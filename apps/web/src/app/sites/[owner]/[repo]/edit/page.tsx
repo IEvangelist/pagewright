@@ -59,6 +59,9 @@ export default async function EditSitePage({
   }
 
   const pages = await provider.getPages({ owner, repo }).catch(() => null);
+  const headSha = await provider.getBranchHead({ owner, repo }, repoData.defaultBranch).catch(
+    () => null,
+  );
   const initialData = blocksToPuckData(page);
 
   return (
@@ -69,6 +72,7 @@ export default async function EditSitePage({
       siteName={repoData.name}
       liveUrl={pages?.url ?? repoData.pagesUrl ?? null}
       initialData={initialData}
+      initialHeadSha={headSha}
     />
   );
 }

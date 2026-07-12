@@ -1,5 +1,6 @@
 import { getProviderForSession } from "@/lib/auth/provider";
 import { parsePage, type Page } from "@pagewright/blocks";
+import { ConcurrencyError } from "@pagewright/github";
 import { puckDataToPage } from "@/lib/builder/convert";
 import type { Data } from "@measured/puck";
 
@@ -17,7 +18,13 @@ function isAllowedPath(path: string): boolean {
  * Persist an edited page. Converts the editor's Puck `Data` back into a `Page`, merges it onto the
  * document currently in the repo (so untouched fields like slug/draft/publishAt survive), validates
  * with Zod, and commits the JSON — which pushes to the default branch and triggers the deploy
- * workflow. Last-write-wins for now; SHA-based conflict handling lands with the persistence step.
+ * workflow.
+ *
+ * Concurrency: when the client sends the branch `expectedHeadSha` it captured when the editor loaded,
+ * the commit is guarded so it only applies if the branch hasn't moved underneath. If it has (the repo
+ * changed elsewhere since the edit began) we return 409 so the client can offer overwrite/reload
+ * instead of silently clobbering newer work. The response always includes the new `headSha` so the
+ * editor can keep saving without reloading.
  */
 export async function POST(
   request: Request,
@@ -30,9 +37,13 @@ export async function POST(
 
   const { owner, repo } = await params;
 
-  let body: { path?: unknown; data?: unknown };
+  let body: { path?: unknown; data?: unknown; expectedHeadSha?: unknown };
   try {
-    body = (await request.json()) as { path?: unknown; data?: unknown };
+    body = (await request.json()) as {
+      path?: unknown;
+      data?: unknown;
+      expectedHeadSha?: unknown;
+    };
   } catch {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -44,6 +55,10 @@ export async function POST(
   if (!body.data || typeof body.data !== "object") {
     return Response.json({ error: "Missing editor data." }, { status: 400 });
   }
+  const expectedHeadSha =
+    typeof body.expectedHeadSha === "string" && body.expectedHeadSha
+      ? body.expectedHeadSha
+      : undefined;
 
   const repoData = await provider.getRepo({ owner, repo }).catch(() => null);
   if (!repoData) {
@@ -81,10 +96,27 @@ export async function POST(
         message: `Update ${fileName} via Pagewright`,
         files: [{ path, content }],
         branch: repoData.defaultBranch,
+        expectedHeadSha,
       },
     );
-    return Response.json({ ok: true, sha: result.sha, commitUrl: result.htmlUrl });
+    return Response.json({
+      ok: true,
+      sha: result.sha,
+      headSha: result.sha,
+      commitUrl: result.htmlUrl,
+    });
   } catch (error) {
+    if (error instanceof ConcurrencyError) {
+      return Response.json(
+        {
+          error:
+            "This site changed somewhere else since you started editing. Reload to get the latest, or overwrite with your version.",
+          code: "conflict",
+          actualHeadSha: error.actualHeadSha,
+        },
+        { status: 409 },
+      );
+    }
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to save changes." },
       { status: 502 },

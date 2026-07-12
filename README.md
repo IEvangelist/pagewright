@@ -97,6 +97,11 @@ block tree back into the page document, re-validates it with the shared Zod sche
 the repo via `POST /api/sites/{owner}/{repo}/pages` — pushing to the default branch and triggering the
 deploy workflow. The local draft is cleared only after the commit succeeds.
 
+Saves are guarded against lost updates: the editor captures the branch head SHA when it loads and
+sends it with every commit (`expectedHeadSha`). If the repo moved elsewhere in the meantime, the
+commit is rejected and the editor shows a conflict banner offering **reload latest** or **overwrite
+with my version** — so concurrent edits never silently clobber each other.
+
 ## Tech decisions
 
 | Area            | Choice                                                                 |
@@ -119,6 +124,7 @@ deploy workflow. The local draft is cleared only after the commit succeeds.
 - [x] One-click site provisioning (create repo, push template, enable Pages) with live progress
 - [x] Live deployment progress (ordered steps, expandable detail, deep links, redeploy, congrats)
 - [x] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
+- [x] Explicit Save with SHA-based conflict detection (reload / overwrite)
 - [ ] Drag-and-drop media uploads
 - [ ] Draft / schedule / publish / unpublish lifecycle
 - [ ] Dashboard with deployed-site thumbnails
