@@ -1108,3 +1108,92 @@ body {
   gap: 10px;
 }
 
+/* ── Visual editor ───────────────────────────────────────────────────────── */
+.pw-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+}
+.pw-editor__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  padding: 10px 16px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card));
+}
+.pw-editor__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.85rem;
+  font-weight: 550;
+  text-decoration: none;
+}
+.pw-editor__back:hover {
+  color: hsl(var(--pw-fg));
+}
+.pw-editor__titlewrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+.pw-editor__title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pw-editor__draftflag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: hsl(33 90% 40%);
+  background: hsl(38 92% 50% / 0.14);
+}
+.pw-editor__baractions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.pw-editor__savebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pw-editor__savebadge--saving {
+  color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary) / 0.12);
+}
+.pw-editor__savebadge--saved {
+  color: hsl(142 71% 36%);
+  background: hsl(142 71% 45% / 0.14);
+}
+.pw-editor__savebadge--error {
+  color: hsl(0 72% 48%);
+  background: hsl(0 72% 51% / 0.12);
+}
+.pw-editor__canvas {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+/* Puck fills its container. */
+.pw-editor__canvas > div {
+  height: 100%;
+}
+

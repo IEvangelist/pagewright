@@ -52,6 +52,85 @@ const stores = new Map<string, MockStore>();
 /** Deploy-progress timeline: how long the simulated Actions run takes to reach "built". */
 const RUN_DURATION_MS = 45_000;
 
+/**
+ * A realistic page document seeded into every mock repo so the visual editor is demoable without a
+ * live GitHub backend. Mirrors the landing template's `home.json` shape (navbar → hero → features →
+ * cta → footer) and personalizes the brand/heading from the repo name.
+ */
+function seedHomePage(name: string): string {
+  const brand = name
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  const page = {
+    title: `${brand} — built with Pagewright`,
+    description: `The ${brand} site, customized visually and deployed to GitHub Pages.`,
+    slug: "/",
+    draft: false,
+    blocks: [
+      {
+        type: "navbar",
+        id: "nav-1",
+        props: {
+          brand,
+          links: [
+            { label: "Features", href: "#features" },
+            { label: "About", href: "#about" },
+          ],
+          cta: { label: "Get started", href: "#start" },
+        },
+      },
+      {
+        type: "hero",
+        id: "hero-1",
+        props: {
+          eyebrow: "Powered by GitHub Pages",
+          heading: `Welcome to ${brand}`,
+          subheading:
+            "Edit every block right here in the visual builder, then publish straight to your own GitHub repository.",
+          primaryCta: { label: "Start building", href: "#start" },
+          secondaryCta: { label: "Learn more", href: "#about" },
+          align: "center",
+        },
+      },
+      {
+        type: "features",
+        id: "features-1",
+        props: {
+          heading: "Everything you need to go live",
+          columns: 3,
+          items: [
+            { icon: "palette", title: "Visual builder", body: "Drag, drop, and edit with a live preview." },
+            { icon: "rocket", title: "One-click publish", body: "Provisions a repo that deploys itself." },
+            { icon: "shield", title: "GitHub auth only", body: "Acts on your behalf with scoped permissions." },
+          ],
+        },
+      },
+      {
+        type: "cta",
+        id: "cta-1",
+        props: {
+          heading: "Your next site is one click away",
+          body: "Sign in with GitHub and publish your first page today.",
+          primaryCta: { label: "Get started free", href: "#start" },
+        },
+      },
+      {
+        type: "footer",
+        id: "footer-1",
+        props: {
+          brand,
+          tagline: "No-code sites, powered by your GitHub.",
+          links: [{ label: "GitHub", href: "https://github.com" }],
+          copyright: "© 2026 Pagewright",
+        },
+      },
+    ],
+  };
+  return JSON.stringify(page, null, 2);
+}
+
 function keyFor(login: string): string {
   return login.toLowerCase();
 }
@@ -125,6 +204,7 @@ function seedRepo(
     branchHead: sha,
     files: new Map([
       ["pagewright.json", JSON.stringify({ templateId: opts.template, manifestVersion: "2026.7.0" }, null, 2)],
+      ["src/data/pages/home.json", seedHomePage(opts.name)],
     ]),
     pages: { enabled: true, url: repo.pagesUrl, status: "built", cname: null },
     runs: [

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { DeployProgress } from "@/components/deploy-progress";
@@ -54,6 +54,12 @@ export default async function SiteManagePage({
             <h1 className="pw-dash__title">{status.repo}</h1>
             <p className="pw-dash__subtitle">Deployment status &amp; live site</p>
           </div>
+          <Link
+            className="pw-btn pw-btn--primary"
+            href={`/sites/${status.owner}/${status.repo}/edit`}
+          >
+            <Pencil size={16} aria-hidden="true" /> Open editor
+          </Link>
         </div>
 
         <DeployProgress initial={status} />

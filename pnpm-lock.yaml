@@ -17,6 +17,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@measured/puck':
+        specifier: ^0.20.2
+        version: 0.20.2(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pagewright/blocks':
         specifier: workspace:*
         version: link:../../packages/blocks
@@ -329,6 +332,30 @@ packages:
   '@capsizecss/unpack@4.0.1':
     resolution: {integrity: sha1-X8Xzo3GpOmnXZOgaCbrfAUM4Fzk=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@capsizecss/unpack/-/unpack-4.0.1.tgz}
     engines: {node: '>=18'}
+
+  '@dnd-kit/abstract@0.1.21':
+    resolution: {integrity: sha1-nNAmdLWUbLKhKL7mUMPHLchAyn4=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/abstract/-/abstract-0.1.21.tgz}
+
+  '@dnd-kit/collision@0.1.21':
+    resolution: {integrity: sha1-enyoldXlSbcOTxSWRDbMpG9fu2E=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/collision/-/collision-0.1.21.tgz}
+
+  '@dnd-kit/dom@0.1.21':
+    resolution: {integrity: sha1-YXpFeSJejbYxC/HAy6t7jtxmvqE=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/dom/-/dom-0.1.21.tgz}
+
+  '@dnd-kit/geometry@0.1.21':
+    resolution: {integrity: sha1-UwugwLrAXTNoniLZsySifkgxrhs=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/geometry/-/geometry-0.1.21.tgz}
+
+  '@dnd-kit/helpers@0.1.18':
+    resolution: {integrity: sha1-JBTF4I6yjAli904PuI+W1HCWCQw=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/helpers/-/helpers-0.1.18.tgz}
+
+  '@dnd-kit/react@0.1.18':
+    resolution: {integrity: sha1-dykJHDEfagKwYXVKPn/swm0Qb94=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/react/-/react-0.1.18.tgz}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  '@dnd-kit/state@0.1.21':
+    resolution: {integrity: sha1-QVzgHOcg4mK4qHmDGgn0QGpMtkM=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@dnd-kit/state/-/state-0.1.21.tgz}
 
   '@emnapi/runtime@1.11.2':
     resolution: {integrity: sha1-6yLwTXb+v99Ph/2v9UyKU/a/Db0=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@emnapi/runtime/-/runtime-1.11.2.tgz}
@@ -814,6 +841,12 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha1-2xXWeByTHzolGj2sOVAcmKYIL9A=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz}
 
+  '@measured/puck@0.20.2':
+    resolution: {integrity: sha1-+rT9rZeNB99J7L2MaNi6twB+MpM=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@measured/puck/-/puck-0.20.2.tgz}
+    deprecated: 'Puck has moved. Please use @puckeditor/core instead: https://www.npmjs.com/package/@puckeditor/core'
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+
   '@next/env@15.5.20':
     resolution: {integrity: sha1-InqBMHhu8fTTZl5+xI5hoLDrLF4=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@next/env/-/env-15.5.20.tgz}
 
@@ -871,6 +904,9 @@ packages:
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha1-VfPZpZdDCgHype9jxrQvdp+c404=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@oslojs/encoding/-/encoding-1.1.0.tgz}
+
+  '@preact/signals-core@1.14.3':
+    resolution: {integrity: sha1-/rEToCsWwmMGiE465gO3LJ0vtRM=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@preact/signals-core/-/signals-core-1.14.3.tgz}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha1-R9K/TO9tRwsi9YMbQg+JZOC/dV8=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/@rolldown/pluginutils/-/pluginutils-1.0.0-beta.27.tgz}
@@ -1404,6 +1440,10 @@ packages:
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha1-PkBgN2CHTC5YZ2kbWZ1zp9oltT8=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/decode-named-character-reference/-/decode-named-character-reference-1.3.0.tgz}
 
+  deep-diff@1.0.2:
+    resolution: {integrity: sha1-r9PR90kRW+ll6Jxj7cersVBrnCY=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/deep-diff/-/deep-diff-1.0.2.tgz}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
   defu@6.1.7:
     resolution: {integrity: sha1-clQ1Z8jp+X/xPOQCttvgmsWuTSM=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/defu/-/defu-6.1.7.tgz}
 
@@ -1506,6 +1546,9 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha1-+LETa0Bx+9jrFAr/hYsQGewpFfo=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/extend/-/extend-3.0.2.tgz}
 
+  fast-deep-equal@3.1.3:
+    resolution: {integrity: sha1-On1WtVnWy8PrUSMlJE5hmmXGxSU=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz}
+
   fdir@6.5.0:
     resolution: {integrity: sha1-7Sq5Z6MxreYvGNB32uGSaE1Q01A=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/fdir/-/fdir-6.5.0.tgz}
     engines: {node: '>=12.0.0'}
@@ -1514,6 +1557,10 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  flat@5.0.2:
+    resolution: {integrity: sha1-jKb+MyBp/6nTJMMnGYxZglnOskE=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/flat/-/flat-5.0.2.tgz}
+    hasBin: true
 
   flattie@1.1.1:
     resolution: {integrity: sha1-iBgiNXIxE2Z9NiF/7FU1knXW/j0=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/flattie/-/flattie-1.1.1.tgz}
@@ -1933,6 +1980,10 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha1-yeq0KO/842zWuSySS9sADvHx7R0=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/nth-check/-/nth-check-2.1.1.tgz}
 
+  object-hash@3.0.0:
+    resolution: {integrity: sha1-c/l/dT57r/wOLMnW4HkHl0Ssguk=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/object-hash/-/object-hash-3.0.0.tgz}
+    engines: {node: '>= 6'}
+
   ofetch@1.5.1:
     resolution: {integrity: sha1-XEPMVuAzmLJzAUlXBgNEJUUFxcc=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/ofetch/-/ofetch-1.5.1.tgz}
 
@@ -2006,6 +2057,12 @@ packages:
     resolution: {integrity: sha1-BFDcmundv/du8ZZAHNi4x/tGbMw=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/react-dom/-/react-dom-19.2.7.tgz}
     peerDependencies:
       react: ^19.2.7
+
+  react-hotkeys-hook@4.6.2:
+    resolution: {integrity: sha1-Jt0g9Z0jIEgU8iPVxfOXmj/oPIg=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/react-hotkeys-hook/-/react-hotkeys-hook-4.6.2.tgz}
+    peerDependencies:
+      react: '>=16.8.1'
+      react-dom: '>=16.8.1'
 
   react-refresh@0.17.0:
     resolution: {integrity: sha1-t+V5w2V/I9BOzL5K0uWKjtUeflM=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/react-refresh/-/react-refresh-0.17.0.tgz}
@@ -2322,6 +2379,17 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  use-debounce@9.0.4:
+    resolution: {integrity: sha1-UdJdhW+9/rU3VTlyzjlDuJfxrIU=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/use-debounce/-/use-debounce-9.0.4.tgz}
+    engines: {node: '>= 10.0.0'}
+    peerDependencies:
+      react: '>=16.8.0'
+
+  uuid@9.0.1:
+    resolution: {integrity: sha1-4YjUyIU8xyIiA5LEJM1jfzIpPzA=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/uuid/-/uuid-9.0.1.tgz}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+    hasBin: true
+
   vfile-location@5.0.3:
     resolution: {integrity: sha1-y56s0g8rZCbRlFHg6vo9CoRiJcM=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/vfile-location/-/vfile-location-5.0.3.tgz}
 
@@ -2432,6 +2500,24 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha1-toDxcohdGLvr8hqDTqJeVaG781Y=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/zod/-/zod-4.4.3.tgz}
+
+  zustand@5.0.14:
+    resolution: {integrity: sha1-GCFsJPy5gM82iY+cV1IOZ7H3eFU=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/zustand/-/zustand-5.0.14.tgz}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
   zwitch@2.0.4:
     resolution: {integrity: sha1-yCfUsKy3b8PmhaTG7CkC1RBw6dc=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/zwitch/-/zwitch-2.0.4.tgz}
@@ -2630,6 +2716,50 @@ snapshots:
   '@capsizecss/unpack@4.0.1':
     dependencies:
       fontkitten: 1.0.3
+
+  '@dnd-kit/abstract@0.1.21':
+    dependencies:
+      '@dnd-kit/geometry': 0.1.21
+      '@dnd-kit/state': 0.1.21
+      tslib: 2.8.1
+
+  '@dnd-kit/collision@0.1.21':
+    dependencies:
+      '@dnd-kit/abstract': 0.1.21
+      '@dnd-kit/geometry': 0.1.21
+      tslib: 2.8.1
+
+  '@dnd-kit/dom@0.1.21':
+    dependencies:
+      '@dnd-kit/abstract': 0.1.21
+      '@dnd-kit/collision': 0.1.21
+      '@dnd-kit/geometry': 0.1.21
+      '@dnd-kit/state': 0.1.21
+      tslib: 2.8.1
+
+  '@dnd-kit/geometry@0.1.21':
+    dependencies:
+      '@dnd-kit/state': 0.1.21
+      tslib: 2.8.1
+
+  '@dnd-kit/helpers@0.1.18':
+    dependencies:
+      '@dnd-kit/abstract': 0.1.21
+      tslib: 2.8.1
+
+  '@dnd-kit/react@0.1.18(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@dnd-kit/abstract': 0.1.21
+      '@dnd-kit/dom': 0.1.21
+      '@dnd-kit/state': 0.1.21
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      tslib: 2.8.1
+
+  '@dnd-kit/state@0.1.21':
+    dependencies:
+      '@preact/signals-core': 1.14.3
+      tslib: 2.8.1
 
   '@emnapi/runtime@1.11.2':
     dependencies:
@@ -2908,6 +3038,25 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@measured/puck@0.20.2(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@dnd-kit/helpers': 0.1.18
+      '@dnd-kit/react': 0.1.18(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      deep-diff: 1.0.2
+      fast-deep-equal: 3.1.3
+      flat: 5.0.2
+      object-hash: 3.0.0
+      react: 19.2.7
+      react-hotkeys-hook: 4.6.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      use-debounce: 9.0.4(react@19.2.7)
+      uuid: 9.0.1
+      zustand: 5.0.14(@types/react@19.2.17)(react@19.2.7)
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - react-dom
+      - use-sync-external-store
+
   '@next/env@15.5.20': {}
 
   '@next/swc-darwin-arm64@15.5.20':
@@ -2935,6 +3084,8 @@ snapshots:
     optional: true
 
   '@oslojs/encoding@1.1.0': {}
+
+  '@preact/signals-core@1.14.3': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
@@ -3458,6 +3609,8 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
+  deep-diff@1.0.2: {}
+
   defu@6.1.7: {}
 
   dequal@2.0.3: {}
@@ -3589,9 +3742,13 @@ snapshots:
 
   extend@3.0.2: {}
 
+  fast-deep-equal@3.1.3: {}
+
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
+
+  flat@5.0.2: {}
 
   flattie@1.1.1: {}
 
@@ -4197,6 +4354,8 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
+  object-hash@3.0.0: {}
+
   ofetch@1.5.1:
     dependencies:
       destr: 2.0.5
@@ -4274,6 +4433,11 @@ snapshots:
     dependencies:
       react: 19.2.7
       scheduler: 0.27.0
+
+  react-hotkeys-hook@4.6.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
 
   react-refresh@0.17.0: {}
 
@@ -4642,6 +4806,12 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
+  use-debounce@9.0.4(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+
+  uuid@9.0.1: {}
+
   vfile-location@5.0.3:
     dependencies:
       '@types/unist': 3.0.3
@@ -4715,5 +4885,10 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.4.3: {}
+
+  zustand@5.0.14(@types/react@19.2.17)(react@19.2.7):
+    optionalDependencies:
+      '@types/react': 19.2.17
+      react: 19.2.7
 
   zwitch@2.0.4: {}

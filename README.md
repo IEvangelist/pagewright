@@ -86,6 +86,17 @@ Progress renders live per-step with a congratulatory completion (live URL, repo,
 Work-in-progress selections autosave to `localStorage`; a failed commit rolls the empty repo back so
 retries stay clean. In demo mode the whole flow runs against the in-memory provider.
 
+### Editing a site
+
+Each site's page opens the **visual editor** (`/sites/{owner}/{repo}/edit`) — a Puck drag-and-drop
+canvas wired to the *same* React block components the generated Astro site renders, so the preview is
+pixel-identical to production. Add, reorder, and configure blocks (navbar, hero, features, gallery,
+call-to-action, prose, footer) with shadcn-styled panels. Every change autosaves to `localStorage`
+(keyed per site + page), so a reload or crash never loses work. Hitting **Publish** converts the
+block tree back into the page document, re-validates it with the shared Zod schema, and commits it to
+the repo via `POST /api/sites/{owner}/{repo}/pages` — pushing to the default branch and triggering the
+deploy workflow. The local draft is cleared only after the commit succeeds.
+
 ## Tech decisions
 
 | Area            | Choice                                                                 |
@@ -107,7 +118,7 @@ retries stay clean. In demo mode the whole flow runs against the in-memory provi
 - [x] GitHub auth (App + OAuth + mock) behind a provider abstraction, encrypted sessions, dashboard
 - [x] One-click site provisioning (create repo, push template, enable Pages) with live progress
 - [x] Live deployment progress (ordered steps, expandable detail, deep links, redeploy, congrats)
-- [ ] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
+- [x] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
 - [ ] Drag-and-drop media uploads
 - [ ] Draft / schedule / publish / unpublish lifecycle
 - [ ] Dashboard with deployed-site thumbnails

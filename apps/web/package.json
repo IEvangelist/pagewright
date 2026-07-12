@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@measured/puck": "^0.20.2",
     "@pagewright/blocks": "workspace:*",
     "@pagewright/github": "workspace:*",
     "@pagewright/registry": "workspace:*",
