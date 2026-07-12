@@ -25,6 +25,7 @@ const CORE_DEPENDENCIES: DependencySet = {
   "@astrojs/react": "4.2.0",
   "@pagewright/blocks": "0.1.0",
   "@pagewright/site-kit": "0.1.0",
+  "lucide-react": "0.469.0",
   react: "19.0.0",
   "react-dom": "19.0.0",
 };

@@ -37,12 +37,12 @@
         "subheading": "Pagewright wires up the repo, the workflows, and the deploys so you can focus on content.",
         "columns": 3,
         "items": [
-          { "icon": "🎨", "title": "Visual builder", "body": "Drag, drop, and edit blocks with a live preview in light or dark mode." },
-          { "icon": "🚀", "title": "One-click publish", "body": "Provisions a repo with GitHub Actions that build and deploy to Pages automatically." },
-          { "icon": "🗓️", "title": "Drafts & scheduling", "body": "Mark pages as drafts and schedule publishing — delegated to GitHub Actions." },
-          { "icon": "🖼️", "title": "Drag-and-drop media", "body": "Drop in images and they're committed to your repo's media folder." },
-          { "icon": "🔒", "title": "GitHub auth only", "body": "Acts on your behalf with scoped, revocable permissions. Your content, your repo." },
-          { "icon": "♻️", "title": "Safe self-updates", "body": "Template improvements arrive as pull requests that preserve your content." }
+          { "icon": "palette", "title": "Visual builder", "body": "Drag, drop, and edit blocks with a live preview in light or dark mode." },
+          { "icon": "rocket", "title": "One-click publish", "body": "Provisions a repo with GitHub Actions that build and deploy to Pages automatically." },
+          { "icon": "calendar", "title": "Drafts & scheduling", "body": "Mark pages as drafts and schedule publishing — delegated to GitHub Actions." },
+          { "icon": "image", "title": "Drag-and-drop media", "body": "Drop in images and they're committed to your repo's media folder." },
+          { "icon": "shield", "title": "GitHub auth only", "body": "Acts on your behalf with scoped, revocable permissions. Your content, your repo." },
+          { "icon": "recycle", "title": "Safe self-updates", "body": "Template improvements arrive as pull requests that preserve your content." }
         ]
       }
     },

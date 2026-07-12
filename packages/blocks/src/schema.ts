@@ -40,6 +40,7 @@ export const heroBlockSchema = z.object({
 });
 
 export const featureItemSchema = z.object({
+  /** Named icon from the shared block icon set (see `blockIcons`), e.g. "rocket". */
   icon: z.string().optional(),
   title: z.string(),
   body: z.string(),

@@ -173,7 +173,18 @@
   border-radius: var(--pw-radius);
   padding: 24px;
 }
-.pw-feature__icon { font-size: 1.75rem; margin-bottom: 12px; }
+.pw-feature__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary) / 0.1);
+}
+.pw-feature__icon svg { display: block; }
 .pw-feature__title { font-size: 1.1rem; font-weight: 700; margin: 0 0 6px; }
 .pw-feature__body { color: hsl(var(--pw-muted-fg)); margin: 0; font-size: 0.95rem; }
 

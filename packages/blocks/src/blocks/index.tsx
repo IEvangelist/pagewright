@@ -4,6 +4,7 @@ import type {
   BlockType,
   Link,
 } from "../schema";
+import { BlockIcon } from "../icons";
 
 /**
  * Block components. Plain React + scoped `pw-` CSS classes (see styles/blocks.css) so they render
@@ -86,7 +87,11 @@ export function Features({
         <div className={`pw-features__grid pw-cols-${columns}`}>
           {items.map((item, i) => (
             <div key={i} className="pw-feature">
-              {item.icon ? <div className="pw-feature__icon" aria-hidden>{item.icon}</div> : null}
+              {item.icon ? (
+                <div className="pw-feature__icon" aria-hidden>
+                  <BlockIcon name={item.icon} size={26} />
+                </div>
+              ) : null}
               <h3 className="pw-feature__title">{item.title}</h3>
               <p className="pw-feature__body">{item.body}</p>
             </div>
