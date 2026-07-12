@@ -33,6 +33,7 @@ packages/
   blocks/              # Shared React blocks + Zod schema + CSS (the linchpin)
   site-kit/            # Versioned Astro rendering kit (theme script, schema, migrations)
   registry/            # Managed dependency registry — versioned build bits per template
+  github/              # GitHub provider abstraction (OAuth App + GitHub App + mock)
 templates/
   landing/             # Astro landing/marketing starter -> GitHub Pages
   blog/                # Astro blog starter (posts, drafts, scheduling, sitemap)
@@ -52,6 +53,21 @@ pnpm typecheck
 - Builder app: <http://localhost:3000>
 - Landing template: <http://localhost:4321>
 
+### Authentication & demo mode
+
+The builder authenticates solely through GitHub, behind a swappable provider interface
+(`@pagewright/github`) with three strategies:
+
+- **GitHub App** (preferred) — fine-grained, refreshable user-to-server tokens.
+- **OAuth App** (fallback) — classic user token with `repo`/`workflow` scopes.
+- **Mock** (default with no credentials) — an in-memory provider so the entire app (sign-in,
+  dashboard, provisioning, publishing, deploy progress) is fully explorable offline.
+
+With nothing configured, `pnpm dev` runs in **demo mode**: click **Sign in with GitHub** to mint a
+demo session and land on the dashboard with seeded sites. To use real GitHub, copy `.env.example`
+to `apps/web/.env.local` and set the App or OAuth client id/secret plus a 32+ char `SESSION_SECRET`.
+Tokens are sealed in an httpOnly, encrypted session cookie and only ever used server-side.
+
 ## Tech decisions
 
 | Area            | Choice                                                                 |
@@ -70,7 +86,7 @@ pnpm typecheck
 - [x] Builder app shell (light/dark, live block rendering)
 - [x] Managed dependency registry (versioned build bits + update detection)
 - [x] Blog + portfolio templates + scheduled-publish / update-kit workflows
-- [ ] GitHub App + OAuth auth, provider abstraction, sessions
+- [x] GitHub auth (App + OAuth + mock) behind a provider abstraction, encrypted sessions, dashboard
 - [ ] One-click site provisioning (create repo, push template, enable Pages)
 - [ ] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
 - [ ] Drag-and-drop media uploads

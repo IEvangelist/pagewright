@@ -1,0 +1,19 @@
+{
+  "name": "@pagewright/github",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "GitHub provider abstraction (OAuth App + GitHub App) — repo creation, atomic commits, Pages, and Actions, behind one swappable interface.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

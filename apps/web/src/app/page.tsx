@@ -1,5 +1,6 @@
 import { PageRenderer, parsePage } from "@pagewright/blocks";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthButton } from "@/components/auth-button";
 import demoPage from "@/demo-page.json";
 
 /**
@@ -16,7 +17,10 @@ export default function Home() {
         <span className="pw-appbar__brand">
           Pagewright <span className="pw-appbar__badge">builder</span>
         </span>
-        <ThemeToggle />
+        <div className="pw-appbar__actions">
+          <AuthButton />
+          <ThemeToggle />
+        </div>
       </header>
       <main className="pw-root">
         <PageRenderer blocks={page.blocks} />
