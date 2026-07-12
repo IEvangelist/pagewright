@@ -32,6 +32,7 @@ apps/
 packages/
   blocks/              # Shared React blocks + Zod schema + CSS (the linchpin)
   site-kit/            # Versioned Astro rendering kit (theme script, schema, migrations)
+  registry/            # Managed dependency registry — versioned build bits per template
 templates/
   landing/             # Astro landing/marketing starter -> GitHub Pages
 brand/                 # Brand kit (colors, logo, tokens)
@@ -65,6 +66,7 @@ pnpm typecheck
 - [x] Shared block library + schema
 - [x] Landing template + Pages deploy workflow
 - [x] Builder app shell (light/dark, live block rendering)
+- [x] Managed dependency registry (versioned build bits + update detection)
 - [ ] GitHub App + OAuth auth, provider abstraction, sessions
 - [ ] One-click site provisioning (create repo, push template, enable Pages)
 - [ ] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo

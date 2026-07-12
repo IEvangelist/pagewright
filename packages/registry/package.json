@@ -1,0 +1,21 @@
+{
+  "name": "@pagewright/registry",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Canonical, versioned manifests of the exact build bits every generated Pagewright site uses.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
