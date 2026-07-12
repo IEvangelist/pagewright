@@ -1,0 +1,14 @@
+<svg width="232" height="48" viewBox="0 0 232 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pagewright">
+  <defs>
+    <linearGradient id="pw-grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6C5CE7"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="40" height="40" rx="10" fill="url(#pw-grad)"/>
+  <path d="M18 13h8l6 6v14a2 2 0 0 1-2 2H18a2 2 0 0 1-2-2V15a2 2 0 0 1 2-2z" fill="#ffffff"/>
+  <path d="M26 13v6h6z" fill="#ffffff" fill-opacity="0.6"/>
+  <rect x="19.5" y="22" width="10" height="2" rx="1" fill="#6C5CE7"/>
+  <rect x="19.5" y="26" width="7.5" height="2" rx="1" fill="#8B7BF0"/>
+  <text x="56" y="31" font-family="ui-sans-serif, system-ui, 'Segoe UI', Inter, sans-serif" font-size="23" font-weight="700" letter-spacing="-0.5" fill="#0B0B12">Pagewright</text>
+</svg>

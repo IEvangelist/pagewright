@@ -1,0 +1,14 @@
+# Netlify configuration for the Pagewright builder app (apps/web).
+# The app lives in a pnpm monorepo; Netlify builds from the app directory while
+# pnpm resolves the workspace packages it depends on.
+
+[build]
+  base = "apps/web"
+  command = "pnpm run build"
+  publish = ".next"
+
+[build.environment]
+  NPM_FLAGS = "--version" # let pnpm handle install via the workspace
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

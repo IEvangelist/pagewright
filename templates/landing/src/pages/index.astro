@@ -1,0 +1,12 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { PageRenderer, parsePage } from "@pagewright/blocks";
+import homeDoc from "../data/pages/home.json";
+
+// Validate + apply schema defaults at build time so malformed content fails loudly.
+const page = parsePage(homeDoc);
+---
+
+<Layout title={page.title} description={page.description}>
+  <PageRenderer blocks={page.blocks} />
+</Layout>

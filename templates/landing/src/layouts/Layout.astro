@@ -1,0 +1,29 @@
+---
+import "@pagewright/blocks/blocks.css";
+import { themeInitScript } from "@pagewright/site-kit";
+import siteConfig from "../data/site.json";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title ? `${title} · ${siteConfig.name}` : siteConfig.name;
+const pageDescription = description ?? siteConfig.description ?? "";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content="Pagewright" />
+    <title>{pageTitle}</title>
+    {pageDescription && <meta name="description" content={pageDescription} />}
+    <script is:inline set:html={themeInitScript} />
+  </head>
+  <body class="pw-root">
+    <slot />
+  </body>
+</html>

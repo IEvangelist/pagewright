@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* App chrome tokens (block tokens come from @pagewright/blocks/blocks.css). */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.pw-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding-inline: 20px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg) / 0.85);
+  backdrop-filter: blur(8px);
+  color: hsl(var(--pw-fg));
+  font-family: var(--pw-font);
+}
+
+.pw-appbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.pw-appbar__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--pw-primary));
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.pw-toggle {
+  height: 38px;
+  width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  font-size: 17px;
+  cursor: pointer;
+}
+.pw-toggle:hover {
+  background: hsl(var(--pw-muted));
+}

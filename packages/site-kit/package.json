@@ -1,0 +1,22 @@
+{
+  "name": "@pagewright/site-kit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Versioned Astro rendering kit for Pagewright sites (theme script, schema, migrations).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pagewright/blocks": "workspace:*"
+  },
+  "peerDependencies": {
+    "astro": ">=5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
