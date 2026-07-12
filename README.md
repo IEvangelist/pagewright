@@ -106,6 +106,7 @@ retries stay clean. In demo mode the whole flow runs against the in-memory provi
 - [x] Blog + portfolio templates + scheduled-publish / update-kit workflows
 - [x] GitHub auth (App + OAuth + mock) behind a provider abstraction, encrypted sessions, dashboard
 - [x] One-click site provisioning (create repo, push template, enable Pages) with live progress
+- [x] Live deployment progress (ordered steps, expandable detail, deep links, redeploy, congrats)
 - [ ] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
 - [ ] Drag-and-drop media uploads
 - [ ] Draft / schedule / publish / unpublish lifecycle
