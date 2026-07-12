@@ -1,0 +1,25 @@
+{
+  "name": "@pagewright/template-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pagewright portfolio starter — Astro + shared blocks, deploys to GitHub Pages.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.2.0",
+    "@pagewright/blocks": "workspace:*",
+    "@pagewright/site-kit": "workspace:*",
+    "astro": "^5.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2"
+  }
+}

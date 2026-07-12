@@ -1,0 +1,50 @@
+# Applies a Pagewright-managed dependency/workflow update and opens it as a pull request so your
+# content is never touched without review. Pagewright triggers this via `repository_dispatch`
+# (type `pagewright-update`) with the new manifest in the client payload; it can also be run
+# manually to re-check.
+name: Apply Pagewright update
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [pagewright-update]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Apply managed update
+        id: apply
+        env:
+          PAGEWRIGHT_UPDATE: ${{ toJson(github.event.client_payload) }}
+        run: node scripts/update-kit.mjs
+
+      - name: Open pull request
+        if: steps.apply.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="pagewright/update-${{ github.run_id }}"
+          git config user.name "pagewright-bot"
+          git config user.email "223556219+Copilot@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -A
+          git commit -m "chore: apply Pagewright managed update"
+          git push origin "$branch"
+          gh pr create \
+            --title "Pagewright managed update" \
+            --body "Automated dependency and workflow update maintained by Pagewright. Your content is preserved." \
+            --base "${{ github.ref_name }}" \
+            --head "$branch"

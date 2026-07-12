@@ -1,0 +1,45 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { PageRenderer, PostHeader } from "@pagewright/blocks";
+import { getPublishedPosts, type LoadedPost } from "../../lib/posts";
+
+export function getStaticPaths() {
+  return getPublishedPosts().map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: LoadedPost;
+}
+
+const { post } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={post.title} description={post.description ?? post.excerpt}>
+  <PostHeader
+    title={post.title}
+    date={post.date}
+    author={post.author}
+    tags={post.tags}
+  />
+  <PageRenderer blocks={post.blocks} />
+  <div class="pw-section" style="padding-block: 0 72px;">
+    <div class="pw-container" style="max-width: 720px;">
+      <a class="pw-postback" href={base}>← Back to all posts</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .pw-postback {
+    color: hsl(var(--pw-primary));
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .pw-postback:hover {
+    text-decoration: underline;
+  }
+</style>

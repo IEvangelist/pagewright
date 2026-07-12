@@ -62,12 +62,11 @@ export const MANIFESTS: SiteManifest[] = [
     packageManager: "npm",
     dependencies: {
       ...CORE_DEPENDENCIES,
-      "@astrojs/mdx": "4.0.0",
       "@astrojs/sitemap": "3.2.1",
     },
     devDependencies: { ...CORE_DEV_DEPENDENCIES },
     actions: CORE_ACTIONS,
-    notes: "Initial stable manifest for the blog template (adds MDX + sitemap).",
+    notes: "Initial stable manifest for the blog template (adds sitemap).",
     releasedAt: RELEASED_AT,
   },
   {

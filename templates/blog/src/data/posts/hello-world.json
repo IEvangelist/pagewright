@@ -1,0 +1,19 @@
+{
+  "title": "Hello, world — welcome to the blog",
+  "description": "The first post on a site built and published entirely from GitHub.",
+  "slug": "hello-world",
+  "draft": false,
+  "date": "2026-06-01T09:00:00.000Z",
+  "excerpt": "Kicking things off: why this blog exists and how it's published without touching a line of code.",
+  "tags": ["welcome", "meta"],
+  "author": "Pagewright",
+  "blocks": [
+    {
+      "type": "prose",
+      "id": "p-1",
+      "props": {
+        "html": "<p>Welcome! This is the very first post on a blog that was created, edited, and published without writing any code. Every word here lives as content in a GitHub repository, and a GitHub Actions workflow builds and deploys the site to GitHub Pages automatically.</p><h2>What to expect</h2><p>Short notes, longer essays, and the occasional behind-the-scenes look at how things are made. Posts can be drafted privately and scheduled to publish later — all handled for you.</p><p>Thanks for reading, and welcome aboard.</p>"
+      }
+    }
+  ]
+}

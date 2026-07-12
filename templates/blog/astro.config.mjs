@@ -1,0 +1,13 @@
+// @ts-check
+import { defineConfig } from "astro/config";
+import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
+
+// `site` and `base` are injected per-repo by Pagewright when it provisions a site
+// (GitHub Pages project sites are served from /<repo>/). They fall back to sensible
+// defaults for local development.
+export default defineConfig({
+  site: process.env.PAGEWRIGHT_SITE_URL || "http://localhost:4321",
+  base: process.env.PAGEWRIGHT_BASE_PATH || "/",
+  integrations: [react(), sitemap()],
+});

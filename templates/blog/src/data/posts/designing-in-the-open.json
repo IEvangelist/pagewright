@@ -1,0 +1,19 @@
+{
+  "title": "Designing in the open",
+  "description": "A few thoughts on sharing work early and often.",
+  "slug": "designing-in-the-open",
+  "draft": false,
+  "date": "2026-06-18T09:00:00.000Z",
+  "excerpt": "Publishing rough drafts, gathering feedback, and letting the work evolve in public.",
+  "tags": ["design", "process"],
+  "author": "Pagewright",
+  "blocks": [
+    {
+      "type": "prose",
+      "id": "p-1",
+      "props": {
+        "html": "<p>There's a particular kind of momentum that comes from working in the open. When the cost of publishing drops to nearly zero, you start to share earlier — a half-formed idea, a rough sketch, a first draft.</p><h2>Lower the cost of shipping</h2><p>The friction of publishing shapes what you publish. If it takes an afternoon of fiddling to get a post live, you'll only post the big things. If it takes a click, you'll share the small ones too — and the small ones compound.</p><blockquote>Make the easy thing the right thing.</blockquote><p>That's the whole idea: a visual editor for the words, and automation for everything else.</p>"
+      }
+    }
+  ]
+}

@@ -35,6 +35,8 @@ packages/
   registry/            # Managed dependency registry — versioned build bits per template
 templates/
   landing/             # Astro landing/marketing starter -> GitHub Pages
+  blog/                # Astro blog starter (posts, drafts, scheduling, sitemap)
+  portfolio/           # Astro portfolio starter (project gallery)
 brand/                 # Brand kit (colors, logo, tokens)
 ```
 
@@ -67,13 +69,13 @@ pnpm typecheck
 - [x] Landing template + Pages deploy workflow
 - [x] Builder app shell (light/dark, live block rendering)
 - [x] Managed dependency registry (versioned build bits + update detection)
+- [x] Blog + portfolio templates + scheduled-publish / update-kit workflows
 - [ ] GitHub App + OAuth auth, provider abstraction, sessions
 - [ ] One-click site provisioning (create repo, push template, enable Pages)
 - [ ] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
 - [ ] Drag-and-drop media uploads
 - [ ] Draft / schedule / publish / unpublish lifecycle
 - [ ] Dashboard with deployed-site thumbnails
-- [ ] Blog + portfolio templates
 
 ## License
 

@@ -1,0 +1,43 @@
+{
+  "title": "Blog",
+  "description": "Notes, updates, and ideas.",
+  "slug": "/",
+  "draft": false,
+  "blocks": [
+    {
+      "type": "navbar",
+      "id": "nav-1",
+      "props": {
+        "brand": "The Blog",
+        "links": [
+          { "label": "Posts", "href": "#posts" },
+          { "label": "About", "href": "#about" }
+        ],
+        "cta": { "label": "Subscribe", "href": "#subscribe" }
+      }
+    },
+    {
+      "type": "hero",
+      "id": "hero-1",
+      "props": {
+        "eyebrow": "Writing in the open",
+        "heading": "The Pagewright Blog",
+        "subheading": "Notes, updates, and ideas — written in a visual editor and published straight from GitHub.",
+        "align": "center"
+      }
+    },
+    {
+      "type": "footer",
+      "id": "footer-1",
+      "props": {
+        "brand": "The Pagewright Blog",
+        "tagline": "Published with Pagewright.",
+        "links": [
+          { "label": "GitHub", "href": "https://github.com" },
+          { "label": "RSS", "href": "#" }
+        ],
+        "copyright": "© 2026"
+      }
+    }
+  ]
+}

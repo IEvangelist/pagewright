@@ -102,6 +102,59 @@ export function Features({
   );
 }
 
+export function Gallery({
+  heading,
+  subheading,
+  columns = 3,
+  items = [],
+}: BlockProps<"gallery">) {
+  return (
+    <section className="pw-section pw-gallery">
+      <div className="pw-container">
+        {heading ? <h2 className="pw-section__heading">{heading}</h2> : null}
+        {subheading ? <p className="pw-section__subheading">{subheading}</p> : null}
+        <div className={`pw-gallery__grid pw-cols-${columns}`}>
+          {items.map((item, i) => {
+            const inner = (
+              <>
+                {item.image ? (
+                  <div className="pw-gallery__media">
+                    <img src={item.image} alt={item.title} loading="lazy" />
+                  </div>
+                ) : null}
+                <div className="pw-gallery__body">
+                  <h3 className="pw-gallery__title">{item.title}</h3>
+                  {item.description ? (
+                    <p className="pw-gallery__desc">{item.description}</p>
+                  ) : null}
+                  {item.tags.length > 0 ? (
+                    <div className="pw-gallery__tags">
+                      {item.tags.map((t, ti) => (
+                        <span key={ti} className="pw-tag">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </>
+            );
+            return item.href ? (
+              <a key={i} className="pw-gallery__item pw-gallery__item--link" href={item.href}>
+                {inner}
+              </a>
+            ) : (
+              <div key={i} className="pw-gallery__item">
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Cta({ heading, body, primaryCta, secondaryCta }: BlockProps<"cta">) {
   return (
     <section className="pw-section pw-cta">
@@ -156,7 +209,117 @@ export const blockRegistry: {
   navbar: Navbar,
   hero: Hero,
   features: Features,
+  gallery: Gallery,
   cta: Cta,
   prose: Prose,
   footer: Footer,
 };
+
+/** Formats an ISO date string as a readable date (build-time, locale-stable). */
+export function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
+
+export interface PostCard {
+  title: string;
+  href: string;
+  date: string;
+  excerpt?: string;
+  cover?: string;
+  tags?: string[];
+}
+
+/**
+ * Renders a grid of blog post cards. Unlike the authored blocks, the post list is *derived* from a
+ * repo's posts at build time, so the blog template gathers posts and passes them here directly.
+ */
+export function PostList({
+  heading,
+  subheading,
+  posts,
+}: {
+  heading?: string;
+  subheading?: string;
+  posts: PostCard[];
+}) {
+  return (
+    <section className="pw-section pw-postlist">
+      <div className="pw-container">
+        {heading ? <h2 className="pw-section__heading">{heading}</h2> : null}
+        {subheading ? <p className="pw-section__subheading">{subheading}</p> : null}
+        {posts.length === 0 ? (
+          <p className="pw-postlist__empty">No posts published yet — check back soon.</p>
+        ) : (
+          <div className="pw-postlist__grid">
+            {posts.map((p, i) => (
+              <a key={i} className="pw-postcard" href={p.href}>
+                {p.cover ? (
+                  <div className="pw-postcard__media">
+                    <img src={p.cover} alt={p.title} loading="lazy" />
+                  </div>
+                ) : null}
+                <div className="pw-postcard__body">
+                  <time className="pw-postcard__date" dateTime={p.date}>
+                    {formatDate(p.date)}
+                  </time>
+                  <h3 className="pw-postcard__title">{p.title}</h3>
+                  {p.excerpt ? <p className="pw-postcard__excerpt">{p.excerpt}</p> : null}
+                  {p.tags && p.tags.length > 0 ? (
+                    <div className="pw-postcard__tags">
+                      {p.tags.map((t, ti) => (
+                        <span key={ti} className="pw-tag">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** Header for a single blog post page (title, date, tags). */
+export function PostHeader({
+  title,
+  date,
+  author,
+  tags = [],
+}: {
+  title: string;
+  date: string;
+  author?: string;
+  tags?: string[];
+}) {
+  return (
+    <header className="pw-posthead">
+      <div className="pw-container pw-posthead__inner">
+        <div className="pw-posthead__meta">
+          <time dateTime={date}>{formatDate(date)}</time>
+          {author ? <span className="pw-posthead__author">· {author}</span> : null}
+        </div>
+        <h1 className="pw-posthead__title">{title}</h1>
+        {tags.length > 0 ? (
+          <div className="pw-posthead__tags">
+            {tags.map((t, i) => (
+              <span key={i} className="pw-tag">
+                {t}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </header>
+  );
+}

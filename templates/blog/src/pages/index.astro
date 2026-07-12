@@ -1,0 +1,29 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { PageRenderer, PostList, parsePage } from "@pagewright/blocks";
+import homeDoc from "../data/pages/home.json";
+import { getPublishedPosts } from "../lib/posts";
+
+const page = parsePage(homeDoc);
+const base = import.meta.env.BASE_URL;
+
+const posts = getPublishedPosts().map((p) => ({
+  title: p.title,
+  href: `${base}blog/${p.slug}/`,
+  date: p.date,
+  excerpt: p.excerpt,
+  cover: p.cover,
+  tags: p.tags,
+}));
+
+// Render authored header blocks, then the derived post list, then the footer.
+const footerIndex = page.blocks.findIndex((b) => b.type === "footer");
+const headBlocks = footerIndex >= 0 ? page.blocks.slice(0, footerIndex) : page.blocks;
+const footerBlocks = footerIndex >= 0 ? page.blocks.slice(footerIndex) : [];
+---
+
+<Layout title={page.title} description={page.description}>
+  <PageRenderer blocks={headBlocks} />
+  <PostList heading="Latest posts" posts={posts} />
+  <PageRenderer blocks={footerBlocks} />
+</Layout>

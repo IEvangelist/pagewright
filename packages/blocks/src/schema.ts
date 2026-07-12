@@ -88,10 +88,31 @@ export const footerBlockSchema = z.object({
   }),
 });
 
+export const galleryItemSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  href: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+});
+export type GalleryItem = z.infer<typeof galleryItemSchema>;
+
+export const galleryBlockSchema = z.object({
+  type: z.literal("gallery"),
+  id: z.string(),
+  props: z.object({
+    heading: z.string().optional(),
+    subheading: z.string().optional(),
+    columns: z.union([z.literal(2), z.literal(3)]).default(3),
+    items: z.array(galleryItemSchema).default([]),
+  }),
+});
+
 export const blockSchema = z.discriminatedUnion("type", [
   navbarBlockSchema,
   heroBlockSchema,
   featuresBlockSchema,
+  galleryBlockSchema,
   ctaBlockSchema,
   proseBlockSchema,
   footerBlockSchema,
@@ -110,6 +131,19 @@ export const pageSchema = z.object({
 });
 export type Page = z.infer<typeof pageSchema>;
 
+/**
+ * A blog post is a page document plus blog front-matter (date, excerpt, cover, tags, author).
+ * Shared by the builder, the generated Astro blog template, and the scheduled-publish workflow.
+ */
+export const postSchema = pageSchema.extend({
+  date: z.string(),
+  excerpt: z.string().optional(),
+  cover: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  author: z.string().optional(),
+});
+export type Post = z.infer<typeof postSchema>;
+
 export const siteConfigSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
@@ -122,4 +156,9 @@ export type SiteConfig = z.infer<typeof siteConfigSchema>;
 /** Parse + apply defaults for an unknown page document (used when reading repo content). */
 export function parsePage(input: unknown): Page {
   return pageSchema.parse(input);
+}
+
+/** Parse + apply defaults for an unknown blog post document. */
+export function parsePost(input: unknown): Post {
+  return postSchema.parse(input);
 }

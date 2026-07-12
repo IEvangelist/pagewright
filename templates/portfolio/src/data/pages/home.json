@@ -1,0 +1,103 @@
+{
+  "title": "Portfolio",
+  "description": "Selected work and projects.",
+  "slug": "/",
+  "draft": false,
+  "blocks": [
+    {
+      "type": "navbar",
+      "id": "nav-1",
+      "props": {
+        "brand": "Your Name",
+        "links": [
+          { "label": "Work", "href": "#work" },
+          { "label": "About", "href": "#about" },
+          { "label": "Contact", "href": "#contact" }
+        ],
+        "cta": { "label": "Get in touch", "href": "#contact" }
+      }
+    },
+    {
+      "type": "hero",
+      "id": "hero-1",
+      "props": {
+        "eyebrow": "Designer & Developer",
+        "heading": "I design and build thoughtful digital experiences",
+        "subheading": "A selection of recent projects spanning product design, brand, and front-end engineering.",
+        "primaryCta": { "label": "View work", "href": "#work" },
+        "secondaryCta": { "label": "About me", "href": "#about" },
+        "align": "center"
+      }
+    },
+    {
+      "type": "gallery",
+      "id": "work-1",
+      "props": {
+        "heading": "Selected work",
+        "subheading": "A few projects I'm proud of. Add your own from the Pagewright builder.",
+        "columns": 3,
+        "items": [
+          {
+            "title": "Aurora Design System",
+            "description": "A component library and tokens powering a suite of internal tools.",
+            "href": "#",
+            "tags": ["Design System", "React"]
+          },
+          {
+            "title": "Meridian Mobile App",
+            "description": "End-to-end product design for a personal finance companion.",
+            "href": "#",
+            "tags": ["Product", "iOS"]
+          },
+          {
+            "title": "Northwind Rebrand",
+            "description": "Visual identity, guidelines, and a marketing site refresh.",
+            "href": "#",
+            "tags": ["Brand", "Web"]
+          },
+          {
+            "title": "Cadence Analytics",
+            "description": "Dashboards and data visualization for a growth team.",
+            "href": "#",
+            "tags": ["Data Viz", "Front-end"]
+          },
+          {
+            "title": "Harbor CMS",
+            "description": "A headless content workflow with a friendly editor.",
+            "href": "#",
+            "tags": ["Product", "TypeScript"]
+          },
+          {
+            "title": "Solstice Campaign",
+            "description": "A seasonal microsite with motion and interaction design.",
+            "href": "#",
+            "tags": ["Web", "Motion"]
+          }
+        ]
+      }
+    },
+    {
+      "type": "cta",
+      "id": "cta-1",
+      "props": {
+        "heading": "Let's build something together",
+        "body": "Available for select freelance and full-time opportunities.",
+        "primaryCta": { "label": "Get in touch", "href": "#contact" }
+      }
+    },
+    {
+      "type": "footer",
+      "id": "footer-1",
+      "props": {
+        "brand": "Your Name",
+        "tagline": "Designer & developer.",
+        "links": [
+          { "label": "GitHub", "href": "https://github.com" },
+          { "label": "LinkedIn", "href": "#" },
+          { "label": "Email", "href": "#contact" }
+        ],
+        "copyright": "© 2026 Your Name"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+# Promotes scheduled content (posts/pages whose `publishAt` has passed) from draft to published,
+# then commits the change — which triggers the deploy workflow. Runs on a cron and on demand.
+#
+# NOTE: GitHub Actions cron is best-effort and can be delayed (especially on free plans), so this
+# also supports manual "Publish now" via workflow_dispatch.
+name: Publish scheduled content
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scheduled-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Promote scheduled content
+        run: node scripts/publish-scheduled.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "pagewright-bot"
+            git config user.email "223556219+Copilot@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: publish scheduled content"
+            git push
+          else
+            echo "Nothing to publish."
+          fi

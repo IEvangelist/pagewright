@@ -1,0 +1,20 @@
+{
+  "title": "Coming soon: what's next",
+  "description": "A scheduled preview of upcoming work.",
+  "slug": "whats-next",
+  "draft": true,
+  "publishAt": "2099-01-01T09:00:00.000Z",
+  "date": "2099-01-01T09:00:00.000Z",
+  "excerpt": "This post is a draft scheduled to publish automatically — it won't appear on the site until its time comes.",
+  "tags": ["roadmap"],
+  "author": "Pagewright",
+  "blocks": [
+    {
+      "type": "prose",
+      "id": "p-1",
+      "props": {
+        "html": "<p>This is a scheduled draft. Because <code>draft</code> is <code>true</code> and <code>publishAt</code> is in the future, it is excluded from the build. The <code>scheduled-publish.yml</code> workflow promotes it to published once its time arrives, then commits the change — which triggers a fresh deploy.</p>"
+      }
+    }
+  ]
+}
