@@ -5,8 +5,9 @@ import homeDoc from "../data/pages/home.json";
 
 // Validate + apply schema defaults at build time so malformed content fails loudly.
 const page = parsePage(homeDoc);
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title={page.title} description={page.description}>
-  <PageRenderer blocks={page.blocks} />
+  <PageRenderer blocks={page.blocks} base={base} />
 </Layout>

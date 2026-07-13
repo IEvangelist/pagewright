@@ -5,37 +5,49 @@ import type {
   Link,
 } from "../schema";
 import { BlockIcon } from "../icons";
+import { withBase, type BaseAware } from "../base";
 
 /**
  * Block components. Plain React + scoped `pw-` CSS classes (see styles/blocks.css) so they render
  * pixel-identically in the Next.js builder preview and in generated Astro sites (via @astrojs/react).
  * No Tailwind dependency here on purpose — that keeps the two consumers perfectly in sync.
+ *
+ * Each block accepts an optional `base` (the site base path) threaded down from PageRenderer so that
+ * root-relative image/link URLs resolve on GitHub Pages project sites.
  */
 
-function CtaLink({ link, variant }: { link?: Link; variant: "primary" | "secondary" }) {
+function CtaLink({
+  link,
+  variant,
+  base,
+}: {
+  link?: Link;
+  variant: "primary" | "secondary";
+  base?: string;
+}) {
   if (!link) return null;
   return (
-    <a className={`pw-btn pw-btn--${variant}`} href={link.href}>
+    <a className={`pw-btn pw-btn--${variant}`} href={withBase(base, link.href)}>
       {link.label}
     </a>
   );
 }
 
-export function Navbar({ brand, logo, links = [], cta }: BlockProps<"navbar">) {
+export function Navbar({ brand, logo, links = [], cta, base }: BlockProps<"navbar"> & BaseAware) {
   return (
     <nav className="pw-navbar">
       <div className="pw-container pw-navbar__inner">
-        <a className="pw-navbar__brand" href="/">
-          {logo ? <img className="pw-navbar__logo" src={logo} alt={brand} /> : null}
+        <a className="pw-navbar__brand" href={withBase(base, "/")}>
+          {logo ? <img className="pw-navbar__logo" src={withBase(base, logo)} alt={brand} /> : null}
           <span>{brand}</span>
         </a>
         <div className="pw-navbar__links">
           {links.map((l, i) => (
-            <a key={i} className="pw-navbar__link" href={l.href}>
+            <a key={i} className="pw-navbar__link" href={withBase(base, l.href)}>
               {l.label}
             </a>
           ))}
-          <CtaLink link={cta} variant="primary" />
+          <CtaLink link={cta} variant="primary" base={base} />
         </div>
       </div>
     </nav>
@@ -50,7 +62,8 @@ export function Hero({
   secondaryCta,
   image,
   align = "center",
-}: BlockProps<"hero">) {
+  base,
+}: BlockProps<"hero"> & BaseAware) {
   return (
     <header className={`pw-hero pw-hero--${align}`}>
       <div className="pw-container pw-hero__inner">
@@ -59,13 +72,13 @@ export function Hero({
           <h1 className="pw-hero__heading">{heading}</h1>
           {subheading ? <p className="pw-hero__subheading">{subheading}</p> : null}
           <div className="pw-hero__actions">
-            <CtaLink link={primaryCta} variant="primary" />
-            <CtaLink link={secondaryCta} variant="secondary" />
+            <CtaLink link={primaryCta} variant="primary" base={base} />
+            <CtaLink link={secondaryCta} variant="secondary" base={base} />
           </div>
         </div>
         {image ? (
           <div className="pw-hero__media">
-            <img src={image} alt={heading} />
+            <img src={withBase(base, image)} alt={heading} />
           </div>
         ) : null}
       </div>
@@ -107,7 +120,8 @@ export function Gallery({
   subheading,
   columns = 3,
   items = [],
-}: BlockProps<"gallery">) {
+  base,
+}: BlockProps<"gallery"> & BaseAware) {
   return (
     <section className="pw-section pw-gallery">
       <div className="pw-container">
@@ -119,7 +133,7 @@ export function Gallery({
               <>
                 {item.image ? (
                   <div className="pw-gallery__media">
-                    <img src={item.image} alt={item.title} loading="lazy" />
+                    <img src={withBase(base, item.image)} alt={item.title} loading="lazy" />
                   </div>
                 ) : null}
                 <div className="pw-gallery__body">
@@ -140,7 +154,11 @@ export function Gallery({
               </>
             );
             return item.href ? (
-              <a key={i} className="pw-gallery__item pw-gallery__item--link" href={item.href}>
+              <a
+                key={i}
+                className="pw-gallery__item pw-gallery__item--link"
+                href={withBase(base, item.href)}
+              >
                 {inner}
               </a>
             ) : (
@@ -155,15 +173,21 @@ export function Gallery({
   );
 }
 
-export function Cta({ heading, body, primaryCta, secondaryCta }: BlockProps<"cta">) {
+export function Cta({
+  heading,
+  body,
+  primaryCta,
+  secondaryCta,
+  base,
+}: BlockProps<"cta"> & BaseAware) {
   return (
     <section className="pw-section pw-cta">
       <div className="pw-container pw-cta__inner">
         <h2 className="pw-cta__heading">{heading}</h2>
         {body ? <p className="pw-cta__body">{body}</p> : null}
         <div className="pw-cta__actions">
-          <CtaLink link={primaryCta} variant="primary" />
-          <CtaLink link={secondaryCta} variant="secondary" />
+          <CtaLink link={primaryCta} variant="primary" base={base} />
+          <CtaLink link={secondaryCta} variant="secondary" base={base} />
         </div>
       </div>
     </section>
@@ -181,7 +205,13 @@ export function Prose({ html = "" }: BlockProps<"prose">) {
   );
 }
 
-export function Footer({ brand, tagline, links = [], copyright }: BlockProps<"footer">) {
+export function Footer({
+  brand,
+  tagline,
+  links = [],
+  copyright,
+  base,
+}: BlockProps<"footer"> & BaseAware) {
   return (
     <footer className="pw-footer">
       <div className="pw-container pw-footer__inner">
@@ -191,7 +221,7 @@ export function Footer({ brand, tagline, links = [], copyright }: BlockProps<"fo
         </div>
         <div className="pw-footer__links">
           {links.map((l, i) => (
-            <a key={i} className="pw-footer__link" href={l.href}>
+            <a key={i} className="pw-footer__link" href={withBase(base, l.href)}>
               {l.label}
             </a>
           ))}
@@ -244,10 +274,12 @@ export function PostList({
   heading,
   subheading,
   posts,
+  base,
 }: {
   heading?: string;
   subheading?: string;
   posts: PostCard[];
+  base?: string;
 }) {
   return (
     <section className="pw-section pw-postlist">
@@ -259,10 +291,10 @@ export function PostList({
         ) : (
           <div className="pw-postlist__grid">
             {posts.map((p, i) => (
-              <a key={i} className="pw-postcard" href={p.href}>
+              <a key={i} className="pw-postcard" href={withBase(base, p.href)}>
                 {p.cover ? (
                   <div className="pw-postcard__media">
-                    <img src={p.cover} alt={p.title} loading="lazy" />
+                    <img src={withBase(base, p.cover)} alt={p.title} loading="lazy" />
                   </div>
                 ) : null}
                 <div className="pw-postcard__body">

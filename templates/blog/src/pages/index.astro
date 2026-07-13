@@ -9,7 +9,7 @@ const base = import.meta.env.BASE_URL;
 
 const posts = getPublishedPosts().map((p) => ({
   title: p.title,
-  href: `${base}blog/${p.slug}/`,
+  href: `/blog/${p.slug}/`,
   date: p.date,
   excerpt: p.excerpt,
   cover: p.cover,
@@ -23,7 +23,7 @@ const footerBlocks = footerIndex >= 0 ? page.blocks.slice(footerIndex) : [];
 ---
 
 <Layout title={page.title} description={page.description}>
-  <PageRenderer blocks={headBlocks} />
-  <PostList heading="Latest posts" posts={posts} />
-  <PageRenderer blocks={footerBlocks} />
+  <PageRenderer blocks={headBlocks} base={base} />
+  <PostList heading="Latest posts" posts={posts} base={base} />
+  <PageRenderer blocks={footerBlocks} base={base} />
 </Layout>

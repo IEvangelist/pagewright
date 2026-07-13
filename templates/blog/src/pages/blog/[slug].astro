@@ -25,7 +25,7 @@ const base = import.meta.env.BASE_URL;
     author={post.author}
     tags={post.tags}
   />
-  <PageRenderer blocks={post.blocks} />
+  <PageRenderer blocks={post.blocks} base={base} />
   <div class="pw-section" style="padding-block: 0 72px;">
     <div class="pw-container" style="max-width: 720px;">
       <a class="pw-postback" href={base}>← Back to all posts</a>

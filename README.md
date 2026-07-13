@@ -108,11 +108,12 @@ Image props (hero image, navbar logo, gallery items) render a **drag-and-drop up
 editor: drop a file or click to browse. The image is read in the browser, base64-encoded, and sent to
 `POST /api/sites/{owner}/{repo}/media`, which sanitizes the filename, appends a short content hash to
 avoid collisions, and commits it to the repo's `public/media/<slug>-<hash>.<ext>` with `base64`
-encoding — the same atomic commit path everything else uses. The field stores the returned
-site-relative URL (`/media/…`), which Astro serves from the site root, so the reference works
-identically in the editor preview and the deployed site. Uploads are capped at 8 MB and limited to
-common image types (PNG, JPEG, GIF, WebP, AVIF, SVG, ICO); pasting an external URL still works as a
-fallback.
+encoding — the same atomic commit path everything else uses. The field stores a **root-relative**
+URL (`/media/…`); at build time the blocks prefix it with the site's base path
+(`import.meta.env.BASE_URL`), so it resolves correctly whether the site is served from a user/org
+root (`/`) or a **project page** subpath (`/<repo>/`), and looks identical in the editor preview.
+Uploads are capped at 8 MB and limited to common image types (PNG, JPEG, GIF, WebP, AVIF, SVG, ICO);
+pasting an external URL still works as a fallback.
 
 ### Publishing
 
@@ -156,7 +157,8 @@ content goes live even if the app is never opened again.
 - [x] Explicit Save with SHA-based conflict detection (reload / overwrite)
 - [x] Drag-and-drop media uploads (committed to repo `public/media/`, content-hashed)
 - [x] Draft / schedule / publish / unpublish lifecycle (site online/offline + page scheduling)
-- [ ] Dashboard with deployed-site thumbnails
+- [x] Dashboard with live block-preview thumbnails per site
+- [x] Base-path–aware asset & link resolution (works on GitHub Pages project subpaths)
 
 ## License
 
