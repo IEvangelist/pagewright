@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import type { Config, CustomField } from "@measured/puck";
 import { Cta, Features, Footer, Gallery, Hero, Navbar, Prose } from "@pagewright/blocks";
 import { ImageField } from "@/components/image-field";
@@ -56,6 +56,12 @@ export const puckConfig: Config = {
       title: { type: "text", label: "Page title" },
       description: { type: "textarea", label: "Page description" },
     },
+    // Wrap the whole preview in `.pw-root` — the same wrapper the generated Astro site uses — so the
+    // canvas gets the themed background + text colour and the WYSIWYG preview matches production in
+    // both light and dark mode (without it, blocks render transparent on Puck's light canvas).
+    render: ({ children }: { children?: ReactNode }) => (
+      <div className="pw-root pw-editor-canvas-root">{children}</div>
+    ),
   },
   components: {
     Navbar: {

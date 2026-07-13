@@ -1856,3 +1856,249 @@ body {
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* ── Markdown post composer ─────────────────────────────────────────────────── */
+.pw-composer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+}
+/* Segmented Write / Split / Preview toggle in the top bar. */
+.pw-viewtoggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 10px;
+  border: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-muted) / 0.5);
+}
+.pw-viewtoggle__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: hsl(var(--pw-muted-fg));
+  font-family: var(--pw-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pw-viewtoggle__btn:hover {
+  color: hsl(var(--pw-fg));
+}
+.pw-viewtoggle__btn.is-active {
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-primary));
+  box-shadow: 0 1px 3px hsl(var(--pw-fg) / 0.14);
+}
+/* Big title field. */
+.pw-composer__titlerow {
+  flex: none;
+  padding: 18px 24px 6px;
+}
+.pw-composer__titleinput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: hsl(var(--pw-fg));
+  font-family: var(--pw-font);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  padding: 2px 0;
+}
+.pw-composer__titleinput::placeholder {
+  color: hsl(var(--pw-muted-fg) / 0.6);
+}
+.pw-composer__titleinput:focus {
+  outline: none;
+}
+/* Formatting toolbar. */
+.pw-composer__toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 6px 20px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card) / 0.6);
+}
+.pw-composer__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: hsl(var(--pw-muted-fg));
+  cursor: pointer;
+}
+.pw-composer__tool:hover {
+  background: hsl(var(--pw-muted));
+  color: hsl(var(--pw-fg));
+  border-color: hsl(var(--pw-border));
+}
+.pw-composer__stats {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 550;
+  color: hsl(var(--pw-muted-fg));
+  white-space: nowrap;
+}
+/* Write / preview panes. */
+.pw-composer__panes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  overflow: hidden;
+}
+.pw-composer__panes--split {
+  grid-template-columns: 1fr 1fr;
+}
+.pw-composer__panes--write,
+.pw-composer__panes--preview {
+  grid-template-columns: 1fr;
+}
+.pw-composer__writepane {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  border-right: 1px solid hsl(var(--pw-border));
+}
+.pw-composer__panes--write .pw-composer__writepane {
+  border-right: none;
+}
+.pw-composer__textarea {
+  flex: 1;
+  width: 100%;
+  resize: none;
+  border: none;
+  outline: none;
+  padding: 22px 24px;
+  background: hsl(var(--pw-bg));
+  color: hsl(var(--pw-fg));
+  font-family: var(--pw-mono, ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+.pw-composer__textarea::placeholder {
+  color: hsl(var(--pw-muted-fg) / 0.6);
+}
+.pw-composer__writepane.is-dragging .pw-composer__textarea {
+  filter: blur(1px);
+}
+.pw-composer__drophint {
+  position: absolute;
+  inset: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed hsl(var(--pw-primary) / 0.6);
+  border-radius: 14px;
+  background: hsl(var(--pw-primary) / 0.08);
+  color: hsl(var(--pw-primary));
+  font-weight: 650;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.pw-composer__previewpane {
+  min-height: 0;
+  overflow-y: auto;
+  background: hsl(var(--pw-bg));
+}
+.pw-composer__preview {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 22px 24px 60px;
+}
+.pw-composer__previewempty {
+  padding: 40px 24px;
+  text-align: center;
+  color: hsl(var(--pw-muted-fg) / 0.7);
+  font-size: 0.9rem;
+}
+@media (max-width: 860px) {
+  .pw-composer__panes--split {
+    grid-template-columns: 1fr;
+  }
+  .pw-composer__panes--split .pw-composer__previewpane {
+    display: none;
+  }
+  .pw-viewtoggle__btn span {
+    display: none;
+  }
+}
+
+/* ── Dark mode for the Puck visual editor ───────────────────────────────────────
+   Puck ships only a light palette driven by CSS variables it defines on `:root`
+   (grey ramp + white/black surfaces + accent ramps). It has no dark theme, so in
+   `.dark` its chrome (header, sidebars, fields, inputs) stays glaringly light.
+   We remap its variables on `html.dark` — higher specificity than Puck's own
+   `:root`, so this wins regardless of stylesheet import order — inverting the grey
+   ramp and flipping the white/black surfaces to our app's dark neutrals. A handful
+   of scoped fixes handle the spots where `--puck-color-white` doubles as *text*
+   (buttons) or where an accent is used as a near-white hover background. */
+html.dark {
+  /* Inverted neutral ramp: 01 = strongest text … 12 = deepest surface. */
+  --puck-color-grey-01: #f7f8fa;
+  --puck-color-grey-02: #e8e9ee;
+  --puck-color-grey-03: #d4d5dc;
+  --puck-color-grey-04: #b3b4bd;
+  --puck-color-grey-05: #9a9ba5;
+  --puck-color-grey-06: #82838e;
+  --puck-color-grey-07: #6b6c77;
+  --puck-color-grey-08: #4a4b55;
+  --puck-color-grey-09: #2f2f38; /* borders / dividers */
+  --puck-color-grey-10: #26262d;
+  --puck-color-grey-11: #1e1e24;
+  --puck-color-grey-12: #17171c;
+  /* Surfaces: `white` is Puck's panel/input background; `black` its strong text. */
+  --puck-color-white: #1a1a20;
+  --puck-color-black: #f7f8fa;
+}
+/* Buttons set `color: var(--puck-color-white)` for light text on a coloured fill —
+   now that white is dark, force their label back to a light neutral. */
+html.dark [class*="_Button_"] {
+  color: #f7f8fa;
+}
+/* Secondary buttons hover to a near-white accent with black text in the light
+   theme; give them a subtle dark hover instead so text stays legible. */
+html.dark [class*="_Button--secondary_"]:hover,
+html.dark [class*="_Button--secondary_"]:active {
+  background-color: hsl(var(--pw-muted));
+  color: #f7f8fa;
+}
+/* Form controls inherit their text colour — pin it so typed text is readable on
+   the dark input surface. */
+html.dark [class*="_Input-input_"],
+html.dark [class*="_Input-radioInner_"],
+html.dark [class*="_ExternalInputModal-searchInput_"],
+html.dark [class*="_ExternalInput-button_"] {
+  color: var(--puck-color-grey-02);
+}
+/* Puck portals modals to <body>, outside `.pw-editor` — the variable remap above
+   still applies since it lives on html.dark, so modals theme correctly too. */
+/* The preview canvas is wrapped in `.pw-root` (see puck-config root.render) so it
+   inherits the block theme tokens; stretch it to fill the drop area so the themed
+   background covers the whole canvas, not just the content height. The Puck preview
+   frame itself hardcodes a white background, so theme it to the block background. */
+.pw-editor-canvas-root {
+  min-height: 100%;
+}
+.pw-editor__canvas [class*="_PuckPreview_"],
+.pw-editor__canvas [class*="_PuckCanvas-root_"] {
+  background: hsl(var(--pw-bg)) !important;
+}

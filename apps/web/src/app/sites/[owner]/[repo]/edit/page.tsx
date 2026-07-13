@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { parsePage, parsePost, type Page } from "@pagewright/blocks";
+import { parsePage, parsePost, type Block, type Page, type Post } from "@pagewright/blocks";
 import { getProviderForSession } from "@/lib/auth/provider";
 import { getCurrentUser } from "@/lib/auth/session";
 import { blocksToPuckData } from "@/lib/builder/convert";
 import { isPostPath, postToMeta, slugFromPostPath, type PostMeta } from "@/lib/content/posts";
+import { htmlToMarkdown } from "@/lib/content/markdown-server";
 import { SiteEditor } from "@/components/site-editor";
+import { PostComposer } from "@/components/post-composer";
 
 export const dynamic = "force-dynamic";
 
@@ -45,18 +47,20 @@ export default async function EditSitePage({
 
   const file = await provider.getFile({ owner, repo }, path).catch(() => null);
   let page: Page | null = null;
+  let parsedPost: Post | null = null;
   let postMeta: PostMeta | undefined;
   if (file) {
     try {
       if (post) {
-        const parsed = parsePost(JSON.parse(file.content));
-        page = parsed;
-        postMeta = postToMeta(parsed);
+        parsedPost = parsePost(JSON.parse(file.content));
+        page = parsedPost;
+        postMeta = postToMeta(parsedPost);
       } else {
         page = parsePage(JSON.parse(file.content));
       }
     } catch {
       page = null;
+      parsedPost = null;
     }
   }
 
@@ -87,10 +91,38 @@ export default async function EditSitePage({
   const headSha = await provider
     .getBranchHead({ owner, repo }, repoData.defaultBranch)
     .catch(() => null);
-  const initialData = blocksToPuckData(page);
 
   const backHref = post ? `/sites/${owner}/${repo}/posts` : `/sites/${owner}/${repo}`;
   const editingLabel = post ? slugFromPostPath(path) : repoData.name;
+  const liveUrl = pages?.url ?? repoData.pagesUrl ?? null;
+
+  // Posts get the markdown-first composer; pages keep the visual (Puck) builder.
+  if (post && parsedPost && postMeta) {
+    const prose = parsedPost.blocks.find(
+      (b): b is Extract<Block, { type: "prose" }> => b.type === "prose",
+    );
+    const markdown =
+      prose?.props.markdown && prose.props.markdown.trim()
+        ? prose.props.markdown
+        : htmlToMarkdown(prose?.props.html ?? "");
+    return (
+      <PostComposer
+        owner={owner}
+        repo={repo}
+        path={path}
+        editingLabel={editingLabel}
+        backHref={backHref}
+        liveUrl={liveUrl}
+        initialTitle={parsedPost.title}
+        initialDescription={parsedPost.description ?? ""}
+        initialMarkdown={markdown}
+        postMeta={postMeta}
+        initialHeadSha={headSha}
+      />
+    );
+  }
+
+  const initialData = blocksToPuckData(page);
 
   return (
     <SiteEditor
@@ -101,7 +133,7 @@ export default async function EditSitePage({
       editingLabel={editingLabel}
       backHref={backHref}
       backLabel={post ? "Back to posts" : "Back to site"}
-      liveUrl={pages?.url ?? repoData.pagesUrl ?? null}
+      liveUrl={liveUrl}
       initialData={initialData}
       initialHeadSha={headSha}
       postMeta={postMeta}

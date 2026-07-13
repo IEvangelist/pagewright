@@ -5,7 +5,7 @@ import type {
   Link,
 } from "../schema";
 import { BlockIcon } from "../icons";
-import { withBase, type BaseAware } from "../base";
+import { withBase, normalizeBase, type BaseAware } from "../base";
 
 /**
  * Block components. Plain React + scoped `pw-` CSS classes (see styles/blocks.css) so they render
@@ -194,12 +194,26 @@ export function Cta({
   );
 }
 
-export function Prose({ html = "" }: BlockProps<"prose">) {
+/**
+ * Rewrites root-relative `src`/`href` attributes in a prose HTML fragment to include the site base
+ * path, so uploaded images (`/media/…`) and internal links resolve on GitHub Pages *project* sites.
+ * Absolute/protocol-relative/anchor URLs are left untouched by {@link withBase}.
+ */
+function withBaseInHtml(html: string, base?: string): string {
+  const b = normalizeBase(base);
+  if (b === "/" || !html) return html;
+  return html.replace(
+    /(\b(?:src|href)=)("|')(\/[^"']*)\2/g,
+    (_m, attr: string, quote: string, url: string) => `${attr}${quote}${withBase(base, url)}${quote}`,
+  );
+}
+
+export function Prose({ html = "", base }: BlockProps<"prose"> & BaseAware) {
   return (
     <section className="pw-section">
       <div
         className="pw-container pw-prose"
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: withBaseInHtml(html, base) }}
       />
     </section>
   );

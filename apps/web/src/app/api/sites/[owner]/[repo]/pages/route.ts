@@ -1,8 +1,9 @@
 import { getProviderForSession } from "@/lib/auth/provider";
-import { parsePage, parsePost, type Page, type Post } from "@pagewright/blocks";
+import { parsePage, parsePost, type Block, type Page, type Post } from "@pagewright/blocks";
 import { ConcurrencyError } from "@pagewright/github";
 import { puckDataToPage } from "@/lib/builder/convert";
 import { applyPostMeta, isPostPath, type PostMeta } from "@/lib/content/posts";
+import { renderMarkdown } from "@/lib/content/markdown";
 import type { Data } from "@measured/puck";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,30 @@ function isAllowedPath(path: string): boolean {
   return (
     /^src\/data\/(pages|posts)\/[A-Za-z0-9._-]+\.json$/.test(path) && !path.includes("..")
   );
+}
+
+/**
+ * Build a post document from markdown: the body becomes a single prose block carrying the markdown
+ * source plus its rendered HTML (what the Astro template outputs). Any existing prose block id is
+ * reused so diffs stay small, and the client metadata is folded on top.
+ */
+function postFromMarkdown(
+  base: Post,
+  markdown: string,
+  meta: Partial<PostMeta> | undefined,
+  root: { title?: string; description?: string },
+): Post {
+  const existingProse = base.blocks.find((b) => b.type === "prose");
+  const id = existingProse?.id ?? `prose-${Date.now().toString(36)}`;
+  const proseBlock = {
+    type: "prose",
+    id,
+    props: { markdown, html: renderMarkdown(markdown) },
+  } as unknown as Block;
+  const withBody: Post = { ...base, blocks: [proseBlock] };
+  if (typeof root.title === "string" && root.title.trim()) withBody.title = root.title.trim();
+  if (typeof root.description === "string") withBody.description = root.description;
+  return parsePost(applyPostMeta(withBody, meta));
 }
 
 /**
@@ -38,14 +63,17 @@ export async function POST(
 
   const { owner, repo } = await params;
 
-  let body: { path?: unknown; data?: unknown; meta?: unknown; expectedHeadSha?: unknown };
+  let body: {
+    path?: unknown;
+    data?: unknown;
+    markdown?: unknown;
+    title?: unknown;
+    description?: unknown;
+    meta?: unknown;
+    expectedHeadSha?: unknown;
+  };
   try {
-    body = (await request.json()) as {
-      path?: unknown;
-      data?: unknown;
-      meta?: unknown;
-      expectedHeadSha?: unknown;
-    };
+    body = (await request.json()) as typeof body;
   } catch {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -54,14 +82,15 @@ export async function POST(
   if (!isAllowedPath(path)) {
     return Response.json({ error: "Unsupported content path." }, { status: 400 });
   }
-  if (!body.data || typeof body.data !== "object") {
+  const isPost = isPostPath(path);
+  const markdownBody = isPost && typeof body.markdown === "string" ? body.markdown : null;
+  if (markdownBody === null && (!body.data || typeof body.data !== "object")) {
     return Response.json({ error: "Missing editor data." }, { status: 400 });
   }
   const expectedHeadSha =
     typeof body.expectedHeadSha === "string" && body.expectedHeadSha
       ? body.expectedHeadSha
       : undefined;
-  const isPost = isPostPath(path);
   const meta =
     isPost && body.meta && typeof body.meta === "object"
       ? (body.meta as Partial<PostMeta>)
@@ -86,8 +115,15 @@ export async function POST(
       } catch {
         base = parsePost({ title: repoData.name, blocks: [] });
       }
-      const withBody = puckDataToPage(body.data as Data, base) as Post;
-      document = parsePost(applyPostMeta(withBody, meta));
+      if (markdownBody !== null) {
+        document = postFromMarkdown(base, markdownBody, meta, {
+          title: typeof body.title === "string" ? body.title : undefined,
+          description: typeof body.description === "string" ? body.description : undefined,
+        });
+      } else {
+        const withBody = puckDataToPage(body.data as Data, base) as Post;
+        document = parsePost(applyPostMeta(withBody, meta));
+      }
     } else {
       let base: Page;
       try {

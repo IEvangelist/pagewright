@@ -73,6 +73,9 @@ export const proseBlockSchema = z.object({
   type: z.literal("prose"),
   id: z.string(),
   props: z.object({
+    /** Markdown source (canonical for posts). Rendered to `html` at save time. */
+    markdown: z.string().optional(),
+    /** Rendered HTML the Astro template outputs directly (kept in sync with `markdown`). */
     html: z.string().default(""),
   }),
 });

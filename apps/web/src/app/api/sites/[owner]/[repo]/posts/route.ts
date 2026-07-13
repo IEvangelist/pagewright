@@ -6,6 +6,8 @@ import {
   slugify,
   starterPostDoc,
 } from "@/lib/content/posts";
+import { renderMarkdown } from "@/lib/content/markdown";
+import type { Post } from "@pagewright/blocks";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -62,7 +64,18 @@ export async function POST(
     );
   }
 
-  const content = `${JSON.stringify(starterPostDoc(title, slug), null, 2)}\n`;
+  // Render the starter markdown to HTML server-side so the very first deploy shows real content
+  // instead of a blank body (the Astro template outputs the stored `html` directly).
+  const starter = starterPostDoc(title, slug);
+  const doc: Post = {
+    ...starter,
+    blocks: starter.blocks.map((b) =>
+      b.type === "prose"
+        ? { ...b, props: { ...b.props, html: renderMarkdown(b.props.markdown ?? "") } }
+        : b,
+    ),
+  };
+  const content = `${JSON.stringify(doc, null, 2)}\n`;
   try {
     const result = await provider.commitFiles(
       { owner, repo },
