@@ -202,11 +202,95 @@
 .pw-cta .pw-btn--secondary { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
 .pw-cta .pw-btn--primary { background: #fff; color: hsl(var(--pw-primary)); }
 
-/* Prose */
-.pw-prose { max-width: 720px; }
-.pw-prose h1, .pw-prose h2, .pw-prose h3 { letter-spacing: -0.02em; }
-.pw-prose a { color: hsl(var(--pw-primary)); }
-.pw-prose img { max-width: 100%; border-radius: var(--pw-radius); }
+/* Prose — rich typography for markdown-rendered post/page content. Tailwind's
+   Preflight resets headings/lists to unstyled, so every element is styled
+   explicitly here. Token-driven so it themes in light/dark and renders
+   identically in the composer preview and on deployed Astro sites. */
+.pw-prose {
+  max-width: 720px;
+  color: hsl(var(--pw-fg));
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.pw-prose > :first-child { margin-top: 0; }
+.pw-prose > :last-child { margin-bottom: 0; }
+.pw-prose h1,
+.pw-prose h2,
+.pw-prose h3,
+.pw-prose h4 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: hsl(var(--pw-fg));
+}
+.pw-prose h1 { font-size: 2rem; font-weight: 800; margin: 2rem 0 1rem; }
+.pw-prose h2 { font-size: 1.5rem; margin: 1.75rem 0 0.75rem; }
+.pw-prose h3 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; }
+.pw-prose h4 { font-size: 1.0625rem; margin: 1.25rem 0 0.5rem; }
+.pw-prose p { margin: 0 0 1rem; }
+.pw-prose a {
+  color: hsl(var(--pw-primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pw-prose strong { font-weight: 700; color: hsl(var(--pw-fg)); }
+.pw-prose em { font-style: italic; }
+.pw-prose ul,
+.pw-prose ol { margin: 0 0 1rem; padding-left: 1.5rem; }
+.pw-prose ul { list-style: disc; }
+.pw-prose ol { list-style: decimal; }
+.pw-prose li { margin: 0.35rem 0; }
+.pw-prose li > ul,
+.pw-prose li > ol { margin: 0.35rem 0; }
+.pw-prose blockquote {
+  margin: 0 0 1rem;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid hsl(var(--pw-border));
+  color: hsl(var(--pw-muted-fg));
+  font-style: italic;
+}
+.pw-prose code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: hsl(var(--pw-muted));
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+}
+.pw-prose pre {
+  margin: 0 0 1rem;
+  padding: 1rem 1.15rem;
+  background: hsl(var(--pw-muted));
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: var(--pw-radius);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+.pw-prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.875rem;
+}
+.pw-prose hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid hsl(var(--pw-border));
+}
+.pw-prose img { max-width: 100%; height: auto; border-radius: var(--pw-radius); }
+.pw-prose table {
+  width: 100%;
+  margin: 0 0 1rem;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.pw-prose th,
+.pw-prose td {
+  border: 1px solid hsl(var(--pw-border));
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.pw-prose th { background: hsl(var(--pw-muted)); font-weight: 700; }
 
 /* Footer */
 .pw-footer {
