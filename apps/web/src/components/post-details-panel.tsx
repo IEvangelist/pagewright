@@ -46,11 +46,13 @@ export function PostDetailsPanel({
   onChange,
   onClose,
   uploader,
+  variant = "card",
 }: {
   meta: PostMeta;
   onChange: (patch: Partial<PostMeta>) => void;
   onClose: () => void;
   uploader: MediaUploader;
+  variant?: "card" | "panel";
 }) {
   const [tagsInput, setTagsInput] = useState(meta.tags.join(", "));
   const [coverBusy, setCoverBusy] = useState(false);
@@ -85,7 +87,11 @@ export function PostDetailsPanel({
   );
 
   return (
-    <div className="pw-postmeta" role="group" aria-label="Post details">
+    <div
+      className={`pw-postmeta${variant === "panel" ? " pw-postmeta--panel" : ""}`}
+      role="group"
+      aria-label="Post details"
+    >
       <div className="pw-postmeta__head">
         <h2 className="pw-postmeta__title">Post details</h2>
         <button
@@ -99,7 +105,7 @@ export function PostDetailsPanel({
       </div>
 
       <div className="pw-postmeta__grid">
-        <label className="pw-field pw-field--check">
+        <label className="pw-field pw-field--check pw-field--wide">
           <input
             type="checkbox"
             checked={meta.draft}
@@ -133,7 +139,7 @@ export function PostDetailsPanel({
           </span>
         </label>
 
-        <label className="pw-field">
+        <label className="pw-field pw-field--wide">
           <span className="pw-field__label">Author</span>
           <input
             type="text"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Bold,
   Check,
+  Clock,
   Code,
   ExternalLink,
   Eye,
@@ -22,11 +23,11 @@ import {
   ListOrdered,
   Loader2,
   Columns2,
+  PanelRight,
   Pencil,
   Quote,
   RotateCw,
   Save,
-  Settings2,
   SquareCode,
 } from "lucide-react";
 import type { MediaUploader } from "@/lib/builder/media-context";
@@ -93,6 +94,7 @@ export function PostComposer({
   const [view, setView] = useState<ViewMode>("split");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -102,6 +104,7 @@ export function PostComposer({
   const headShaRef = useRef<string | null>(initialHeadSha);
   const metaRef = useRef<PostMeta>(postMeta);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const dirtyRef = useRef(false);
 
   // Hydrate from a locally-saved draft once on mount (kept out of initial state so SSR markup matches).
   useEffect(() => {
@@ -120,6 +123,10 @@ export function PostComposer({
         setMeta(m);
         metaRef.current = m;
         setRestoredDraft(true);
+      }
+      if (window.localStorage.getItem(draftKey) || window.localStorage.getItem(metaDraftKey)) {
+        setDirty(true);
+        dirtyRef.current = true;
       }
     } catch {
       // ignore corrupt drafts
@@ -141,7 +148,11 @@ export function PostComposer({
     [draftKey],
   );
 
-  const dirtied = useCallback(() => setSaveState((s) => (s === "saved" ? "idle" : s)), []);
+  const dirtied = useCallback(() => {
+    setDirty(true);
+    dirtyRef.current = true;
+    setSaveState((s) => (s === "saved" ? "idle" : s));
+  }, []);
 
   const commitMarkdown = useCallback(
     (next: string) => {
@@ -386,6 +397,8 @@ export function PostComposer({
           // ignore
         }
         setRestoredDraft(false);
+        setDirty(false);
+        dirtyRef.current = false;
         setSaveState("saved");
         setMessage(
           metaRef.current.draft
@@ -411,8 +424,45 @@ export function PostComposer({
   }, [draftKey, metaDraftKey]);
 
   // ── keyboard shortcuts (scoped to the textarea) ─────────────────────────────
+  const outdent = useCallback(() => {
+    editSelection(({ value, start, end }) => {
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      let lineEnd = value.indexOf("\n", end);
+      if (lineEnd === -1) lineEnd = value.length;
+      const block = value.slice(lineStart, lineEnd);
+      let removedFirst = 0;
+      const out = block
+        .split("\n")
+        .map((l, i) => {
+          const m = l.match(/^( {1,2}|\t)/);
+          const cut = m ? m[0].length : 0;
+          if (i === 0) removedFirst = cut;
+          return l.slice(cut);
+        })
+        .join("\n");
+      return {
+        value: value.slice(0, lineStart) + out + value.slice(lineEnd),
+        selStart: Math.max(lineStart, start - removedFirst),
+        selEnd: lineStart + out.length,
+      };
+    });
+  }, [editSelection]);
+
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Tab traps focus and indents (a standard editor nicety) rather than leaving the field.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const ta = taRef.current;
+        if (e.shiftKey) {
+          outdent();
+        } else if (ta && ta.selectionStart !== ta.selectionEnd) {
+          prefixLines(() => "  ");
+        } else {
+          insertAtCursor("  ");
+        }
+        return;
+      }
       const mod = e.metaKey || e.ctrlKey;
       if (!mod) return;
       const k = e.key.toLowerCase();
@@ -430,32 +480,76 @@ export function PostComposer({
         void save();
       }
     },
-    [wrap, save],
+    [wrap, save, outdent, prefixLines, insertAtCursor],
   );
+
+  // Warn before leaving with unsaved changes (drafts are local until an explicit Save commits).
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  // Auto-dismiss the "Saved" confirmation so the toolbar returns to a calm state.
+  useEffect(() => {
+    if (saveState !== "saved") return;
+    const t = setTimeout(() => setSaveState("idle"), 2600);
+    return () => clearTimeout(t);
+  }, [saveState]);
+
+  // Escape closes the details panel.
+  useEffect(() => {
+    if (!detailsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDetailsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [detailsOpen]);
 
   const stats = useMemo(() => readingStats(markdown), [markdown]);
   const previewHtml = useMemo(() => renderMarkdown(markdown), [markdown]);
   const showWrite = view !== "preview";
   const showPreview = view !== "write";
 
+  // Live publish status derived from the metadata, surfaced as a header badge so authors
+  // always know whether the post is hidden, queued, or public without opening details.
+  const status = useMemo<{ kind: "draft" | "scheduled" | "public"; label: string }>(() => {
+    if (meta.draft) return { kind: "draft", label: "Draft" };
+    const at = meta.publishAt ? new Date(meta.publishAt).getTime() : 0;
+    if (at && at > Date.now()) {
+      const when = new Date(meta.publishAt).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+      return { kind: "scheduled", label: `Scheduled · ${when}` };
+    }
+    return { kind: "public", label: "Public" };
+  }, [meta.draft, meta.publishAt]);
+
   const tools: {
     key: string;
     label: string;
     icon: React.ReactNode;
     run: () => void;
+    group: number;
   }[] = [
-    { key: "h1", label: "Heading 1", icon: <Heading1 size={16} />, run: () => setHeading(1) },
-    { key: "h2", label: "Heading 2", icon: <Heading2 size={16} />, run: () => setHeading(2) },
-    { key: "h3", label: "Heading 3", icon: <Heading3 size={16} />, run: () => setHeading(3) },
-    { key: "bold", label: "Bold  (⌘B)", icon: <Bold size={16} />, run: () => wrap("**", "**", "bold text") },
-    { key: "italic", label: "Italic  (⌘I)", icon: <Italic size={16} />, run: () => wrap("*", "*", "italic text") },
-    { key: "code", label: "Inline code", icon: <Code size={16} />, run: () => wrap("`", "`", "code") },
-    { key: "link", label: "Link  (⌘K)", icon: <Link2 size={16} />, run: () => wrap("[", "](https://)", "link text") },
-    { key: "quote", label: "Quote", icon: <Quote size={16} />, run: () => prefixLines(() => "> ") },
-    { key: "ul", label: "Bulleted list", icon: <List size={16} />, run: () => prefixLines(() => "- ") },
-    { key: "ol", label: "Numbered list", icon: <ListOrdered size={16} />, run: () => prefixLines((i) => `${i + 1}. `) },
-    { key: "codeblock", label: "Code block", icon: <SquareCode size={16} />, run: () => wrap("```\n", "\n```", "code") },
-    { key: "image", label: "Insert image", icon: <ImageIcon size={16} />, run: () => imageInputRef.current?.click() },
+    { key: "h1", label: "Heading 1", icon: <Heading1 size={16} />, run: () => setHeading(1), group: 0 },
+    { key: "h2", label: "Heading 2", icon: <Heading2 size={16} />, run: () => setHeading(2), group: 0 },
+    { key: "h3", label: "Heading 3", icon: <Heading3 size={16} />, run: () => setHeading(3), group: 0 },
+    { key: "bold", label: "Bold  (⌘B)", icon: <Bold size={16} />, run: () => wrap("**", "**", "bold text"), group: 1 },
+    { key: "italic", label: "Italic  (⌘I)", icon: <Italic size={16} />, run: () => wrap("*", "*", "italic text"), group: 1 },
+    { key: "code", label: "Inline code", icon: <Code size={16} />, run: () => wrap("`", "`", "code"), group: 1 },
+    { key: "link", label: "Link  (⌘K)", icon: <Link2 size={16} />, run: () => wrap("[", "](https://)", "link text"), group: 1 },
+    { key: "quote", label: "Quote", icon: <Quote size={16} />, run: () => prefixLines(() => "> "), group: 2 },
+    { key: "ul", label: "Bulleted list", icon: <List size={16} />, run: () => prefixLines(() => "- "), group: 2 },
+    { key: "ol", label: "Numbered list", icon: <ListOrdered size={16} />, run: () => prefixLines((i) => `${i + 1}. `), group: 2 },
+    { key: "codeblock", label: "Code block", icon: <SquareCode size={16} />, run: () => wrap("```\n", "\n```", "code"), group: 2 },
+    { key: "image", label: "Insert image", icon: <ImageIcon size={16} />, run: () => imageInputRef.current?.click(), group: 3 },
   ];
 
   return (
@@ -467,8 +561,23 @@ export function PostComposer({
         </Link>
         <div className="pw-editor__titlewrap">
           <span className="pw-editor__title">{editingLabel}</span>
-          <span className="pw-editor__kind">post</span>
-          {restoredDraft ? <span className="pw-editor__draftflag">Restored unsaved draft</span> : null}
+          <span
+            className={`pw-statusbadge pw-statusbadge--${status.kind}`}
+            title={
+              status.kind === "draft"
+                ? "Hidden from the published site"
+                : status.kind === "scheduled"
+                  ? "Stays hidden until the scheduled time"
+                  : "Visible on the published site"
+            }
+          >
+            {status.kind === "scheduled" ? (
+              <Clock size={12} aria-hidden="true" />
+            ) : (
+              <span className="pw-statusbadge__dot" aria-hidden="true" />
+            )}
+            <span>{status.label}</span>
+          </span>
         </div>
         <div className="pw-editor__baractions">
           <div className="pw-viewtoggle" role="group" aria-label="View mode">
@@ -500,15 +609,7 @@ export function PostComposer({
               <span>Preview</span>
             </button>
           </div>
-          <button
-            type="button"
-            className={`pw-btn pw-btn--ghost pw-btn--sm${detailsOpen ? " pw-btn--active" : ""}`}
-            onClick={() => setDetailsOpen((o) => !o)}
-            aria-expanded={detailsOpen}
-          >
-            <Settings2 size={15} aria-hidden="true" />
-            <span>Post details</span>
-          </button>
+          <SaveStatus state={saveState} message={message} dirty={dirty} restored={restoredDraft} />
           {liveUrl ? (
             <a className="pw-linkpill" href={liveUrl} target="_blank" rel="noreferrer">
               <Globe size={14} aria-hidden="true" />
@@ -516,7 +617,16 @@ export function PostComposer({
               <ExternalLink size={12} aria-hidden="true" />
             </a>
           ) : null}
-          <SaveBadge state={saveState} message={message} />
+          <button
+            type="button"
+            className={`pw-btn pw-btn--ghost pw-btn--sm${detailsOpen ? " pw-btn--active" : ""}`}
+            onClick={() => setDetailsOpen((o) => !o)}
+            aria-expanded={detailsOpen}
+            title="Post details (Esc to close)"
+          >
+            <PanelRight size={15} aria-hidden="true" />
+            <span>Details</span>
+          </button>
           <button
             type="button"
             className="pw-btn pw-btn--primary pw-btn--sm"
@@ -533,15 +643,6 @@ export function PostComposer({
         </div>
       </div>
 
-      {detailsOpen ? (
-        <PostDetailsPanel
-          meta={meta}
-          onChange={updateMeta}
-          onClose={() => setDetailsOpen(false)}
-          uploader={uploader}
-        />
-      ) : null}
-
       {saveState === "conflict" ? (
         <div className="pw-editor__conflict" role="alert">
           <AlertTriangle size={16} aria-hidden="true" />
@@ -557,83 +658,113 @@ export function PostComposer({
         </div>
       ) : null}
 
-      <div className="pw-composer__titlerow">
-        <input
-          className="pw-composer__titleinput"
-          value={title}
-          onChange={(e) => onTitle(e.target.value)}
-          placeholder="Post title"
-          aria-label="Post title"
-        />
-      </div>
-
-      <div className="pw-composer__toolbar" role="toolbar" aria-label="Formatting">
-        {tools.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            className="pw-composer__tool"
-            title={t.label}
-            aria-label={t.label}
-            onClick={t.run}
-          >
-            {t.icon}
-          </button>
-        ))}
-        <span className="pw-composer__stats" aria-live="polite">
-          {uploading > 0 ? (
-            <>
-              <Loader2 size={13} className="pw-spin" aria-hidden="true" />
-              <span>Uploading {uploading} image{uploading > 1 ? "s" : ""}…</span>
-            </>
-          ) : (
-            <span>
-              {stats.words} word{stats.words === 1 ? "" : "s"} · {stats.minutes} min read
-            </span>
-          )}
-        </span>
-      </div>
-
-      <div className={`pw-composer__panes pw-composer__panes--${view}`}>
-        {showWrite ? (
-          <div
-            className={`pw-composer__writepane${dragActive ? " is-dragging" : ""}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragActive(true);
-            }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={onDrop}
-          >
-            <textarea
-              ref={taRef}
-              className="pw-composer__textarea"
-              value={markdown}
-              onChange={(e) => commitMarkdown(e.target.value)}
-              onKeyDown={onKeyDown}
-              onPaste={onPaste}
-              placeholder="Write your post in markdown…  Drag an image in to upload it."
-              spellCheck
+      <div className="pw-composer__body">
+        <div className="pw-composer__main">
+          <div className="pw-composer__titlerow">
+            <input
+              className="pw-composer__titleinput"
+              value={title}
+              onChange={(e) => onTitle(e.target.value)}
+              placeholder="Post title"
+              aria-label="Post title"
             />
-            {dragActive ? (
-              <div className="pw-composer__drophint" aria-hidden="true">
-                <ImageIcon size={22} />
-                <span>Drop images to upload</span>
+          </div>
+
+          <div className="pw-composer__toolbar" role="toolbar" aria-label="Formatting">
+            {tools.map((t, i) => (
+              <Fragment key={t.key}>
+                {i > 0 && tools[i - 1]!.group !== t.group ? (
+                  <span className="pw-composer__tooldiv" aria-hidden="true" />
+                ) : null}
+                <button
+                  type="button"
+                  className="pw-composer__tool"
+                  title={t.label}
+                  aria-label={t.label}
+                  onClick={t.run}
+                >
+                  {t.icon}
+                </button>
+              </Fragment>
+            ))}
+            <span className="pw-composer__stats" aria-live="polite">
+              {uploading > 0 ? (
+                <>
+                  <Loader2 size={13} className="pw-spin" aria-hidden="true" />
+                  <span>Uploading {uploading} image{uploading > 1 ? "s" : ""}…</span>
+                </>
+              ) : (
+                <span>
+                  {stats.words} word{stats.words === 1 ? "" : "s"} · {stats.minutes} min read
+                </span>
+              )}
+            </span>
+          </div>
+
+          <div className={`pw-composer__panes pw-composer__panes--${view}`}>
+            {showWrite ? (
+              <div
+                className={`pw-composer__writepane${dragActive ? " is-dragging" : ""}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={onDrop}
+              >
+                <textarea
+                  ref={taRef}
+                  className="pw-composer__textarea"
+                  value={markdown}
+                  onChange={(e) => commitMarkdown(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  onPaste={onPaste}
+                  placeholder="Write your post in markdown…  Drag an image in to upload it."
+                  spellCheck
+                />
+                {dragActive ? (
+                  <div className="pw-composer__drophint" aria-hidden="true">
+                    <ImageIcon size={22} />
+                    <span>Drop images to upload</span>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {showPreview ? (
+              <div className="pw-composer__previewpane">
+                {markdown.trim() ? (
+                  <article
+                    className="pw-prose pw-composer__preview"
+                    dangerouslySetInnerHTML={{ __html: previewHtml }}
+                  />
+                ) : (
+                  <div className="pw-composer__previewempty">Your rendered post will appear here.</div>
+                )}
               </div>
             ) : null}
           </div>
-        ) : null}
-        {showPreview ? (
-          <div className="pw-composer__previewpane">
-            {markdown.trim() ? (
-              <article
-                className="pw-prose pw-composer__preview"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-              />
-            ) : (
-              <div className="pw-composer__previewempty">Your rendered post will appear here.</div>
-            )}
-          </div>
+        </div>
+
+        <aside
+          className={`pw-composer__side${detailsOpen ? " is-open" : ""}`}
+          aria-hidden={!detailsOpen}
+        >
+          <PostDetailsPanel
+            meta={meta}
+            onChange={updateMeta}
+            onClose={() => setDetailsOpen(false)}
+            uploader={uploader}
+            variant="panel"
+          />
+        </aside>
+
+        {detailsOpen ? (
+          <button
+            type="button"
+            className="pw-composer__scrim"
+            aria-label="Close post details"
+            onClick={() => setDetailsOpen(false)}
+          />
         ) : null}
       </div>
 
@@ -653,22 +784,49 @@ export function PostComposer({
   );
 }
 
-function SaveBadge({ state, message }: { state: SaveState; message: string | null }) {
-  if (state === "idle" || state === "conflict") return null;
-  const icon =
-    state === "saving" ? (
-      <Loader2 size={14} className="pw-spin" aria-hidden="true" />
-    ) : state === "saved" ? (
-      <Check size={14} aria-hidden="true" />
-    ) : (
-      <AlertCircle size={14} aria-hidden="true" />
+function SaveStatus({
+  state,
+  message,
+  dirty,
+  restored,
+}: {
+  state: SaveState;
+  message: string | null;
+  dirty: boolean;
+  restored: boolean;
+}) {
+  if (state === "saving") {
+    return (
+      <span className="pw-editor__savebadge pw-editor__savebadge--saving">
+        <Loader2 size={14} className="pw-spin" aria-hidden="true" />
+        <span>Saving…</span>
+      </span>
     );
-  const label =
-    state === "saving" ? "Saving…" : state === "saved" ? message ?? "Saved" : message ?? "Error";
-  return (
-    <span className={`pw-editor__savebadge pw-editor__savebadge--${state}`}>
-      {icon}
-      <span>{label}</span>
-    </span>
-  );
+  }
+  if (state === "saved") {
+    return (
+      <span className="pw-editor__savebadge pw-editor__savebadge--saved">
+        <Check size={14} aria-hidden="true" />
+        <span>{message ?? "Saved"}</span>
+      </span>
+    );
+  }
+  if (state === "error") {
+    return (
+      <span className="pw-editor__savebadge pw-editor__savebadge--error">
+        <AlertCircle size={14} aria-hidden="true" />
+        <span>{message ?? "Error"}</span>
+      </span>
+    );
+  }
+  // idle / conflict — surface unsaved work (including a recovered local draft) as a gentle nudge.
+  if (dirty) {
+    return (
+      <span className="pw-editor__savebadge pw-editor__savebadge--dirty">
+        <span className="pw-editor__unsaveddot" aria-hidden="true" />
+        <span>{restored ? "Unsaved draft" : "Unsaved changes"}</span>
+      </span>
+    );
+  }
+  return null;
 }

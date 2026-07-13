@@ -1743,6 +1743,37 @@ body {
   }
 }
 
+/* Panel variant — fills the composer's collapsible sidebar (single column, scrolls). */
+.pw-postmeta--panel {
+  width: 340px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pw-postmeta--panel .pw-postmeta__head {
+  flex: none;
+  margin: 0;
+  padding: 16px 18px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card));
+}
+.pw-postmeta--panel .pw-postmeta__grid {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 18px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.pw-postmeta--panel .pw-field--wide {
+  grid-column: auto;
+}
+
 .pw-postlist {
   list-style: none;
   margin: 0;
@@ -1864,6 +1895,107 @@ body {
   height: 100vh;
   min-height: 0;
 }
+/* Body splits into the writing area (main) and the collapsible details sidebar. */
+.pw-composer__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.pw-composer__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Right-hand details sidebar: collapsed to zero width, animates open on toggle. */
+.pw-composer__side {
+  flex: none;
+  width: 0;
+  overflow: hidden;
+  border-left: 1px solid transparent;
+  background: hsl(var(--pw-card));
+  transition: width 0.22s ease, border-color 0.22s ease;
+}
+.pw-composer__side.is-open {
+  width: 340px;
+  border-left-color: hsl(var(--pw-border));
+}
+.pw-composer__scrim {
+  display: none;
+}
+@media (max-width: 980px) {
+  /* On narrow screens the sidebar overlays the editor instead of squeezing it. */
+  .pw-composer__side {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    box-shadow: -12px 0 32px hsl(var(--pw-fg) / 0.12);
+  }
+  .pw-composer__side.is-open {
+    width: min(360px, 86vw);
+  }
+  .pw-composer__scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    padding: 0;
+    background: hsl(var(--pw-fg) / 0.28);
+    cursor: pointer;
+    animation: pw-fadein 0.18s ease;
+  }
+}
+@keyframes pw-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Live publish-status badge in the top bar. */
+.pw-statusbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.pw-statusbadge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.pw-statusbadge--public {
+  color: hsl(142 64% 34%);
+  background: hsl(142 64% 42% / 0.14);
+}
+.pw-statusbadge--draft {
+  color: hsl(33 88% 40%);
+  background: hsl(38 92% 50% / 0.16);
+}
+.pw-statusbadge--scheduled {
+  color: hsl(221 78% 52%);
+  background: hsl(221 83% 58% / 0.14);
+}
+/* Unsaved-changes indicator (idle state). */
+.pw-editor__savebadge--dirty {
+  color: hsl(var(--pw-muted-fg));
+  background: hsl(var(--pw-muted));
+}
+.pw-editor__unsaveddot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: hsl(33 90% 50%);
+}
 /* Segmented Write / Split / Preview toggle in the top bar. */
 .pw-viewtoggle {
   display: inline-flex;
@@ -1944,6 +2076,12 @@ body {
   background: hsl(var(--pw-muted));
   color: hsl(var(--pw-fg));
   border-color: hsl(var(--pw-border));
+}
+.pw-composer__tooldiv {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 6px;
+  background: hsl(var(--pw-border));
 }
 .pw-composer__stats {
   margin-left: auto;
