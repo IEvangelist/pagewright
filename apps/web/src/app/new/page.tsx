@@ -1,27 +1,36 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import type { Block } from "@pagewright/blocks";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { NewSiteWizard } from "@/components/new-site-wizard";
 import { getCurrentUser } from "@/lib/auth/session";
+import { TEMPLATES } from "@/lib/templates";
+import { loadTemplateHomeBlocks } from "@/lib/provision/template-source";
 
 export const dynamic = "force-dynamic";
 
 /**
  * The one-click site-creation experience: pick a template, configure it, and Pagewright provisions
- * the repo + deploy workflows with live progress. Auth is enforced server-side before the wizard
- * (which talks to the streaming provisioning route) ever renders.
+ * the repo + deploy workflows with live progress. Browsing templates is fully public — sign-in is
+ * only required for the real operation (provisioning), which the wizard gates at launch time.
  */
 export default async function NewSitePage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/auth/login");
+
+  // Real at-scale gallery previews: read each template's starter home page from the provision
+  // bundle (server-only) and hand the blocks to the wizard, which renders them like the dashboard
+  // site thumbnails instead of flat gradient placeholders.
+  const previews: Record<string, Block[]> = {};
+  for (const template of TEMPLATES) {
+    previews[template.id] = loadTemplateHomeBlocks(template.id);
+  }
 
   return (
     <>
       <header className="pw-appbar">
         <span className="pw-appbar__brand">
-          <Link href="/dashboard" className="pw-appbar__brandlink">
+          <Link href={user ? "/dashboard" : "/"} className="pw-appbar__brandlink">
             Pagewright
           </Link>
           <span className="pw-appbar__badge">new site</span>
@@ -32,11 +41,11 @@ export default async function NewSitePage() {
         </div>
       </header>
       <main className="pw-dash">
-        <Link href="/dashboard" className="pw-backlink">
+        <Link href={user ? "/dashboard" : "/"} className="pw-backlink">
           <ArrowLeft size={16} aria-hidden="true" />
-          <span>Back to dashboard</span>
+          <span>{user ? "Back to dashboard" : "Back to home"}</span>
         </Link>
-        <NewSiteWizard login={user.login} />
+        <NewSiteWizard login={user?.login ?? null} previews={previews} />
       </main>
     </>
   );

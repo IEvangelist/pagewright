@@ -1,6 +1,7 @@
 import "server-only";
 import type { CommitFile } from "@pagewright/github";
 import type { TemplateId } from "@pagewright/registry";
+import { parsePage, type Block } from "@pagewright/blocks";
 import bundle from "./provision-bundle.generated.json";
 
 /**
@@ -44,4 +45,21 @@ export function loadTemplateFiles(templateId: TemplateId): CommitFile[] {
  */
 export function loadVendorFiles(): CommitFile[] {
   return clone(typedBundle.vendor);
+}
+
+/**
+ * The parsed home-page blocks for a template, used to render a live at-scale preview in the template
+ * gallery (the same block components the deployed Astro site uses). Returns an empty array if the
+ * template has no parseable home page, so callers can fall back to a gradient placeholder.
+ */
+export function loadTemplateHomeBlocks(templateId: TemplateId): Block[] {
+  const files = typedBundle.templates[templateId];
+  if (!files) return [];
+  const home = files.find((file) => file.path.endsWith("src/data/pages/home.json"));
+  if (!home || typeof home.content !== "string") return [];
+  try {
+    return parsePage(JSON.parse(home.content)).blocks;
+  } catch {
+    return [];
+  }
 }

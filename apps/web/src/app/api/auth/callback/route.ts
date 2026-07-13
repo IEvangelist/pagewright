@@ -6,6 +6,7 @@ import {
 } from "@pagewright/github";
 import { getAppUrl, getOAuthCallbackUrl, resolveAuthConfig } from "@/lib/auth/env";
 import { getSession } from "@/lib/auth/session";
+import { sanitizeReturnTo } from "@/lib/auth/return-to";
 import { applyTokenToSession } from "@/lib/auth/provider";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +30,10 @@ export async function GET(request: NextRequest) {
 
   const session = await getSession();
   const expectedState = session.oauthState;
-  // One-time use: clear the stored state regardless of outcome.
+  const returnTo = sanitizeReturnTo(session.returnTo);
+  // One-time use: clear the stored state + returnTo regardless of outcome.
   session.oauthState = undefined;
+  session.returnTo = undefined;
 
   if (oauthError) {
     await session.save();
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
     applyTokenToSession(session, token.accessToken, token.refreshToken, token.expiresIn);
     await session.save();
 
-    return NextResponse.redirect(`${appUrl}/dashboard`);
+    return NextResponse.redirect(`${appUrl}${returnTo}`);
   } catch (err) {
     await session.save();
     return redirectWithError(appUrl, "exchange_failed", (err as Error).message);

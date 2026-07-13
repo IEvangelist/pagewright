@@ -20,6 +20,7 @@ import {
   Sun,
   XCircle,
 } from "lucide-react";
+import { PageRenderer, type Block } from "@pagewright/blocks";
 import { GitHubMark } from "@/components/icons/github-mark";
 import {
   ACCENT_PRESETS,
@@ -65,7 +66,13 @@ const EMPTY_DRAFT: Draft = {
   isPrivate: false,
 };
 
-export function NewSiteWizard({ login }: { login: string }) {
+export function NewSiteWizard({
+  login,
+  previews = {},
+}: {
+  login?: string | null;
+  previews?: Record<string, Block[]>;
+}) {
   const [phase, setPhase] = useState<Phase>("choose");
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [hydrated, setHydrated] = useState(false);
@@ -85,17 +92,29 @@ export function NewSiteWizard({ login }: { login: string }) {
 
   // Restore any in-progress draft from a previous visit (localStorage autosave).
   useEffect(() => {
+    let restoredTemplate = false;
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<Draft>;
+        restoredTemplate = Boolean(parsed.templateId);
         setDraft((prev) => ({ ...prev, ...parsed }));
       }
     } catch {
       // Ignore malformed drafts.
     }
+    // If the user was bounced through sign-in from the configure step (?resume=1), drop them back
+    // where they left off instead of the gallery.
+    try {
+      const resume = new URLSearchParams(window.location.search).get("resume");
+      if (resume === "1" && restoredTemplate && login) {
+        setPhase("configure");
+      }
+    } catch {
+      // Ignore — SSR/no-window.
+    }
     setHydrated(true);
-  }, []);
+  }, [login]);
 
   // Autosave the draft as the user works.
   useEffect(() => {
@@ -155,6 +174,13 @@ export function NewSiteWizard({ login }: { login: string }) {
 
   async function startProvisioning() {
     if (!draft.templateId || !canSubmit) return;
+    // Provisioning is the first "real" operation — it needs the user's GitHub token. Anyone can get
+    // this far unauthenticated (browsing + configuring), so bounce them through sign-in here and
+    // bring them right back to this step (?resume=1) with their draft intact.
+    if (!login) {
+      window.location.href = `/api/auth/login?returnTo=${encodeURIComponent("/new?resume=1")}`;
+      return;
+    }
     setPhase("provisioning");
     setErrorMessage(null);
     setResult(null);
@@ -279,21 +305,12 @@ export function NewSiteWizard({ login }: { login: string }) {
         ) : (
           <div className="pw-gallery">
             {filteredTemplates.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className="pw-tplcard"
-                onClick={() => chooseTemplate(t.id)}
-              >
-                <span
-                  className="pw-tplcard__preview"
-                  style={{
-                    background: `linear-gradient(135deg, ${t.preview.from}, ${t.preview.to})`,
-                  }}
-                  aria-hidden="true"
-                >
-                  <span className="pw-tplcard__previewname">{t.name}</span>
-                </span>
+              <div key={t.id} className="pw-tplcard">
+                <TemplatePreview
+                  blocks={previews[t.id]}
+                  name={t.name}
+                  gradient={`linear-gradient(135deg, ${t.preview.from}, ${t.preview.to})`}
+                />
                 <span className="pw-tplcard__body">
                   <span className="pw-tplcard__top">
                     <span className="pw-tplcard__name">{t.name}</span>
@@ -308,10 +325,15 @@ export function NewSiteWizard({ login }: { login: string }) {
                     ))}
                   </span>
                 </span>
-                <span className="pw-tplcard__cta">
-                  Use this template <ArrowRight size={15} aria-hidden="true" />
-                </span>
-              </button>
+                <button
+                  type="button"
+                  className="pw-tplcard__cta"
+                  onClick={() => chooseTemplate(t.id)}
+                >
+                  <span className="pw-tplcard__ctalabel">Use this template</span>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -359,7 +381,7 @@ export function NewSiteWizard({ login }: { login: string }) {
               maxLength={90}
             />
             <span className="pw-field__hint">
-              <GitHubMark size={13} /> github.com/{login}/{repoSlug || "…"}
+              <GitHubMark size={13} /> github.com/{login ?? "your-account"}/{repoSlug || "…"}
             </span>
           </label>
 
@@ -448,8 +470,17 @@ export function NewSiteWizard({ login }: { login: string }) {
             disabled={!canSubmit}
             onClick={startProvisioning}
           >
-            <Rocket size={16} aria-hidden="true" />
-            Create &amp; deploy site
+            {login ? (
+              <>
+                <Rocket size={16} aria-hidden="true" />
+                Create &amp; deploy site
+              </>
+            ) : (
+              <>
+                <GitHubMark size={16} aria-hidden="true" />
+                Sign in to create site
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -551,6 +582,59 @@ function StepIcon({ status }: { status: ProvisionStepStatus }) {
   if (status === "error") return <XCircle size={20} />;
   if (status === "running") return <Loader2 size={20} className="pw-spin" />;
   return <Circle size={20} />;
+}
+
+/** Width the preview page is rendered at before being scaled down to fit its frame. */
+const PREVIEW_PAGE_WIDTH = 1280;
+
+/**
+ * A live, at-scale preview of a template's starter home page — the same block components the
+ * deployed Astro site uses, rendered at desktop width and scaled to fit the card. A ResizeObserver
+ * keeps the scale pixel-perfect as the responsive gallery reflows. Falls back to a branded gradient
+ * when a template has no parseable home page.
+ */
+function TemplatePreview({
+  blocks,
+  name,
+  gradient,
+}: {
+  blocks?: Block[];
+  name: string;
+  gradient: string;
+}) {
+  const frameRef = useRef<HTMLSpanElement>(null);
+  const [scale, setScale] = useState(0.3);
+
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const measure = () => setScale(el.clientWidth / PREVIEW_PAGE_WIDTH);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const hasPreview = Boolean(blocks && blocks.length > 0);
+
+  return (
+    <span className="pw-tplcard__preview" ref={frameRef} aria-hidden="true" inert>
+      {hasPreview ? (
+        <span className="pw-tplcard__frame">
+          <span
+            className="pw-tplcard__page pw-root"
+            style={{ transform: `scale(${scale})` }}
+          >
+            <PageRenderer blocks={blocks!} />
+          </span>
+        </span>
+      ) : (
+        <span className="pw-tplcard__gradient" style={{ background: gradient }}>
+          <span className="pw-tplcard__previewname">{name}</span>
+        </span>
+      )}
+    </span>
+  );
 }
 
 function WizardHeading({

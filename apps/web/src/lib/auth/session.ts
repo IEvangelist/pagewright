@@ -19,6 +19,8 @@ export interface SessionData {
   accessTokenExpiresAt?: number;
   /** Transient CSRF value written before redirecting to GitHub, verified in the callback. */
   oauthState?: string;
+  /** Where to send the user after a successful sign-in (sanitized, same-site path only). */
+  returnTo?: string;
 }
 
 const COOKIE_NAME = "pagewright_session";

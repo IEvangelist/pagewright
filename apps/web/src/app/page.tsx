@@ -12,7 +12,15 @@ export default function Home() {
   const page = parsePage(demoPage);
 
   return (
-    <>
+    <div className="pw-landing">
+      {/* Decorative, landing-only flair — ambient aurora blobs + grid. Does not touch the shared
+          block components, so generated Astro sites stay clean. Purely presentational. */}
+      <div className="pw-landing__backdrop" aria-hidden="true">
+        <div className="pw-landing__grid" />
+        <span className="pw-landing__blob pw-landing__blob--1" />
+        <span className="pw-landing__blob pw-landing__blob--2" />
+        <span className="pw-landing__blob pw-landing__blob--3" />
+      </div>
       <header className="pw-appbar">
         <span className="pw-appbar__brand">
           Pagewright <span className="pw-appbar__badge">builder</span>
@@ -22,9 +30,9 @@ export default function Home() {
           <ThemeToggle />
         </div>
       </header>
-      <main className="pw-root">
+      <main className="pw-root pw-landing__content">
         <PageRenderer blocks={page.blocks} />
       </main>
-    </>
+    </div>
   );
 }

@@ -12,7 +12,7 @@
         "heading": "Ship a beautiful site in minutes — no code required",
         "subheading": "Choose a template, make it yours with a visual editor, and publish straight to your own GitHub repository. Drafts, scheduling, and updates are all handled for you.",
         "primaryCta": { "label": "Start building", "href": "/new" },
-        "secondaryCta": { "label": "Browse templates", "href": "/new" },
+        "secondaryCta": { "label": "Sign in with GitHub", "href": "/api/auth/login" },
         "align": "center"
       }
     },
@@ -39,7 +39,8 @@
       "props": {
         "heading": "Your next site is one click away",
         "body": "Sign in with GitHub and publish your first page today — completely free.",
-        "primaryCta": { "label": "Get started free", "href": "/new" }
+        "primaryCta": { "label": "Get started free", "href": "/new" },
+        "secondaryCta": { "label": "Go to your dashboard", "href": "/dashboard" }
       }
     },
     {
@@ -49,9 +50,9 @@
         "brand": "Pagewright",
         "tagline": "No-code sites, powered by your GitHub.",
         "links": [
-          { "label": "Templates", "href": "/new" },
-          { "label": "GitHub", "href": "https://github.com" },
-          { "label": "Dashboard", "href": "/dashboard" }
+          { "label": "New site", "href": "/new" },
+          { "label": "Dashboard", "href": "/dashboard" },
+          { "label": "GitHub", "href": "https://github.com/IEvangelist/pagewright" }
         ],
         "copyright": "© 2026 Pagewright"
       }

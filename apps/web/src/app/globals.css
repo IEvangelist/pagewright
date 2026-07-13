@@ -583,6 +583,7 @@ body {
   gap: 16px;
 }
 .pw-tplcard {
+  position: relative;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -593,7 +594,6 @@ body {
   background: hsl(var(--pw-card));
   color: hsl(var(--pw-fg));
   font-family: var(--pw-font);
-  cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .pw-tplcard:hover {
@@ -601,10 +601,39 @@ body {
   box-shadow: 0 14px 34px -18px hsl(var(--pw-fg) / 0.4);
   transform: translateY(-2px);
 }
+.pw-tplcard:has(.pw-tplcard__cta:focus-visible) {
+  border-color: hsl(var(--pw-primary) / 0.6);
+  box-shadow: 0 0 0 3px hsl(var(--pw-primary) / 0.35);
+}
+/* Live at-scale template preview (mirrors the dashboard site thumbnail). */
 .pw-tplcard__preview {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg));
+}
+.pw-tplcard__frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pw-tplcard__page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 1280px;
+  transform-origin: top left;
+  pointer-events: none;
+}
+.pw-tplcard__gradient {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: flex-end;
-  height: 116px;
   padding: 14px;
 }
 .pw-tplcard__previewname {
@@ -616,9 +645,10 @@ body {
 }
 .pw-tplcard__body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  padding: 14px 16px 4px;
+  padding: 14px 16px 16px;
 }
 .pw-tplcard__top {
   display: flex;
@@ -650,14 +680,40 @@ body {
   padding: 2px 8px;
 }
 .pw-tplcard__cta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  margin-top: auto;
-  padding: 14px 16px;
+  width: 100%;
+  padding: 13px 16px;
   font-size: 0.85rem;
   font-weight: 700;
+  font-family: var(--pw-font);
   color: hsl(var(--pw-primary));
+  background: transparent;
+  border: 0;
+  border-top: 1px solid hsl(var(--pw-border));
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+/* Stretched-link pattern: the CTA is the single interactive element, but its ::after overlay makes
+   the whole card clickable (the decorative preview underneath is pointer-events:none). */
+.pw-tplcard__cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.pw-tplcard:hover .pw-tplcard__cta {
+  background: hsl(var(--pw-primary) / 0.06);
+}
+.pw-tplcard__cta svg {
+  flex: none;
+  transition: transform 0.15s ease;
+}
+.pw-tplcard:hover .pw-tplcard__cta svg {
+  transform: translateX(3px);
 }
 
 /* Configure form */
@@ -2239,4 +2295,188 @@ html.dark [class*="_ExternalInput-button_"] {
 .pw-editor__canvas [class*="_PuckPreview_"],
 .pw-editor__canvas [class*="_PuckCanvas-root_"] {
   background: hsl(var(--pw-bg)) !important;
+}
+
+/* ── Landing page flair ──────────────────────────────────────────────────────────
+   Landing-only ambient decoration (drifting aurora blobs + a soft dotted grid) plus
+   a few scoped micro-interactions and staggered entrance animations. Everything is
+   nested under `.pw-landing`, so the shared block components — and therefore every
+   generated Astro site — stay completely untouched. Purely presentational. */
+.pw-landing {
+  position: relative;
+  overflow-x: clip; /* clip blobs horizontally without breaking the sticky appbar */
+  isolation: isolate;
+  background: hsl(var(--pw-bg));
+}
+.pw-landing__content {
+  position: relative;
+  z-index: 1;
+}
+/* The shared .pw-root paints an opaque page background; on the landing we let the ambient
+   backdrop show through instead (the base color lives on .pw-landing above). */
+.pw-landing__content.pw-root {
+  background: transparent;
+}
+.pw-landing__backdrop {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 920px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.pw-landing__grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(hsl(var(--pw-fg) / 0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+}
+.dark .pw-landing__grid {
+  background-image: radial-gradient(hsl(0 0% 100% / 0.07) 1px, transparent 1px);
+}
+.pw-landing__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.dark .pw-landing__blob {
+  opacity: 0.4;
+}
+.pw-landing__blob--1 {
+  top: -150px;
+  left: -90px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle at 30% 30%, hsl(var(--pw-primary) / 0.55), transparent 70%);
+  animation: pw-drift-a 19s ease-in-out infinite;
+}
+.pw-landing__blob--2 {
+  top: -110px;
+  right: -110px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle at 60% 40%, hsl(var(--pw-accent) / 0.5), transparent 70%);
+  animation: pw-drift-b 23s ease-in-out infinite;
+}
+.pw-landing__blob--3 {
+  top: 210px;
+  left: 40%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle at 50% 50%, hsl(280 85% 65% / 0.4), transparent 70%);
+  animation: pw-drift-c 27s ease-in-out infinite;
+}
+@keyframes pw-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(46px, 32px, 0) scale(1.08); }
+}
+@keyframes pw-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-40px, 26px, 0) scale(1.1); }
+}
+@keyframes pw-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -34px, 0) scale(1.14); }
+}
+
+/* Hero eyebrow → live status pill */
+.pw-landing .pw-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  margin-bottom: 22px;
+  border-radius: 999px;
+  background: hsl(var(--pw-primary) / 0.1);
+  border: 1px solid hsl(var(--pw-primary) / 0.28);
+  color: hsl(var(--pw-primary));
+  backdrop-filter: blur(4px);
+}
+.pw-landing .pw-hero__eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: hsl(var(--pw-primary));
+  animation: pw-pulse-dot 2.4s ease-out infinite;
+}
+@keyframes pw-pulse-dot {
+  0% { box-shadow: 0 0 0 0 hsl(var(--pw-primary) / 0.5); }
+  70% { box-shadow: 0 0 0 8px hsl(var(--pw-primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--pw-primary) / 0); }
+}
+
+/* Hero heading → subtle gradient ink (landing only) */
+.pw-landing .pw-hero__heading {
+  background-image: linear-gradient(
+    135deg,
+    hsl(var(--pw-fg)) 28%,
+    hsl(var(--pw-primary)) 74%,
+    hsl(var(--pw-accent))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Primary hero CTA → depth + a hover sheen sweep */
+.pw-landing .pw-hero__actions .pw-btn--primary {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px hsl(var(--pw-primary) / 0.6);
+}
+.pw-landing .pw-hero__actions .pw-btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.pw-landing .pw-hero__actions .pw-btn--primary:hover::after {
+  transform: translateX(120%);
+}
+
+/* Feature cards → lift on hover */
+.pw-landing .pw-feature {
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.pw-landing .pw-feature:hover {
+  transform: translateY(-4px);
+  border-color: hsl(var(--pw-primary) / 0.4);
+  box-shadow: 0 18px 44px -26px hsl(var(--pw-primary) / 0.55);
+}
+
+/* CTA card → brand glow */
+.pw-landing .pw-cta__inner {
+  box-shadow: 0 30px 80px -42px hsl(var(--pw-primary) / 0.75);
+}
+
+/* Staggered entrance for the hero */
+@media (prefers-reduced-motion: no-preference) {
+  .pw-landing .pw-hero__eyebrow,
+  .pw-landing .pw-hero__heading,
+  .pw-landing .pw-hero__subheading,
+  .pw-landing .pw-hero__actions {
+    animation: pw-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .pw-landing .pw-hero__eyebrow { animation-delay: 0.05s; }
+  .pw-landing .pw-hero__heading { animation-delay: 0.14s; }
+  .pw-landing .pw-hero__subheading { animation-delay: 0.24s; }
+  .pw-landing .pw-hero__actions { animation-delay: 0.34s; }
+}
+@keyframes pw-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-landing__blob,
+  .pw-landing .pw-hero__eyebrow::before {
+    animation: none;
+  }
 }
