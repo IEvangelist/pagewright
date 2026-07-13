@@ -1214,3 +1214,100 @@ body {
   height: 100%;
 }
 
+/* Drag-and-drop image field (Puck custom field) */
+.pw-imgfield {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pw-imgfield__label {
+  font-size: 0.78rem;
+  font-weight: 550;
+  color: hsl(var(--pw-fg));
+}
+.pw-imgfield__drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1.5px dashed hsl(var(--pw-border));
+  border-radius: 10px;
+  background: hsl(var(--pw-muted) / 0.4);
+  color: hsl(var(--pw-muted-fg, var(--pw-fg)));
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pw-imgfield__drop:hover {
+  border-color: hsl(var(--pw-primary));
+}
+.pw-imgfield__drop--drag {
+  border-color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary) / 0.08);
+}
+.pw-imgfield__preview {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+.pw-imgfield__placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: hsl(var(--pw-card));
+  border: 1px solid hsl(var(--pw-border));
+  color: hsl(var(--pw-primary));
+}
+.pw-imgfield__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  opacity: 0.85;
+}
+.pw-imgfield__clear {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 999px;
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  cursor: pointer;
+}
+.pw-imgfield__clear:hover {
+  background: hsl(var(--pw-muted));
+}
+.pw-imgfield__url {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 8px;
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  font: inherit;
+  font-size: 0.8rem;
+}
+.pw-imgfield__url:focus-visible {
+  outline: 2px solid hsl(var(--pw-primary) / 0.5);
+  outline-offset: 1px;
+}
+.pw-imgfield__error {
+  font-size: 0.74rem;
+  color: hsl(var(--pw-destructive, 0 72% 51%));
+}
+

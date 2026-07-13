@@ -1,8 +1,9 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import type { Config } from "@measured/puck";
+import type { Config, CustomField } from "@measured/puck";
 import { Cta, Features, Footer, Gallery, Hero, Navbar, Prose } from "@pagewright/blocks";
+import { ImageField } from "@/components/image-field";
 
 /**
  * Puck editor configuration for Pagewright blocks. Each component's `render` delegates to the shared
@@ -23,6 +24,19 @@ const linkField = (label: string) =>
       href: { type: "text", label: "URL" },
     },
   }) as const;
+
+/**
+ * A drag-and-drop image field. Renders the {@link ImageField} custom control which uploads dropped
+ * files to the site repo's media folder (via the editor's MediaUploadProvider) and stores the
+ * resulting site-relative URL as a plain string, so the saved page stays a simple JSON string prop.
+ */
+const imageField = (label: string): CustomField<string> => ({
+  type: "custom",
+  label,
+  render: ({ value, onChange }) => (
+    <ImageField value={value ?? ""} onChange={onChange} label={label} />
+  ),
+});
 
 const linkArrayField = (label: string) =>
   ({
@@ -47,7 +61,7 @@ export const puckConfig: Config = {
     Navbar: {
       fields: {
         brand: { type: "text", label: "Brand" },
-        logo: { type: "text", label: "Logo URL (optional)" },
+        logo: imageField("Logo (optional)"),
         links: linkArrayField("Nav links"),
         cta: linkField("Call-to-action button"),
       },
@@ -65,7 +79,7 @@ export const puckConfig: Config = {
         subheading: { type: "textarea", label: "Subheading" },
         primaryCta: linkField("Primary button"),
         secondaryCta: linkField("Secondary button"),
-        image: { type: "text", label: "Image URL (optional)" },
+        image: imageField("Image (optional)"),
         align: {
           type: "radio",
           label: "Alignment",
@@ -131,7 +145,7 @@ export const puckConfig: Config = {
           arrayFields: {
             title: { type: "text", label: "Title" },
             description: { type: "textarea", label: "Description" },
-            image: { type: "text", label: "Image URL" },
+            image: imageField("Image"),
             href: { type: "text", label: "Link URL" },
           },
         },

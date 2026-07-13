@@ -2,7 +2,7 @@
 
 import "@measured/puck/puck.css";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Puck, type Data } from "@measured/puck";
 import {
@@ -16,9 +16,23 @@ import {
   RotateCw,
 } from "lucide-react";
 import { puckConfig } from "@/lib/builder/puck-config";
+import { MediaUploadProvider, type MediaUploader } from "@/lib/builder/media-context";
 
 const DRAFT_PREFIX = "pagewright:page-draft:";
 const DRAFT_DEBOUNCE_MS = 600;
+
+/** Read a File as a bare base64 string (no data-URL prefix). */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      resolve(result.replace(/^data:[^;]+;base64,/, ""));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
 
 type SaveState = "idle" | "saving" | "saved" | "error" | "conflict";
 
@@ -152,6 +166,33 @@ export function SiteEditor({
     window.location.reload();
   }, [draftKey]);
 
+  // Uploads a dropped/selected image to the repo's media folder and hands back the site-relative URL
+  // the block should reference. Memoized so the provider value is stable across renders.
+  const uploader = useMemo<MediaUploader>(
+    () => ({
+      async upload(file) {
+        const contentBase64 = await fileToBase64(file);
+        const res = await fetch(`/api/sites/${owner}/${repo}/media`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            contentBase64,
+          }),
+        });
+        const body = (await res.json().catch(() => null)) as
+          | { url?: string; path?: string; error?: string }
+          | null;
+        if (!res.ok || !body?.url) {
+          throw new Error(body?.error ?? "Upload failed.");
+        }
+        return { url: body.url, path: body.path ?? "" };
+      },
+    }),
+    [owner, repo],
+  );
+
   return (
     <div className="pw-editor">
       <div className="pw-editor__bar">
@@ -191,13 +232,15 @@ export function SiteEditor({
         </div>
       ) : null}
       <div className="pw-editor__canvas">
-        <Puck
-          config={puckConfig}
-          data={data}
-          onChange={onChange}
-          onPublish={onPublish}
-          iframe={{ enabled: false }}
-        />
+        <MediaUploadProvider uploader={uploader}>
+          <Puck
+            config={puckConfig}
+            data={data}
+            onChange={onChange}
+            onPublish={onPublish}
+            iframe={{ enabled: false }}
+          />
+        </MediaUploadProvider>
       </div>
     </div>
   );
