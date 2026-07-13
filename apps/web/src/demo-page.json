@@ -11,8 +11,8 @@
         "eyebrow": "Free hosting on GitHub Pages",
         "heading": "Ship a beautiful site in minutes — no code required",
         "subheading": "Choose a template, make it yours with a visual editor, and publish straight to your own GitHub repository. Drafts, scheduling, and updates are all handled for you.",
-        "primaryCta": { "label": "Start building", "href": "#signin" },
-        "secondaryCta": { "label": "Browse templates", "href": "#templates" },
+        "primaryCta": { "label": "Start building", "href": "/new" },
+        "secondaryCta": { "label": "Browse templates", "href": "/new" },
         "align": "center"
       }
     },
@@ -39,7 +39,7 @@
       "props": {
         "heading": "Your next site is one click away",
         "body": "Sign in with GitHub and publish your first page today — completely free.",
-        "primaryCta": { "label": "Get started free", "href": "#signin" }
+        "primaryCta": { "label": "Get started free", "href": "/new" }
       }
     },
     {
@@ -49,9 +49,9 @@
         "brand": "Pagewright",
         "tagline": "No-code sites, powered by your GitHub.",
         "links": [
-          { "label": "Templates", "href": "#templates" },
+          { "label": "Templates", "href": "/new" },
           { "label": "GitHub", "href": "https://github.com" },
-          { "label": "Privacy", "href": "#privacy" }
+          { "label": "Dashboard", "href": "/dashboard" }
         ],
         "copyright": "© 2026 Pagewright"
       }
