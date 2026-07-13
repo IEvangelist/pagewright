@@ -251,11 +251,88 @@ body {
 .pw-sitecard {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 18px;
   border-radius: 14px;
   border: 1px solid hsl(var(--pw-border));
   background: hsl(var(--pw-card));
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.pw-sitecard:hover {
+  border-color: hsl(var(--pw-primary) / 0.5);
+  box-shadow: 0 8px 24px -12px hsl(var(--pw-fg) / 0.25);
+  transform: translateY(-2px);
+}
+.pw-sitecard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  flex: 1;
+}
+
+/* Live-preview thumbnail: renders the real block components, shrunk into a 16:10 frame. */
+.pw-sitethumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg));
+  text-decoration: none;
+}
+.pw-sitethumb__frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+/*
+ * Render the page at a wide "desktop" width, then scale it down so the whole layout fits the frame.
+ * 1280px * 0.3125 = 400px of visual width; the parent clips whatever overflows vertically.
+ */
+.pw-sitethumb__page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  transform: scale(0.3125);
+  transform-origin: top left;
+  pointer-events: none;
+}
+.pw-sitethumb__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(var(--pw-primary) / 0.85), hsl(var(--pw-primary) / 0.35));
+}
+.pw-sitethumb__initial {
+  font-size: 3rem;
+  font-weight: 800;
+  color: hsl(0 0% 100% / 0.9);
+  letter-spacing: -0.02em;
+}
+.pw-sitethumb__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  background: hsl(var(--pw-fg) / 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.pw-sitethumb:hover .pw-sitethumb__overlay,
+.pw-sitethumb:focus-visible .pw-sitethumb__overlay {
+  opacity: 1;
 }
 .pw-sitecard__top {
   display: flex;

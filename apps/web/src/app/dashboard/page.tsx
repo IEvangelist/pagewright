@@ -7,6 +7,7 @@ import {
   Plus,
   Rocket,
 } from "lucide-react";
+import { PageRenderer, parsePage, type Block } from "@pagewright/blocks";
 import type { GitHubProvider, PagesInfo, Repo, WorkflowRun } from "@pagewright/github";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
@@ -14,6 +15,7 @@ import { GitHubMark } from "@/components/icons/github-mark";
 import { getProviderForSession } from "@/lib/auth/provider";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAuthMode } from "@/lib/auth/env";
+import { HOME_PAGE_PATH } from "@/lib/publish/state";
 
 export const dynamic = "force-dynamic";
 
@@ -21,19 +23,30 @@ interface SiteView {
   repo: Repo;
   pages: PagesInfo;
   latestRun: WorkflowRun | null;
+  /** The site's home page blocks, used to render a live thumbnail preview. */
+  previewBlocks: Block[] | null;
 }
 
 async function loadSites(provider: GitHubProvider): Promise<SiteView[]> {
   const repos = await provider.listManagedRepos();
-  // Enrich each site with Pages + latest run in parallel; tolerate per-repo failures.
+  // Enrich each site with Pages + latest run + a preview in parallel; tolerate per-repo failures.
   return Promise.all(
     repos.map(async (repo): Promise<SiteView> => {
       const ref = { owner: repo.owner, repo: repo.name };
-      const [pages, runs] = await Promise.all([
+      const [pages, runs, home] = await Promise.all([
         provider.getPages(ref).catch(() => emptyPages()),
         provider.listWorkflowRuns(ref, { perPage: 1 }).catch(() => []),
+        provider.getFile(ref, HOME_PAGE_PATH).catch(() => null),
       ]);
-      return { repo, pages, latestRun: runs[0] ?? null };
+      let previewBlocks: Block[] | null = null;
+      if (home) {
+        try {
+          previewBlocks = parsePage(JSON.parse(home.content)).blocks;
+        } catch {
+          previewBlocks = null;
+        }
+      }
+      return { repo, pages, latestRun: runs[0] ?? null, previewBlocks };
     }),
   );
 }
@@ -134,43 +147,108 @@ function SiteCard({ site }: { site: SiteView }) {
   const status = deriveStatus(site);
   return (
     <li className="pw-sitecard">
-      <div className="pw-sitecard__top">
-        <span className={`pw-status pw-status--${status.tone}`}>
-          {status.tone === "deploying" ? (
-            <Loader2 size={13} strokeWidth={2.5} className="pw-spin" aria-hidden="true" />
-          ) : (
-            <span className="pw-status__dot" aria-hidden="true" />
+      <SiteThumb site={site} status={status} />
+
+      <div className="pw-sitecard__body">
+        <div className="pw-sitecard__top">
+          <span className={`pw-status pw-status--${status.tone}`}>
+            {status.tone === "deploying" ? (
+              <Loader2 size={13} strokeWidth={2.5} className="pw-spin" aria-hidden="true" />
+            ) : (
+              <span className="pw-status__dot" aria-hidden="true" />
+            )}
+            {status.label}
+          </span>
+          {repo.private && <span className="pw-chip">Private</span>}
+        </div>
+
+        <h2 className="pw-sitecard__name">{repo.name}</h2>
+        {repo.description && <p className="pw-sitecard__desc">{repo.description}</p>}
+
+        <div className="pw-sitecard__links">
+          {pages.url && (
+            <a className="pw-linkpill" href={pages.url} target="_blank" rel="noreferrer">
+              <Globe size={14} aria-hidden="true" />
+              <span>Visit site</span>
+              <ExternalLink size={12} aria-hidden="true" />
+            </a>
           )}
-          {status.label}
-        </span>
-        {repo.private && <span className="pw-chip">Private</span>}
-      </div>
-
-      <h2 className="pw-sitecard__name">{repo.name}</h2>
-      {repo.description && <p className="pw-sitecard__desc">{repo.description}</p>}
-
-      <div className="pw-sitecard__links">
-        {pages.url && (
-          <a className="pw-linkpill" href={pages.url} target="_blank" rel="noreferrer">
-            <Globe size={14} aria-hidden="true" />
-            <span>Visit site</span>
+          <a className="pw-linkpill" href={repo.htmlUrl} target="_blank" rel="noreferrer">
+            <GitHubMark size={14} aria-hidden="true" />
+            <span>Repo</span>
             <ExternalLink size={12} aria-hidden="true" />
           </a>
-        )}
-        <a className="pw-linkpill" href={repo.htmlUrl} target="_blank" rel="noreferrer">
-          <GitHubMark size={14} aria-hidden="true" />
-          <span>Repo</span>
-          <ExternalLink size={12} aria-hidden="true" />
-        </a>
-      </div>
+        </div>
 
-      <div className="pw-sitecard__actions">
-        <Link href={`/sites/${repo.owner}/${repo.name}`} className="pw-btn pw-btn--ghost pw-btn--sm">
-          <span>Manage</span>
-          <ArrowUpRight size={15} aria-hidden="true" />
-        </Link>
+        <div className="pw-sitecard__actions">
+          <Link
+            href={`/sites/${repo.owner}/${repo.name}`}
+            className="pw-btn pw-btn--ghost pw-btn--sm"
+          >
+            <span>Manage</span>
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </li>
+  );
+}
+
+/**
+ * A live, at-scale preview of the site's home page. Rather than a screenshot service (which would
+ * need external infra and wouldn't work in demo mode), we render the exact same block components the
+ * deployed Astro site uses, then shrink the whole thing into a fixed 16:10 frame with a CSS
+ * transform. Sites without a parseable home page fall back to a branded gradient placeholder.
+ */
+function SiteThumb({
+  site,
+  status,
+}: {
+  site: SiteView;
+  status: { tone: StatusTone; label: string };
+}) {
+  const { repo, pages, previewBlocks } = site;
+  const href = pages.url ?? `/sites/${repo.owner}/${repo.name}`;
+  const external = Boolean(pages.url);
+
+  const inner =
+    previewBlocks && previewBlocks.length > 0 ? (
+      <div className="pw-sitethumb__frame" aria-hidden="true">
+        <div className="pw-sitethumb__page pw-root">
+          <PageRenderer blocks={previewBlocks} />
+        </div>
+      </div>
+    ) : (
+      <div className="pw-sitethumb__placeholder" aria-hidden="true">
+        <span className="pw-sitethumb__initial">{repo.name.charAt(0).toUpperCase()}</span>
+      </div>
+    );
+
+  return (
+    <a
+      className="pw-sitethumb"
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      aria-label={
+        external ? `Open live site ${repo.name}` : `Manage ${repo.name}`
+      }
+    >
+      {inner}
+      <span className="pw-sitethumb__overlay">
+        {external ? (
+          <>
+            <Globe size={14} aria-hidden="true" />
+            <span>Open live site</span>
+          </>
+        ) : (
+          <>
+            <ArrowUpRight size={14} aria-hidden="true" />
+            <span>{status.tone === "deploying" ? "Deploying…" : "Set up site"}</span>
+          </>
+        )}
+      </span>
+    </a>
   );
 }
 
