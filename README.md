@@ -160,6 +160,24 @@ content goes live even if the app is never opened again.
 - [x] Dashboard with live block-preview thumbnails per site
 - [x] Base-path–aware asset & link resolution (works on GitHub Pages project subpaths)
 
+## Production prerequisites
+
+Pagewright runs fully in **demo mode** out of the box (`PAGEWRIGHT_AUTH_MODE=mock`) — the entire
+create → edit → publish flow works against an in-memory GitHub. Two things must be in place before
+generated sites build in *real* GitHub Actions:
+
+1. **GitHub credentials.** Provide the GitHub App (or OAuth App fallback) env vars so the provider
+   can act on a user's behalf — see `.env.example`.
+2. **Resolvable build bits.** A generated repo's `package.json` pins `@pagewright/blocks` and
+   `@pagewright/site-kit` at the registry-managed versions from
+   `packages/registry/src/manifests.ts`. Those are currently private workspace packages, so a
+   generated repo's CI `npm install` can only resolve them once they are **published** to a registry
+   the workflow can reach (npm or GitHub Packages) at those versions, **or** provisioning is extended
+   to **vendor** their built output into the repo. Until one of those is done, the deploy workflow's
+   install step fails on the `@pagewright/*` dependencies. Everything else the generated site needs —
+   base path, pinned action versions, Node version, and content schema — is already rendered per repo,
+   so once those two packages resolve, `npm run build` produces a correct GitHub Pages bundle.
+
 ## License
 
 TBD.
