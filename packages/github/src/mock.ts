@@ -11,6 +11,7 @@ import {
   type CommitOptions,
   type CommitResult,
   type CreateRepoOptions,
+  type DirEntry,
   type EnablePagesOptions,
   type FileContents,
   type GitHubProvider,
@@ -135,6 +136,94 @@ function keyFor(login: string): string {
   return login.toLowerCase();
 }
 
+/**
+ * A few sample blog posts (published, scheduled, and draft) seeded into mock blog repos so the Posts
+ * authoring experience — list, status badges, edit, and delete — is demoable without a live backend.
+ */
+function seedBlogPosts(): Array<[string, string]> {
+  const prose = (heading: string, body: string) => ({
+    type: "prose",
+    id: `prose-${heading.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    props: { markdown: `## ${heading}\n\n${body}` },
+  });
+  const now = Date.now();
+  const iso = (msAgo: number) => new Date(now - msAgo).toISOString();
+  const day = 86_400_000;
+  const posts: Array<{ slug: string; doc: Record<string, unknown> }> = [
+    {
+      slug: "hello-world",
+      doc: {
+        title: "Hello, world",
+        description: "The first post on my brand-new Pagewright blog.",
+        slug: "hello-world",
+        draft: false,
+        date: iso(3 * day),
+        excerpt: "Kicking things off — why I started this blog and what to expect.",
+        tags: ["intro", "meta"],
+        author: "Pagewright Demo",
+        blocks: [
+          prose(
+            "Welcome",
+            "This blog was created and published straight from Pagewright — no terminal required. Every post you see here is a JSON document committed to a GitHub repo that deploys itself to GitHub Pages.",
+          ),
+        ],
+      },
+    },
+    {
+      slug: "designing-in-the-open",
+      doc: {
+        title: "Designing in the open",
+        description: "Notes on building a portfolio the transparent way.",
+        slug: "designing-in-the-open",
+        draft: false,
+        date: iso(1 * day),
+        excerpt: "A short field guide to sharing work-in-progress without the anxiety.",
+        tags: ["design", "process"],
+        author: "Pagewright Demo",
+        blocks: [
+          prose(
+            "Why open",
+            "Publishing early keeps me honest and invites feedback while it still matters. Here's how I structure posts so they stay useful months later.",
+          ),
+        ],
+      },
+    },
+    {
+      slug: "coming-soon-roadmap",
+      doc: {
+        title: "Coming soon: the 2026 roadmap",
+        description: "A scheduled peek at what's next.",
+        slug: "coming-soon-roadmap",
+        draft: false,
+        date: iso(-2 * day),
+        publishAt: iso(-2 * day),
+        excerpt: "Scheduled to go live in two days — a preview of the roadmap.",
+        tags: ["roadmap"],
+        author: "Pagewright Demo",
+        blocks: [prose("What's next", "This post is scheduled — it will appear on the live site once its publish date arrives.")],
+      },
+    },
+    {
+      slug: "untitled-draft",
+      doc: {
+        title: "Untitled draft",
+        description: "",
+        slug: "untitled-draft",
+        draft: true,
+        date: iso(0),
+        excerpt: "",
+        tags: [],
+        author: "Pagewright Demo",
+        blocks: [prose("Rough notes", "Still cooking. This one is a draft, so it stays hidden from the published site until I flip the switch.")],
+      },
+    },
+  ];
+  return posts.map((p) => [
+    `src/data/posts/${p.slug}.json`,
+    JSON.stringify(p.doc, null, 2),
+  ]);
+}
+
 function randomSha(): string {
   return Array.from({ length: 40 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
 }
@@ -202,9 +291,10 @@ function seedRepo(
   const state: MockRepoState = {
     repo,
     branchHead: sha,
-    files: new Map([
+    files: new Map<string, string>([
       ["pagewright.json", JSON.stringify({ templateId: opts.template, manifestVersion: "2026.7.0" }, null, 2)],
       ["src/data/pages/home.json", seedHomePage(opts.name)],
+      ...(opts.template === "blog" ? seedBlogPosts() : []),
     ]),
     pages: { enabled: true, url: repo.pagesUrl, status: "built", cname: null },
     runs: [
@@ -307,6 +397,30 @@ export class MockGitHubProvider implements GitHubProvider {
     const content = state?.files.get(path);
     if (state === undefined || content === undefined) return null;
     return { content, sha: randomSha(), path };
+  }
+
+  async listDirectory(ref: RepoRef, path: string): Promise<DirEntry[]> {
+    const state = this.store().repos.get(ref.repo.toLowerCase());
+    if (!state) return [];
+    const prefix = path.replace(/\/+$/, "") + "/";
+    const seen = new Set<string>();
+    const entries: DirEntry[] = [];
+    for (const filePath of state.files.keys()) {
+      if (!filePath.startsWith(prefix)) continue;
+      const rest = filePath.slice(prefix.length);
+      const slash = rest.indexOf("/");
+      if (slash === -1) {
+        entries.push({ name: rest, path: filePath, type: "file", sha: randomSha() });
+      } else {
+        // A nested path implies an intermediate directory entry.
+        const dirName = rest.slice(0, slash);
+        if (!seen.has(dirName)) {
+          seen.add(dirName);
+          entries.push({ name: dirName, path: prefix + dirName, type: "dir", sha: randomSha() });
+        }
+      }
+    }
+    return entries;
   }
 
   async commitFiles(ref: RepoRef, opts: CommitOptions): Promise<CommitResult> {

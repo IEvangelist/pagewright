@@ -1,7 +1,8 @@
 import { getProviderForSession } from "@/lib/auth/provider";
-import { parsePage, type Page } from "@pagewright/blocks";
+import { parsePage, parsePost, type Page, type Post } from "@pagewright/blocks";
 import { ConcurrencyError } from "@pagewright/github";
 import { puckDataToPage } from "@/lib/builder/convert";
+import { applyPostMeta, isPostPath, type PostMeta } from "@/lib/content/posts";
 import type { Data } from "@measured/puck";
 
 export const dynamic = "force-dynamic";
@@ -37,11 +38,12 @@ export async function POST(
 
   const { owner, repo } = await params;
 
-  let body: { path?: unknown; data?: unknown; expectedHeadSha?: unknown };
+  let body: { path?: unknown; data?: unknown; meta?: unknown; expectedHeadSha?: unknown };
   try {
     body = (await request.json()) as {
       path?: unknown;
       data?: unknown;
+      meta?: unknown;
       expectedHeadSha?: unknown;
     };
   } catch {
@@ -59,6 +61,11 @@ export async function POST(
     typeof body.expectedHeadSha === "string" && body.expectedHeadSha
       ? body.expectedHeadSha
       : undefined;
+  const isPost = isPostPath(path);
+  const meta =
+    isPost && body.meta && typeof body.meta === "object"
+      ? (body.meta as Partial<PostMeta>)
+      : undefined;
 
   const repoData = await provider.getRepo({ owner, repo }).catch(() => null);
   if (!repoData) {
@@ -66,19 +73,32 @@ export async function POST(
   }
 
   // Load the existing document to preserve fields the editor doesn't manage.
-  let base: Page;
   const existing = await provider.getFile({ owner, repo }, path).catch(() => null);
-  try {
-    base = existing
-      ? parsePage(JSON.parse(existing.content))
-      : parsePage({ title: repoData.name, blocks: [] });
-  } catch {
-    base = parsePage({ title: repoData.name, blocks: [] });
-  }
 
-  let page: Page;
+  let document: Page | Post;
   try {
-    page = parsePage(puckDataToPage(body.data as Data, base));
+    if (isPost) {
+      // Posts carry front-matter (date/excerpt/tags/…) that plain page parsing would strip, so parse
+      // the base as a post, fold the edited body onto it, then merge the client-supplied metadata.
+      let base: Post;
+      try {
+        base = parsePost(existing ? JSON.parse(existing.content) : { title: repoData.name, blocks: [] });
+      } catch {
+        base = parsePost({ title: repoData.name, blocks: [] });
+      }
+      const withBody = puckDataToPage(body.data as Data, base) as Post;
+      document = parsePost(applyPostMeta(withBody, meta));
+    } else {
+      let base: Page;
+      try {
+        base = existing
+          ? parsePage(JSON.parse(existing.content))
+          : parsePage({ title: repoData.name, blocks: [] });
+      } catch {
+        base = parsePage({ title: repoData.name, blocks: [] });
+      }
+      document = parsePage(puckDataToPage(body.data as Data, base));
+    }
   } catch {
     return Response.json(
       { error: "Some blocks are missing required fields. Fix them and try again." },
@@ -86,7 +106,7 @@ export async function POST(
     );
   }
 
-  const content = `${JSON.stringify(page, null, 2)}\n`;
+  const content = `${JSON.stringify(document, null, 2)}\n`;
   const fileName = path.split("/").pop() ?? path;
 
   try {

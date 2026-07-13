@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "@pagewright/blocks/blocks.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NavProgress } from "@/components/nav-progress";
 
 export const metadata: Metadata = {
   title: "Pagewright",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="pw-theme">
+          <NavProgress />
           {children}
         </ThemeProvider>
       </body>

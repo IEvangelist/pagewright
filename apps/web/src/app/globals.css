@@ -1512,3 +1512,347 @@ body {
   border-color: hsl(0 72% 51% / 0.55);
 }
 
+
+/* ============================================================================
+   Loading affordances: navigation progress bar + skeletons
+   ========================================================================= */
+
+/* Global top-of-viewport navigation progress bar (see components/nav-progress). */
+.pw-navprogress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 100;
+  pointer-events: none;
+}
+.pw-navprogress__bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(
+    90deg,
+    hsl(var(--pw-primary)),
+    hsl(var(--pw-primary) / 0.55)
+  );
+  box-shadow: 0 0 10px hsl(var(--pw-primary) / 0.55);
+  transition: transform 0.2s ease;
+}
+
+/* Shimmering skeleton block. */
+.pw-skel {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--pw-muted));
+  border-radius: 8px;
+  vertical-align: middle;
+}
+.pw-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--pw-fg) / 0.07),
+    transparent
+  );
+  animation: pw-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes pw-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-skel::after {
+    animation: none;
+  }
+}
+
+/* Card-shaped skeleton container (mirrors the app's card surfaces). */
+.pw-skelcard {
+  border-radius: 14px;
+  border: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card));
+}
+
+/* Full-screen editor loading state. */
+.pw-editorloading {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--pw-font);
+  color: hsl(var(--pw-fg));
+}
+.pw-editorloading__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.pw-editorloading__spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 3px solid hsl(var(--pw-border));
+  border-top-color: hsl(var(--pw-primary));
+  animation: pw-spin 0.8s linear infinite;
+}
+.pw-editorloading__label {
+  margin: 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.9rem;
+}
+
+/* ---- Posts: status tones, list, details panel, new-post modal ---- */
+.pw-status--published {
+  color: hsl(145 63% 38%);
+  border-color: hsl(145 63% 38% / 0.4);
+  background: hsl(145 63% 38% / 0.1);
+}
+.pw-status--scheduled {
+  color: hsl(38 92% 42%);
+  border-color: hsl(38 92% 42% / 0.4);
+  background: hsl(38 92% 42% / 0.1);
+}
+.pw-status--draft {
+  color: hsl(var(--pw-muted-fg));
+  border-color: hsl(var(--pw-border));
+  background: hsl(var(--pw-fg) / 0.05);
+}
+
+.pw-btn--active {
+  border-color: hsl(var(--pw-primary));
+  color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary) / 0.1);
+}
+.pw-btn--icononly {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.pw-dash__headactions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pw-editor__kind {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary) / 0.12);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.pw-field__error {
+  font-size: 0.8rem;
+  color: hsl(0 72% 51%);
+}
+.pw-field--check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.pw-field--check input {
+  margin-top: 3px;
+}
+.pw-field--wide {
+  grid-column: 1 / -1;
+}
+
+.pw-postmeta {
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 14px;
+  background: hsl(var(--pw-card));
+  margin: 0 0 16px;
+  padding: 18px 20px;
+}
+.pw-postmeta__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.pw-postmeta__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.pw-postmeta__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: hsl(var(--pw-muted-fg));
+  cursor: pointer;
+}
+.pw-postmeta__close:hover {
+  background: hsl(var(--pw-fg) / 0.06);
+  color: hsl(var(--pw-fg));
+}
+.pw-postmeta__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.pw-postmeta__cover {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pw-postmeta__coverimg {
+  width: 120px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid hsl(var(--pw-border));
+}
+.pw-postmeta__coverempty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 72px;
+  border-radius: 10px;
+  border: 1px dashed hsl(var(--pw-border));
+  color: hsl(var(--pw-muted-fg));
+}
+.pw-postmeta__coveractions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .pw-postmeta__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pw-postlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pw-postrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 14px;
+  background: hsl(var(--pw-card));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pw-postrow:hover {
+  border-color: hsl(var(--pw-primary) / 0.5);
+  box-shadow: 0 4px 16px hsl(var(--pw-fg) / 0.05);
+}
+.pw-postrow__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pw-postrow__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pw-postrow__date {
+  font-size: 0.8rem;
+  color: hsl(var(--pw-muted-fg));
+}
+.pw-postrow__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: hsl(var(--pw-fg));
+  text-decoration: none;
+}
+.pw-postrow__title:hover {
+  color: hsl(var(--pw-primary));
+}
+.pw-postrow__excerpt {
+  margin: 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 70ch;
+}
+.pw-postrow__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pw-postrow__confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .pw-postrow {
+    flex-direction: column;
+  }
+  .pw-postrow__actions {
+    align-self: flex-end;
+  }
+}
+
+.pw-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: hsl(var(--pw-fg) / 0.35);
+  backdrop-filter: blur(2px);
+}
+.pw-modal__card {
+  width: 100%;
+  max-width: 460px;
+  border-radius: 16px;
+  border: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg));
+  padding: 22px;
+  box-shadow: 0 24px 60px hsl(var(--pw-fg) / 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pw-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pw-modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.pw-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

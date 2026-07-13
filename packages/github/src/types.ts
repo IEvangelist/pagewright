@@ -81,6 +81,13 @@ export interface FileContents {
   path: string;
 }
 
+export interface DirEntry {
+  name: string;
+  path: string;
+  type: "file" | "dir";
+  sha: string;
+}
+
 export type PagesStatusState =
   | "not_enabled"
   | "building"
@@ -177,6 +184,8 @@ export interface GitHubProvider {
   /** Atomic multi-file commit via the Git Data API (blobs → tree → commit → ref update). */
   commitFiles(ref: RepoRef, opts: CommitOptions): Promise<CommitResult>;
   getFile(ref: RepoRef, path: string, branch?: string): Promise<FileContents | null>;
+  /** List the entries of a directory at a ref. Returns [] when the directory is absent. */
+  listDirectory(ref: RepoRef, path: string, branch?: string): Promise<DirEntry[]>;
   /** Current HEAD SHA of a branch (used for conflict detection on save). */
   getBranchHead(ref: RepoRef, branch?: string): Promise<string | null>;
 

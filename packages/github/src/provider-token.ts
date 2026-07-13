@@ -5,6 +5,7 @@ import {
   type CommitResult,
   type CreateRepoOptions,
   type EnablePagesOptions,
+  type DirEntry,
   type FileContents,
   type GitHubProvider,
   type GitHubUser,
@@ -132,6 +133,22 @@ export class TokenGitHubProvider implements GitHubProvider {
     const encoding = typeof data.encoding === "string" ? data.encoding : "base64";
     const decoded = encoding === "base64" ? decodeBase64(data.content) : data.content;
     return { content: decoded, sha: data.sha, path };
+  }
+
+  async listDirectory(ref: RepoRef, path: string, branch?: string): Promise<DirEntry[]> {
+    // The contents API returns a JSON array when `path` is a directory (names + shas, not content),
+    // and 404s when the directory does not exist — which we tolerate as an empty listing.
+    const data = await this.rest.request<unknown>(
+      `/repos/${ref.owner}/${ref.repo}/contents/${encodePath(path)}`,
+      { query: branch ? { ref: branch } : undefined, allowStatuses: [404] },
+    );
+    if (!Array.isArray(data)) return [];
+    return data.filter(isRecord).map((entry) => ({
+      name: typeof entry.name === "string" ? entry.name : "",
+      path: typeof entry.path === "string" ? entry.path : "",
+      type: entry.type === "dir" ? "dir" : "file",
+      sha: typeof entry.sha === "string" ? entry.sha : "",
+    }));
   }
 
   /**
