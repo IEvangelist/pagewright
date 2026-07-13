@@ -7,7 +7,7 @@ import {
   type WorkflowRun,
 } from "@pagewright/github";
 import { getLatestManifest } from "@pagewright/registry";
-import { loadTemplateFiles } from "./template-source";
+import { loadTemplateFiles, loadVendorFiles } from "./template-source";
 import { renderProvisionFiles } from "./render";
 import type { ProvisionEvent, ProvisionRequest, ProvisionResult } from "./shared";
 
@@ -93,8 +93,9 @@ export async function* provisionSite(
     message: "Adding your site files and workflows…",
   };
   try {
-    const templateFiles = await loadTemplateFiles(request.templateId);
-    const files = renderProvisionFiles({ request, manifest, templateFiles });
+    const templateFiles = loadTemplateFiles(request.templateId);
+    const vendorFiles = loadVendorFiles();
+    const files = renderProvisionFiles({ request, manifest, templateFiles, vendorFiles });
     await provider.commitFiles(ref, {
       message: "Initial Pagewright site",
       files,

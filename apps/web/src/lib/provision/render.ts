@@ -70,15 +70,36 @@ function renderSiteJson(content: string, req: ProvisionRequest): string {
   return json(parsed);
 }
 
+/**
+ * The `@pagewright/*` packages are not published to npm. Instead their source is vendored into each
+ * generated repo under `vendor/`, and the standalone `package.json` references them with `file:`
+ * specifiers so a plain `npm install` resolves them locally (no registry, no auth, no publish step).
+ */
+const VENDOR_FILE_DEPS: Record<string, string> = {
+  "@pagewright/blocks": "file:./vendor/pagewright-blocks",
+  "@pagewright/site-kit": "file:./vendor/pagewright-site-kit",
+};
+
+/** Point the `@pagewright/*` dependencies at the vendored source committed alongside the site. */
+function withVendoredDeps(pkg: Record<string, unknown>): Record<string, unknown> {
+  const deps = { ...((pkg.dependencies as Record<string, string>) ?? {}) };
+  for (const [name, spec] of Object.entries(VENDOR_FILE_DEPS)) {
+    if (name in deps) deps[name] = spec;
+  }
+  return { ...pkg, dependencies: deps };
+}
+
 export interface RenderInput {
   request: ProvisionRequest;
   manifest: SiteManifest;
   templateFiles: CommitFile[];
+  /** Vendored `@pagewright/*` package sources committed under `vendor/` (see `loadVendorFiles`). */
+  vendorFiles: CommitFile[];
 }
 
 /** Produce the final set of files to commit for a new site. */
 export function renderProvisionFiles(input: RenderInput): CommitFile[] {
-  const { request, manifest, templateFiles } = input;
+  const { request, manifest, templateFiles, vendorFiles } = input;
   const actionVersions = new Map(
     manifest.actions.map((action) => [action.uses, action.version]),
   );
@@ -91,10 +112,12 @@ export function renderProvisionFiles(input: RenderInput): CommitFile[] {
       output.push({
         path: file.path,
         content: json(
-          renderStandalonePackageJson(manifest, {
-            name: request.repoName,
-            description: request.description || undefined,
-          }),
+          withVendoredDeps(
+            renderStandalonePackageJson(manifest, {
+              name: request.repoName,
+              description: request.description || undefined,
+            }),
+          ),
         ),
         encoding: "utf-8",
       });
@@ -137,6 +160,12 @@ export function renderProvisionFiles(input: RenderInput): CommitFile[] {
 
   if (!sawGitignore) {
     output.push({ path: ".gitignore", content: GITIGNORE, encoding: "utf-8" });
+  }
+
+  // Commit the vendored @pagewright/* sources so the generated repo's CI can build with no npm
+  // publishing. Their paths (vendor/**) never collide with template files.
+  for (const file of vendorFiles) {
+    output.push({ ...file, encoding: file.encoding ?? "utf-8" });
   }
 
   return output;

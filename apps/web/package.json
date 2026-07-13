@@ -5,10 +5,15 @@
   "type": "module",
   "description": "Pagewright builder app — Next.js (App Router) + shadcn, deployed on Netlify.",
   "scripts": {
+    "prebundle": "node ../../scripts/build-provision-bundle.mjs",
+    "bundle": "node ../../scripts/build-provision-bundle.mjs",
+    "predev": "node ../../scripts/build-provision-bundle.mjs",
     "dev": "next dev",
+    "prebuild": "node ../../scripts/build-provision-bundle.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "pretypecheck": "node ../../scripts/build-provision-bundle.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,84 +1,47 @@
 import "server-only";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import type { CommitFile } from "@pagewright/github";
 import type { TemplateId } from "@pagewright/registry";
+import bundle from "./provision-bundle.generated.json";
 
 /**
- * Reads a template's source files off disk so they can be committed into a freshly provisioned repo.
- * Build artifacts (`node_modules`, `dist`, `.astro`) are excluded — only the authored source that
- * belongs in a generated site is returned.
+ * Template + vendored-package sources for provisioning, read from a build-time generated bundle
+ * (see `scripts/build-provision-bundle.mjs`) rather than the monorepo filesystem.
  *
- * NOTE: this resolves the monorepo `templates/` directory from the filesystem, which works in local
- * dev and `next start`. A serverless deployment (Netlify) must bundle the templates with the
- * function (e.g. via `includeFiles`) or swap this loader for a build-time generated bundle.
+ * Reading from an imported JSON module — instead of walking `templates/` on disk — is what lets
+ * provisioning work in a serverless deployment (Netlify), where the monorepo source tree is not
+ * present next to the function. The bundle is regenerated before every `dev`/`build`, so it always
+ * reflects the current templates and `@pagewright/*` sources.
  */
 
-const IGNORED_DIRS = new Set(["node_modules", "dist", ".astro", ".git", ".turbo"]);
-const IGNORED_FILES = new Set([".DS_Store", "*.tsbuildinfo"]);
-
-let cachedRoot: string | null = null;
-
-async function pathExists(p: string): Promise<boolean> {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
+interface ProvisionBundle {
+  templates: Record<string, CommitFile[]>;
+  vendor: CommitFile[];
 }
 
-/** Walk up from the current working directory to the workspace root (has `pnpm-workspace.yaml`). */
-async function findWorkspaceRoot(): Promise<string> {
-  if (cachedRoot) return cachedRoot;
-  let dir = process.cwd();
-  for (let i = 0; i < 10; i++) {
-    if (await pathExists(path.join(dir, "pnpm-workspace.yaml"))) {
-      cachedRoot = dir;
-      return dir;
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  throw new Error(
-    "Could not locate the Pagewright workspace root (pnpm-workspace.yaml). Templates are unavailable in this environment.",
-  );
-}
+const typedBundle = bundle as unknown as ProvisionBundle;
 
-function isIgnoredFile(name: string): boolean {
-  if (IGNORED_FILES.has(name)) return true;
-  if (name.endsWith(".tsbuildinfo")) return true;
-  return false;
+/** Copy so callers can freely transform files without mutating the shared bundle. */
+function clone(files: CommitFile[]): CommitFile[] {
+  return files.map((file) => ({ ...file }));
 }
 
 /** Load every source file for a template as commit-ready entries (repo-relative paths, utf-8). */
-export async function loadTemplateFiles(
-  templateId: TemplateId,
-): Promise<CommitFile[]> {
-  const root = await findWorkspaceRoot();
-  const templateDir = path.join(root, "templates", templateId);
-  if (!(await pathExists(templateDir))) {
-    throw new Error(`Template "${templateId}" was not found at ${templateDir}.`);
+export function loadTemplateFiles(templateId: TemplateId): CommitFile[] {
+  const files = typedBundle.templates[templateId];
+  if (!files) {
+    throw new Error(
+      `Template "${templateId}" is not present in the provision bundle. ` +
+        `Re-run scripts/build-provision-bundle.mjs.`,
+    );
   }
+  return clone(files);
+}
 
-  const files: CommitFile[] = [];
-
-  async function walk(absDir: string, relDir: string): Promise<void> {
-    const entries = await fs.readdir(absDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) {
-        if (IGNORED_DIRS.has(entry.name)) continue;
-        await walk(path.join(absDir, entry.name), rel);
-      } else if (entry.isFile()) {
-        if (isIgnoredFile(entry.name)) continue;
-        const content = await fs.readFile(path.join(absDir, entry.name), "utf-8");
-        files.push({ path: rel, content, encoding: "utf-8" });
-      }
-    }
-  }
-
-  await walk(templateDir, "");
-  return files;
+/**
+ * The vendored `@pagewright/*` package sources committed into every generated repo under `vendor/`.
+ * Generated repos reference them with `file:` dependencies + `vite.ssr.noExternal`, so a plain
+ * `npm install` + `astro build` resolves and transpiles them with no npm publishing required.
+ */
+export function loadVendorFiles(): CommitFile[] {
+  return clone(typedBundle.vendor);
 }
