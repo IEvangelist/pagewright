@@ -4,9 +4,11 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { DeployProgress } from "@/components/deploy-progress";
+import { PublishPanel } from "@/components/publish-panel";
 import { getProviderForSession } from "@/lib/auth/provider";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDeployStatus } from "@/lib/deploy/server";
+import { getPublishState } from "@/lib/publish/server";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,8 @@ export default async function SiteManagePage({
   const { owner, repo: repoName } = await params;
   const status = await getDeployStatus(provider, { owner, repo: repoName });
   if (!status) notFound();
+
+  const publishState = await getPublishState(provider, { owner, repo: repoName });
 
   return (
     <>
@@ -64,14 +68,7 @@ export default async function SiteManagePage({
 
         <DeployProgress initial={status} />
 
-        <div className="pw-empty" style={{ marginTop: 24 }}>
-          <h2 className="pw-empty__title">Editor &amp; publishing controls coming soon</h2>
-          <p className="pw-empty__body">
-            The visual builder, media library, and draft/schedule/publish controls attach to this
-            page in the next steps. Your connection and this site&apos;s live status are already
-            wired through GitHub.
-          </p>
-        </div>
+        {publishState ? <PublishPanel initial={publishState} /> : null}
       </main>
     </>
   );

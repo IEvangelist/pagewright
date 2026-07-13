@@ -114,6 +114,23 @@ identically in the editor preview and the deployed site. Uploads are capped at 8
 common image types (PNG, JPEG, GIF, WebP, AVIF, SVG, ICO); pasting an external URL still works as a
 fallback.
 
+### Publishing
+
+Each site's manage page (`/sites/{owner}/{repo}`) has a **Publishing** panel with two concerns kept
+deliberately separate:
+
+- **Site — live / offline.** Publish the site to enable GitHub Pages (and kick a build), or take it
+  offline with a confirmation. Offline disables Pages; your content and repo are untouched, so you can
+  bring it back anytime.
+- **Home page — draft → scheduled → published.** *Publish now* clears the draft flag so the page goes
+  live on the next deploy; *Unpublish* turns it back into a draft; *Schedule…* sets a future
+  `publishAt`. All three commit the page JSON via `POST /api/sites/{owner}/{repo}/publish`, which
+  pushes to the default branch and triggers the deploy workflow.
+
+Scheduling is **delegated to GitHub Actions**, not this app: the generated `scheduled-publish.yml`
+runs on a cron in the user's repo and promotes any draft whose `publishAt` has passed — so scheduled
+content goes live even if the app is never opened again.
+
 ## Tech decisions
 
 | Area            | Choice                                                                 |
@@ -138,7 +155,7 @@ fallback.
 - [x] Visual drag-and-drop editor (Puck) + localStorage autosave + commit-to-repo
 - [x] Explicit Save with SHA-based conflict detection (reload / overwrite)
 - [x] Drag-and-drop media uploads (committed to repo `public/media/`, content-hashed)
-- [ ] Draft / schedule / publish / unpublish lifecycle
+- [x] Draft / schedule / publish / unpublish lifecycle (site online/offline + page scheduling)
 - [ ] Dashboard with deployed-site thumbnails
 
 ## License
