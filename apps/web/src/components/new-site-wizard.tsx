@@ -20,8 +20,9 @@ import {
   Sun,
   XCircle,
 } from "lucide-react";
-import { PageRenderer, type Block } from "@pagewright/blocks";
+import type { Block } from "@pagewright/blocks";
 import { GitHubMark } from "@/components/icons/github-mark";
+import { TemplateCard } from "@/components/template-card";
 import {
   ACCENT_PRESETS,
   TEMPLATES,
@@ -38,6 +39,7 @@ import {
   type ProvisionStepStatus,
 } from "@/lib/provision/shared";
 import type { TemplateId } from "@pagewright/registry";
+import { resolveTemplateId } from "@/lib/landing-content";
 
 type Phase = "choose" | "configure" | "provisioning" | "done" | "error";
 type ThemeChoice = "light" | "dark" | "system";
@@ -122,8 +124,11 @@ export function NewSiteWizard({
   useEffect(() => {
     if (!hydrated) return;
     try {
-      const tpl = new URLSearchParams(window.location.search).get("template");
-      if (tpl && TEMPLATES.some((t) => t.id === tpl)) {
+      const tpl = resolveTemplateId(
+        new URLSearchParams(window.location.search).get("template"),
+        TEMPLATES.map((template) => template.id),
+      );
+      if (tpl) {
         chooseTemplate(tpl as TemplateId);
       }
     } catch {
@@ -353,36 +358,12 @@ export function NewSiteWizard({
           <p className="pw-wizard__empty">No templates match “{query}”.</p>
         ) : (
           <div className="pw-gallery" ref={galleryRef}>
-            {filteredTemplates.map((t) => (
-              <div key={t.id} className="pw-tplcard">
-                <TemplatePreview
-                  blocks={previews[t.id]}
-                  name={t.name}
-                  gradient={`linear-gradient(135deg, ${t.preview.from}, ${t.preview.to})`}
-                />
-                <span className="pw-tplcard__body">
-                  <span className="pw-tplcard__top">
-                    <span className="pw-tplcard__name">{t.name}</span>
-                    <span className="pw-chip">{t.category}</span>
-                  </span>
-                  <span className="pw-tplcard__tagline">{t.tagline}</span>
-                  <span className="pw-tplcard__highlights">
-                    {t.highlights.map((h) => (
-                      <span key={h} className="pw-tplcard__pill">
-                        {h}
-                      </span>
-                    ))}
-                  </span>
-                </span>
-                <Link
-                  href={`/templates/${t.id}`}
-                  className="pw-tplcard__cta"
-                  aria-label={`View the ${t.name} template`}
-                >
-                  <span className="pw-tplcard__ctalabel">View template</span>
-                  <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-              </div>
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                blocks={previews[template.id]}
+              />
             ))}
           </div>
         )}
@@ -507,7 +488,7 @@ export function NewSiteWizard({
             <span className="pw-field__hint">
               {draft.isPrivate
                 ? "Private repos need GitHub Pages on a paid plan to go live."
-                : "Recommended — free GitHub Pages hosting works with public repos."}
+                : "Recommended. Free GitHub Pages hosting works with public repos."}
             </span>
           </div>
         </div>
@@ -545,7 +526,7 @@ export function NewSiteWizard({
           subtitle={
             phase === "done"
               ? "Everything's set up. The first deployment finishes in about a minute."
-              : "Hang tight — this usually takes a few seconds."
+              : "Hang tight. This usually takes a few seconds."
           }
         />
 
@@ -631,59 +612,6 @@ function StepIcon({ status }: { status: ProvisionStepStatus }) {
   if (status === "error") return <XCircle size={20} />;
   if (status === "running") return <Loader2 size={20} className="pw-spin" />;
   return <Circle size={20} />;
-}
-
-/** Width the preview page is rendered at before being scaled down to fit its frame. */
-const PREVIEW_PAGE_WIDTH = 1280;
-
-/**
- * A live, at-scale preview of a template's starter home page — the same block components the
- * deployed Astro site uses, rendered at desktop width and scaled to fit the card. A ResizeObserver
- * keeps the scale pixel-perfect as the responsive gallery reflows. Falls back to a branded gradient
- * when a template has no parseable home page.
- */
-function TemplatePreview({
-  blocks,
-  name,
-  gradient,
-}: {
-  blocks?: Block[];
-  name: string;
-  gradient: string;
-}) {
-  const frameRef = useRef<HTMLSpanElement>(null);
-  const [scale, setScale] = useState(0.3);
-
-  useEffect(() => {
-    const el = frameRef.current;
-    if (!el) return;
-    const measure = () => setScale(el.clientWidth / PREVIEW_PAGE_WIDTH);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const hasPreview = Boolean(blocks && blocks.length > 0);
-
-  return (
-    <span className="pw-tplcard__preview" ref={frameRef} aria-hidden="true" inert>
-      {hasPreview ? (
-        <span className="pw-tplcard__frame">
-          <span
-            className="pw-tplcard__page pw-root"
-            style={{ transform: `scale(${scale})` }}
-          >
-            <PageRenderer blocks={blocks!} />
-          </span>
-        </span>
-      ) : (
-        <span className="pw-tplcard__gradient" style={{ background: gradient }}>
-          <span className="pw-tplcard__previewname">{name}</span>
-        </span>
-      )}
-    </span>
-  );
 }
 
 function WizardHeading({

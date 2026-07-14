@@ -14,7 +14,8 @@
     "start": "next start",
     "lint": "next lint",
     "pretypecheck": "node ../../scripts/build-provision-bundle.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/landing.test.mjs"
   },
   "dependencies": {
     "@measured/puck": "^0.20.2",

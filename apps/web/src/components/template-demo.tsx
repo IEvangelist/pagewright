@@ -15,6 +15,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
+import { templateUseHref } from "@/lib/landing-content";
 
 export type DeviceId = "desktop" | "tablet" | "mobile";
 
@@ -157,10 +158,10 @@ export function TemplateDemo({
                 }
               }}
             >
-              <option value="__home">Home · post index</option>
+              <option value="__home">Home - post index</option>
               {posts.map((p) => (
                 <option key={p.slug} value={p.slug}>
-                  Article · {p.title}
+                  Article - {p.title}
                 </option>
               ))}
             </select>
@@ -231,7 +232,7 @@ export function TemplateDemo({
                   </li>
                 ))}
               </ul>
-              <Link href={`/new?template=${templateId}`} className="pw-demo__cta">
+              <Link href={templateUseHref(templateId)} className="pw-demo__cta">
                 Use this template
                 <ArrowRight size={16} aria-hidden="true" />
               </Link>

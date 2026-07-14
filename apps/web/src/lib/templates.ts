@@ -17,7 +17,7 @@ export interface TemplateMeta {
   category: TemplateCategory;
   /** Free-text tags surfaced in search. */
   tags: string[];
-  /** Preview card gradient (CSS colors), a lightweight stand-in until real screenshots land. */
+  /** Branded fallback shown only when a starter preview cannot be loaded. */
   preview: { from: string; to: string };
   highlights: string[];
 }
@@ -28,11 +28,11 @@ export const TEMPLATES: TemplateMeta[] = [
     name: "Landing Page",
     tagline: "A punchy one-page site to launch anything",
     description:
-      "A single-page marketing site with a bold hero, feature grid, and call-to-action — perfect for a product, event, or campaign.",
+      "A focused marketing site with a strong hero, clear product details, and a direct call to action.",
     category: "Marketing",
     tags: ["marketing", "product", "startup", "one page", "launch"],
     preview: { from: "hsl(250 84% 60%)", to: "hsl(280 80% 62%)" },
-    highlights: ["Hero + features", "Call-to-action", "Fast & SEO-ready"],
+    highlights: ["Hero and features", "Call to action", "Fast and SEO-ready"],
   },
   {
     id: "blog",
@@ -43,7 +43,7 @@ export const TEMPLATES: TemplateMeta[] = [
     category: "Blog",
     tags: ["blog", "writing", "articles", "newsletter", "posts"],
     preview: { from: "hsl(200 85% 52%)", to: "hsl(250 84% 60%)" },
-    highlights: ["Post index + articles", "Drafts & scheduling", "RSS-ready"],
+    highlights: ["Post index and articles", "Drafts and scheduling", "RSS-ready"],
   },
   {
     id: "portfolio",
@@ -54,7 +54,7 @@ export const TEMPLATES: TemplateMeta[] = [
     category: "Portfolio",
     tags: ["portfolio", "resume", "personal", "projects", "profile"],
     preview: { from: "hsl(33 95% 55%)", to: "hsl(350 80% 60%)" },
-    highlights: ["Project showcase", "About + contact", "Personal brand"],
+    highlights: ["Project showcase", "About and contact", "Personal brand"],
   },
 ];
 

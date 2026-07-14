@@ -81,6 +81,22 @@ button:disabled {
   align-items: center;
   gap: 10px;
 }
+.pw-marketingbar__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  margin-inline: auto;
+}
+.pw-marketingbar__nav a {
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pw-marketingbar__nav a:hover,
+.pw-marketingbar__nav a[aria-current="page"] {
+  color: hsl(var(--pw-fg));
+}
 
 .pw-btn {
   display: inline-flex;
@@ -649,7 +665,10 @@ button:disabled {
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
+  gap: 4px;
   align-items: flex-end;
+  justify-content: flex-end;
   padding: 14px;
 }
 .pw-tplcard__previewname {
@@ -658,6 +677,11 @@ button:disabled {
   letter-spacing: -0.01em;
   color: #fff;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+}
+.pw-tplcard__previewstate {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 .pw-tplcard__body {
   display: flex;
@@ -675,11 +699,13 @@ button:disabled {
 .pw-tplcard__name {
   font-weight: 700;
   font-size: 1rem;
+  margin: 0;
 }
 .pw-tplcard__tagline {
   color: hsl(var(--pw-muted-fg));
   font-size: 0.86rem;
   line-height: 1.45;
+  margin: 0;
 }
 .pw-tplcard__highlights {
   display: flex;
@@ -2783,263 +2809,361 @@ html.dark [class*="_ExternalInput-button_"] {
   background: hsl(var(--pw-bg)) !important;
 }
 
-/* ── Landing page flair ──────────────────────────────────────────────────────────
-   Landing-only ambient decoration (drifting aurora blobs + a soft dotted grid) plus
-   a few scoped micro-interactions and staggered entrance animations. Everything is
-   nested under `.pw-landing`, so the shared block components — and therefore every
-   generated Astro site — stay completely untouched. Purely presentational. */
+/* Landing marketing surfaces */
 .pw-landing {
-  position: relative;
-  overflow-x: clip; /* clip blobs horizontally without breaking the sticky appbar */
-  isolation: isolate;
+  min-height: 100dvh;
   background: hsl(var(--pw-bg));
+  color: hsl(var(--pw-fg));
+  font-family: var(--pw-font);
 }
 .pw-landing__content {
-  position: relative;
-  z-index: 1;
-}
-/* The shared .pw-root paints an opaque page background; on the landing we let the ambient
-   backdrop show through instead (the base color lives on .pw-landing above). */
-.pw-landing__content.pw-root {
-  background: transparent;
-}
-.pw-landing__backdrop {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 920px;
-  z-index: 0;
-  pointer-events: none;
   overflow: hidden;
 }
-.pw-landing__grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(hsl(var(--pw-fg) / 0.06) 1px, transparent 1px);
-  background-size: 26px 26px;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+.pw-landing__hero,
+.pw-landing__templates,
+.pw-landing__workflow,
+.pw-landing__closing-inner,
+.pw-landing__footer {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
 }
-.dark .pw-landing__grid {
-  background-image: radial-gradient(hsl(0 0% 100% / 0.07) 1px, transparent 1px);
+.pw-landing__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(520px, 1.18fr);
+  align-items: center;
+  gap: clamp(40px, 7vw, 92px);
+  min-height: calc(100dvh - 56px);
+  padding-block: 56px 72px;
 }
-.pw-landing__blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-  will-change: transform;
+.pw-landing__hero-copy {
+  max-width: 540px;
 }
-.dark .pw-landing__blob {
-  opacity: 0.4;
+.pw-landing__eyebrow {
+  margin: 0 0 18px;
+  color: hsl(var(--pw-primary));
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.pw-landing__blob--1 {
-  top: -150px;
-  left: -90px;
-  width: 460px;
-  height: 460px;
-  background: radial-gradient(circle at 30% 30%, hsl(var(--pw-primary) / 0.55), transparent 70%);
-  animation: pw-drift-a 19s ease-in-out infinite;
+.pw-landing__hero h1 {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(3rem, 5vw, 4.4rem);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  line-height: 0.97;
 }
-.pw-landing__blob--2 {
-  top: -110px;
-  right: -110px;
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(circle at 60% 40%, hsl(var(--pw-accent) / 0.5), transparent 70%);
-  animation: pw-drift-b 23s ease-in-out infinite;
+.pw-landing__lede {
+  max-width: 47ch;
+  margin: 24px 0 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: clamp(1.04rem, 1.7vw, 1.22rem);
+  line-height: 1.6;
 }
-.pw-landing__blob--3 {
-  top: 210px;
-  left: 40%;
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle at 50% 50%, hsl(280 85% 65% / 0.4), transparent 70%);
-  animation: pw-drift-c 27s ease-in-out infinite;
+.pw-landing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
 }
-@keyframes pw-drift-a {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(46px, 32px, 0) scale(1.08); }
+.pw-landing__actions .pw-btn,
+.pw-landing__closing .pw-btn {
+  white-space: nowrap;
 }
-@keyframes pw-drift-b {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-40px, 26px, 0) scale(1.1); }
+.pw-landing__primary {
+  box-shadow: 0 12px 28px -18px hsl(var(--pw-primary) / 0.75);
 }
-@keyframes pw-drift-c {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(0, -34px, 0) scale(1.14); }
+.pw-landing__hero-visual {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 18px;
+  background: hsl(var(--pw-card));
+  box-shadow: 0 28px 70px -46px hsl(var(--pw-fg) / 0.52);
 }
-
-/* Hero eyebrow → live status pill */
-.pw-landing .pw-hero__eyebrow {
+.pw-landing__preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+.pw-landing__preview-head a {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  margin-bottom: 22px;
-  border-radius: 999px;
-  background: hsl(var(--pw-primary) / 0.1);
-  border: 1px solid hsl(var(--pw-primary) / 0.28);
+  gap: 6px;
   color: hsl(var(--pw-primary));
-  backdrop-filter: blur(4px);
+  text-decoration: none;
 }
-.pw-landing .pw-hero__eyebrow::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: hsl(var(--pw-primary));
-  animation: pw-pulse-dot 2.4s ease-out infinite;
+.pw-landing__hero-preview {
+  aspect-ratio: 16 / 10;
+  border-bottom: 0;
 }
-@keyframes pw-pulse-dot {
-  0% { box-shadow: 0 0 0 0 hsl(var(--pw-primary) / 0.5); }
-  70% { box-shadow: 0 0 0 8px hsl(var(--pw-primary) / 0); }
-  100% { box-shadow: 0 0 0 0 hsl(var(--pw-primary) / 0); }
+.pw-landing__preview-note {
+  margin: 0;
+  padding: 11px 16px;
+  border-top: 1px solid hsl(var(--pw-border));
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.78rem;
+}
+.pw-landing__templates {
+  padding-block: 96px;
+}
+.pw-landing__templates-head {
+  max-width: 650px;
+  margin-bottom: 34px;
+}
+.pw-landing__templates-head h2,
+.pw-landing__workflow h2,
+.pw-landing__closing h2 {
+  margin: 0;
+  font-size: clamp(2rem, 3.8vw, 3.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1.04;
+}
+.pw-landing__templates-head p,
+.pw-landing__workflow-copy > p,
+.pw-landing__closing p {
+  margin: 16px 0 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+.pw-landing__template-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 18px;
+}
+.pw-landing__template-grid .pw-tplcard:first-child {
+  grid-column: span 6;
+}
+.pw-landing__template-grid .pw-tplcard {
+  grid-column: span 3;
+}
+.pw-landing__workflow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(48px, 8vw, 110px);
+  padding-block: 104px;
+  border-top: 1px solid hsl(var(--pw-border));
+}
+.pw-landing__workflow-copy {
+  align-self: start;
+  position: sticky;
+  top: 96px;
+}
+.pw-landing__workflow-list {
+  display: grid;
+}
+.pw-landing__workflow-list article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  padding-block: 26px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+}
+.pw-landing__workflow-list article:first-child {
+  padding-top: 0;
+}
+.pw-landing__workflow-list svg {
+  margin-top: 3px;
+  color: hsl(var(--pw-primary));
+}
+.pw-landing__workflow-list h3 {
+  margin: 0 0 7px;
+  font-size: 1.15rem;
+}
+.pw-landing__workflow-list p {
+  margin: 0;
+  color: hsl(var(--pw-muted-fg));
+  line-height: 1.55;
+}
+.pw-landing__closing {
+  padding-block: 40px 96px;
+}
+.pw-landing__closing-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  padding: clamp(30px, 5vw, 58px);
+  border: 1px solid hsl(var(--pw-primary) / 0.28);
+  border-radius: 18px;
+  background: hsl(var(--pw-primary) / 0.07);
+}
+.pw-landing__closing h2 {
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+}
+.pw-landing__closing p {
+  max-width: 58ch;
+}
+.pw-landing__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-block: 28px 36px;
+  border-top: 1px solid hsl(var(--pw-border));
+}
+.pw-landing__footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.pw-landing__footer a {
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pw-landing__footer a:hover {
+  color: hsl(var(--pw-fg));
+}
+.pw-template-gallery-page {
+  width: min(1120px, calc(100% - 40px));
+  min-height: calc(100dvh - 56px);
+  margin-inline: auto;
+  padding-block: 72px 96px;
+  color: hsl(var(--pw-fg));
+  font-family: var(--pw-font);
+}
+.pw-template-gallery-page__head {
+  max-width: 680px;
+  margin-bottom: 36px;
+}
+.pw-template-gallery-page__head h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+.pw-template-gallery-page__head p {
+  margin: 18px 0 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 1.06rem;
+  line-height: 1.6;
+}
+.pw-template-gallery-page > .pw-gallery {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-/* Hero heading → living gradient ink that slowly drifts (landing only) */
-.pw-landing .pw-hero__heading {
-  background-image: linear-gradient(
-    110deg,
-    hsl(var(--pw-fg)) 20%,
-    hsl(var(--pw-primary)) 50%,
-    hsl(var(--pw-accent)) 68%,
-    hsl(var(--pw-primary)) 82%,
-    hsl(var(--pw-fg)) 100%
-  );
-  background-size: 220% 100%;
-  background-position: 0% 50%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: pw-textflow 12s ease-in-out infinite;
-}
-@keyframes pw-textflow {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Primary hero CTA → depth + a hover sheen sweep */
-.pw-landing .pw-hero__actions .pw-btn--primary {
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 30px -10px hsl(var(--pw-primary) / 0.6);
-}
-.pw-landing .pw-hero__actions .pw-btn--primary::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.35) 50%, transparent 70%);
-  transform: translateX(-120%);
-  transition: transform 0.6s ease;
-}
-.pw-landing .pw-hero__actions .pw-btn--primary:hover::after {
-  transform: translateX(120%);
-}
-
-/* Feature cards use a small, local hover response. */
-.pw-landing .pw-feature {
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.pw-landing .pw-feature:hover {
-  transform: translateY(-2px);
-  border-color: hsl(var(--pw-primary) / 0.4);
-  box-shadow: 0 12px 30px -24px hsl(var(--pw-primary) / 0.45);
-}
-
-/* CTA card → brand glow */
-.pw-landing .pw-cta__inner {
-  box-shadow: 0 30px 80px -42px hsl(var(--pw-primary) / 0.75);
-}
-
-/* Staggered entrance for the hero */
 @media (prefers-reduced-motion: no-preference) {
-  .pw-landing .pw-hero__eyebrow,
-  .pw-landing .pw-hero__heading,
-  .pw-landing .pw-hero__subheading,
-  .pw-landing .pw-hero__actions {
-    animation: pw-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  .pw-landing__hero-copy,
+  .pw-landing__hero-visual {
+    animation: pw-rise 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  .pw-landing .pw-hero__eyebrow { animation-delay: 0.05s; }
-  .pw-landing .pw-hero__heading { animation-delay: 0.14s; }
-  .pw-landing .pw-hero__subheading { animation-delay: 0.24s; }
-  .pw-landing .pw-hero__actions { animation-delay: 0.34s; }
+  .pw-landing__hero-visual {
+    animation-delay: 90ms;
+  }
 }
 @keyframes pw-rise {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .pw-landing__blob,
-  .pw-landing .pw-hero__eyebrow::before,
-  .pw-landing .pw-hero__heading {
-    animation: none;
-  }
-}
-
-/* ── Landing motion layer (JS-driven, enabled by `.pw-motion`) ────────────────────
-   Everything below only activates once <LandingMotion /> flags the root with
-   `.pw-motion` — which it never does under prefers-reduced-motion. So these
-   pre-reveal hidden states can't strand content for no-JS / reduced-motion users. */
-
-/* Scroll reveal — sections rise + fade as they enter view. The transition lives on the revealed
-   state so the initial hide (applied by JS after first paint) snaps instantly rather than fading out
-   and back in. */
 .pw-motion .pw-reveal {
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(18px);
   will-change: opacity, transform;
 }
 .pw-motion .pw-reveal--in {
   opacity: 1;
   transform: none;
   transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--pw-reveal-delay, 0ms);
 }
 
-.pw-landing.pw-motion .pw-hero__actions .pw-btn--primary:hover {
-  box-shadow: 0 12px 30px -16px hsl(var(--pw-primary) / 0.6);
+@media (max-width: 980px) {
+  .pw-landing__hero {
+    grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+    gap: 36px;
+  }
+  .pw-landing__template-grid .pw-tplcard:first-child {
+    grid-column: span 12;
+  }
+  .pw-landing__template-grid .pw-tplcard {
+    grid-column: span 6;
+  }
+  .pw-template-gallery-page > .pw-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-
-/* CTA card → a slow conic glow rotating behind the panel. */
-.pw-landing.pw-motion .pw-cta {
-  position: relative;
+@media (max-width: 767px) {
+  .pw-marketingbar__nav {
+    display: none;
+  }
+  .pw-landing__hero,
+  .pw-landing__workflow {
+    grid-template-columns: 1fr;
+  }
+  .pw-landing__hero {
+    min-height: auto;
+    gap: 42px;
+    padding-block: 52px 64px;
+  }
+  .pw-landing__hero h1 {
+    max-width: 10ch;
+    font-size: clamp(2.8rem, 14vw, 4.3rem);
+  }
+  .pw-landing__templates,
+  .pw-landing__workflow {
+    padding-block: 72px;
+  }
+  .pw-landing__template-grid .pw-tplcard,
+  .pw-landing__template-grid .pw-tplcard:first-child {
+    grid-column: span 12;
+  }
+  .pw-landing__workflow-copy {
+    position: static;
+  }
+  .pw-landing__closing {
+    padding-block: 24px 72px;
+  }
+  .pw-landing__closing-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pw-template-gallery-page > .pw-gallery {
+    grid-template-columns: 1fr;
+  }
 }
-.pw-landing.pw-motion .pw-cta__inner {
-  position: relative;
-  isolation: isolate;
-}
-.pw-landing.pw-motion .pw-cta__inner::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  z-index: -1;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(
-    from var(--pw-spin, 0deg),
-    hsl(var(--pw-primary)),
-    hsl(var(--pw-accent)),
-    hsl(280 85% 65%),
-    hsl(var(--pw-primary))
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.9;
-  animation: pw-spin 9s linear infinite;
-}
-@property --pw-spin {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes pw-spin {
-  to { --pw-spin: 360deg; }
+@media (max-width: 520px) {
+  .pw-appbar {
+    padding-inline: 14px;
+  }
+  .pw-marketingbar .pw-auth__placeholder {
+    width: 88px;
+  }
+  .pw-marketingbar .pw-auth__login {
+    display: none;
+  }
+  .pw-marketingbar .pw-btn {
+    padding-inline: 10px;
+    font-size: 0.8rem;
+  }
+  .pw-landing__hero,
+  .pw-landing__templates,
+  .pw-landing__workflow,
+  .pw-landing__closing-inner,
+  .pw-landing__footer,
+  .pw-template-gallery-page {
+    width: min(100% - 28px, 1180px);
+  }
+  .pw-landing__preview-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .pw-landing__footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 /* Gallery template cards (/new) use stagger reveal plus a small hover lift.

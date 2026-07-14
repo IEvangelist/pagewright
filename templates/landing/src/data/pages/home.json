@@ -1,5 +1,5 @@
 {
-  "title": "Pagewright — ship a site in minutes",
+  "title": "Pagewright: ship a site in minutes",
   "description": "Pick a template, customize it visually, and publish to GitHub Pages with one click.",
   "slug": "/",
   "draft": false,
@@ -14,7 +14,7 @@
           { "label": "Features", "href": "#features" },
           { "label": "Docs", "href": "#docs" }
         ],
-        "cta": { "label": "Sign in with GitHub", "href": "#signin" }
+        "cta": { "label": "View source", "href": "https://github.com/IEvangelist/pagewright" }
       }
     },
     {
@@ -22,10 +22,10 @@
       "id": "hero-1",
       "props": {
         "eyebrow": "Free hosting on GitHub Pages",
-        "heading": "Ship a beautiful site in minutes — no code required",
+        "heading": "Ship a beautiful site in minutes without writing code",
         "subheading": "Choose a template, make it yours with a visual editor, and publish straight to your own GitHub repository. Drafts, scheduling, and updates are all handled for you.",
-        "primaryCta": { "label": "Start building", "href": "#signin" },
-        "secondaryCta": { "label": "Browse templates", "href": "#templates" },
+        "primaryCta": { "label": "See features", "href": "#features" },
+        "secondaryCta": { "label": "View source", "href": "https://github.com/IEvangelist/pagewright" },
         "align": "center"
       }
     },
@@ -39,7 +39,7 @@
         "items": [
           { "icon": "palette", "title": "Visual builder", "body": "Drag, drop, and edit blocks with a live preview in light or dark mode." },
           { "icon": "rocket", "title": "One-click publish", "body": "Provisions a repo with GitHub Actions that build and deploy to Pages automatically." },
-          { "icon": "calendar", "title": "Drafts & scheduling", "body": "Mark pages as drafts and schedule publishing — delegated to GitHub Actions." },
+          { "icon": "calendar", "title": "Drafts and scheduling", "body": "Mark pages as drafts and let GitHub Actions publish them on schedule." },
           { "icon": "image", "title": "Drag-and-drop media", "body": "Drop in images and they're committed to your repo's media folder." },
           { "icon": "shield", "title": "GitHub auth only", "body": "Acts on your behalf with scoped, revocable permissions. Your content, your repo." },
           { "icon": "recycle", "title": "Safe self-updates", "body": "Template improvements arrive as pull requests that preserve your content." }
@@ -51,8 +51,8 @@
       "id": "cta-1",
       "props": {
         "heading": "Your next site is one click away",
-        "body": "Sign in with GitHub and publish your first page today — completely free.",
-        "primaryCta": { "label": "Get started free", "href": "#signin" }
+        "body": "Publish your first page from a repository you control.",
+        "primaryCta": { "label": "View source", "href": "https://github.com/IEvangelist/pagewright" }
       }
     },
     {

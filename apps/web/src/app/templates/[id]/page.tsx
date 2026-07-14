@@ -19,7 +19,7 @@ const FEATURES: Record<string, DemoFeature[]> = {
   ],
   blog: [
     { title: "Post index + articles", body: "A clean home feed and readable article pages, styled for long-form." },
-    { title: "Drafts & scheduling", body: "Write ahead, mark drafts, and schedule posts — future ones show as “Coming soon.”" },
+    { title: "Drafts and scheduling", body: "Write ahead, mark drafts, and schedule posts. Future posts show as “Coming soon.”" },
     { title: "Own your content", body: "Every post is Markdown committed to your repo. No lock-in." },
     { title: "RSS-ready", body: "A feed your readers can subscribe to from day one." },
   ],
@@ -60,9 +60,9 @@ export default async function TemplateDemoPage({ params }: { params: Promise<{ i
         </div>
       </header>
       <main className="pw-dash pw-demopage">
-        <Link href="/new" className="pw-backlink">
+        <Link href="/templates" className="pw-backlink">
           <ArrowLeft size={16} aria-hidden="true" />
-          <span>All templates</span>
+          <span>Back to templates</span>
         </Link>
 
         <div className="pw-demopage__head">

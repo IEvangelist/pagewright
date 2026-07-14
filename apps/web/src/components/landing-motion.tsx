@@ -22,7 +22,7 @@ export function LandingMotion() {
 
     const revealTargets = Array.from(
       root.querySelectorAll<HTMLElement>(
-        ".pw-features .pw-section__heading, .pw-features .pw-section__subheading, .pw-feature, .pw-cta__inner, .pw-footer__inner",
+        ".pw-landing__templates-head, .pw-landing__template-grid .pw-tplcard, .pw-landing__workflow-copy, .pw-landing__workflow-list, .pw-landing__closing-inner, .pw-landing__footer",
       ),
     );
     revealTargets.forEach((el, i) => {

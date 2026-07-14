@@ -69,6 +69,7 @@ export function AuthButton() {
       <button
         type="button"
         className="pw-auth__trigger"
+        aria-label={`Open account menu for ${user.login}`}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
