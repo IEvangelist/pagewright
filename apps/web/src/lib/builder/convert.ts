@@ -15,6 +15,7 @@ export const PUCK_NAME_BY_TYPE = {
   gallery: "Gallery",
   cta: "Call to action",
   prose: "Prose",
+  githubDiscussions: "GitHub Discussions",
   footer: "Footer",
 } satisfies Record<BlockType, string>;
 

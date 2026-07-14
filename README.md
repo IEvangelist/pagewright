@@ -115,6 +115,33 @@ root (`/`) or a **project page** subpath (`/<repo>/`), and looks identical in th
 Uploads are capped at 8 MB and limited to common image types (PNG, JPEG, GIF, WebP, AVIF, SVG, ICO);
 pasting an external URL still works as a fallback.
 
+### Composing posts and adding discussions
+
+Blog posts use an ordered component view. Existing posts with one prose block continue to open as
+before, while authors can add more text sections or a **GitHub Discussions** section, reorder them by
+dragging or with the accessible move buttons, preview the complete post, and remove sections. The
+same JSON component list is validated and rendered by the builder and generated Astro blog.
+
+The Discussions component wraps the official [Giscus](https://giscus.app) client. It stores only
+public configuration in the post document: repository name and ID, discussion category and ID,
+mapping, theme, input position, and reaction preferences. It never receives a GitHub token or
+secret. Readers can view the discussion anonymously; Giscus prompts them to sign in with GitHub
+before commenting or reacting.
+
+To configure it:
+
+1. Use a public site repository. In the component editor, let Pagewright enable GitHub Discussions
+   for that repository if needed.
+2. Install the Giscus GitHub App for the repository, then select one of its Discussion categories
+   in Pagewright. Pagewright resolves the public repository and category IDs automatically.
+3. Keep **Post pathname** mapping unless the post needs an explicitly managed discussion. The
+   deployed `/blog/<slug>/` path gives each post a deterministic discussion key.
+
+An unfinished component remains saveable and renders a clear setup state instead of loading a
+broken iframe. No credentials belong in post JSON, site configuration, or client environment
+variables. Advanced settings retain manual repository, ID, mapping, and theme controls for sites
+that intentionally use a different public Discussions repository.
+
 ### Publishing
 
 Each site's manage page (`/sites/{owner}/{repo}`) has a **Publishing** panel with two concerns kept

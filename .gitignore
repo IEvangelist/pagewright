@@ -8,6 +8,7 @@ dist/
 .netlify/
 .astro/
 .turbo/
+.test-dist/
 out/
 *.tsbuildinfo
 

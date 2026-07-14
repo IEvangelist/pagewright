@@ -1,9 +1,18 @@
 import { getProviderForSession } from "@/lib/auth/provider";
-import { parsePage, parsePost, type Block, type Page, type Post } from "@pagewright/blocks";
+import {
+  parsePage,
+  parsePost,
+  postComponentsSchema,
+  type Page,
+  type Post,
+  type PostComponent,
+} from "@pagewright/blocks";
 import { ConcurrencyError } from "@pagewright/github";
 import { puckDataToPage } from "@/lib/builder/convert";
 import { applyPostMeta, isPostPath, type PostMeta } from "@/lib/content/posts";
 import { renderMarkdown } from "@/lib/content/markdown";
+import { loadVendorFiles } from "@/lib/provision/template-source";
+import { createStamp, getLatestManifest } from "@pagewright/registry";
 import type { Data } from "@measured/puck";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +38,36 @@ function postFromMarkdown(
 ): Post {
   const existingProse = base.blocks.find((b) => b.type === "prose");
   const id = existingProse?.id ?? `prose-${Date.now().toString(36)}`;
-  const proseBlock = {
+  const proseBlock: Extract<PostComponent, { type: "prose" }> = {
     type: "prose",
     id,
     props: { markdown, html: renderMarkdown(markdown) },
-  } as unknown as Block;
+  };
   const withBody: Post = { ...base, blocks: [proseBlock] };
+  if (typeof root.title === "string" && root.title.trim()) withBody.title = root.title.trim();
+  if (typeof root.description === "string") withBody.description = root.description;
+  return parsePost(applyPostMeta(withBody, meta));
+}
+
+/** Validate ordered post components and render each Markdown source to deployable HTML. */
+function postFromComponents(
+  base: Post,
+  input: unknown[],
+  meta: Partial<PostMeta> | undefined,
+  root: { title?: string; description?: string },
+): Post {
+  const blocks = postComponentsSchema.parse(input).map((component) =>
+    component.type === "prose"
+      ? {
+          ...component,
+          props: {
+            ...component.props,
+            html: renderMarkdown(component.props.markdown ?? ""),
+          },
+        }
+      : component,
+  );
+  const withBody: Post = { ...base, blocks };
   if (typeof root.title === "string" && root.title.trim()) withBody.title = root.title.trim();
   if (typeof root.description === "string") withBody.description = root.description;
   return parsePost(applyPostMeta(withBody, meta));
@@ -67,6 +100,7 @@ export async function POST(
     path?: unknown;
     data?: unknown;
     markdown?: unknown;
+    blocks?: unknown;
     title?: unknown;
     description?: unknown;
     meta?: unknown;
@@ -83,8 +117,13 @@ export async function POST(
     return Response.json({ error: "Unsupported content path." }, { status: 400 });
   }
   const isPost = isPostPath(path);
+  const componentBody = isPost && Array.isArray(body.blocks) ? body.blocks : null;
   const markdownBody = isPost && typeof body.markdown === "string" ? body.markdown : null;
-  if (markdownBody === null && (!body.data || typeof body.data !== "object")) {
+  if (
+    componentBody === null &&
+    markdownBody === null &&
+    (!body.data || typeof body.data !== "object")
+  ) {
     return Response.json({ error: "Missing editor data." }, { status: 400 });
   }
   const expectedHeadSha =
@@ -115,7 +154,12 @@ export async function POST(
       } catch {
         base = parsePost({ title: repoData.name, blocks: [] });
       }
-      if (markdownBody !== null) {
+      if (componentBody !== null) {
+        document = postFromComponents(base, componentBody, meta, {
+          title: typeof body.title === "string" ? body.title : undefined,
+          description: typeof body.description === "string" ? body.description : undefined,
+        });
+      } else if (markdownBody !== null) {
         document = postFromMarkdown(base, markdownBody, meta, {
           title: typeof body.title === "string" ? body.title : undefined,
           description: typeof body.description === "string" ? body.description : undefined,
@@ -144,13 +188,29 @@ export async function POST(
 
   const content = `${JSON.stringify(document, null, 2)}\n`;
   const fileName = path.split("/").pop() ?? path;
+  const files = [{ path, content }];
+  if (isPost && document.blocks.some((block) => block.type === "githubDiscussions")) {
+    const manifest = getLatestManifest("blog");
+    if (!manifest) {
+      return Response.json({ error: "The blog runtime is not available." }, { status: 503 });
+    }
+    files.push(
+      ...loadVendorFiles()
+        .filter((file) => file.path.startsWith("vendor/pagewright-blocks/"))
+        .map((file) => ({ path: file.path, content: file.content })),
+      {
+        path: "pagewright.json",
+        content: `${JSON.stringify(createStamp(manifest), null, 2)}\n`,
+      },
+    );
+  }
 
   try {
     const result = await provider.commitFiles(
       { owner, repo },
       {
         message: `Update ${fileName} via Pagewright`,
-        files: [{ path, content }],
+        files,
         branch: repoData.defaultBranch,
         expectedHeadSha,
       },

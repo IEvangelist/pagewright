@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node tests/run.mjs"
   },
   "peerDependencies": {
     "react": ">=18.2.0",

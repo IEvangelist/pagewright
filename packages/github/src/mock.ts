@@ -11,6 +11,7 @@ import {
   type CommitOptions,
   type CommitResult,
   type CreateRepoOptions,
+  type DiscussionSetup,
   type DirEntry,
   type EnablePagesOptions,
   type FileContents,
@@ -276,6 +277,7 @@ function seedRepo(
   const pushedAt = new Date(Date.now() - opts.minutesAgo * 60_000).toISOString();
   const repo: Repo = {
     id,
+    nodeId: `R_mockRepository${id}`,
     name: opts.name,
     fullName: `${login}/${opts.name}`,
     owner: login,
@@ -286,6 +288,7 @@ function seedRepo(
     topics: [...opts.topics, PAGEWRIGHT_TOPIC],
     homepage: `https://${login}.github.io/${opts.name}/`,
     pushedAt,
+    hasDiscussions: opts.template === "blog",
     pagesUrl: `https://${login}.github.io/${opts.name}/`,
   };
   const state: MockRepoState = {
@@ -362,6 +365,39 @@ export class MockGitHubProvider implements GitHubProvider {
 
   async getRepo(ref: RepoRef): Promise<Repo | null> {
     return this.store().repos.get(ref.repo.toLowerCase())?.repo ?? null;
+  }
+
+  async getDiscussionSetup(ref: RepoRef): Promise<DiscussionSetup | null> {
+    const repo = await this.getRepo(ref);
+    if (!repo) return null;
+    return {
+      repo: repo.fullName,
+      repoId: repo.nodeId,
+      enabled: repo.hasDiscussions,
+      private: repo.private,
+      categories: repo.hasDiscussions
+        ? [
+            {
+              id: `DIC_mockAnnouncements${repo.id}`,
+              name: "Announcements",
+              description: "Updates and post conversations",
+              emoji: "📣",
+            },
+            {
+              id: `DIC_mockGeneral${repo.id}`,
+              name: "General",
+              description: "Open discussion",
+              emoji: "💬",
+            },
+          ]
+        : [],
+    };
+  }
+
+  async enableDiscussions(ref: RepoRef): Promise<DiscussionSetup> {
+    const repo = requireRepo(this.store(), ref).repo;
+    repo.hasDiscussions = true;
+    return (await this.getDiscussionSetup(ref))!;
   }
 
   async createRepo(opts: CreateRepoOptions): Promise<Repo> {

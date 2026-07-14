@@ -14,15 +14,13 @@ export default function Home() {
 
   return (
     <div className="pw-landing">
-      {/* Decorative, landing-only flair — ambient aurora blobs, grid, and a cursor-tracking
-          spotlight. Does not touch the shared block components, so generated Astro sites stay
-          clean. Purely presentational; the interactive bits are wired by <LandingMotion />. */}
+      {/* Decorative, landing-only ambient color. The motion layer is intentionally limited to
+          scroll reveals and does not follow the pointer. */}
       <div className="pw-landing__backdrop" aria-hidden="true">
         <div className="pw-landing__grid" />
         <span className="pw-landing__blob pw-landing__blob--1" />
         <span className="pw-landing__blob pw-landing__blob--2" />
         <span className="pw-landing__blob pw-landing__blob--3" />
-        <span className="pw-landing__spotlight" />
       </div>
       <header className="pw-appbar">
         <span className="pw-appbar__brand">

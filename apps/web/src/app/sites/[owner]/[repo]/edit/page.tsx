@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { parsePage, parsePost, type Block, type Page, type Post } from "@pagewright/blocks";
+import {
+  parsePage,
+  parsePost,
+  type Block,
+  type Page,
+  type Post,
+  type PostComponent,
+} from "@pagewright/blocks";
+import type { DiscussionSetup } from "@pagewright/github";
 import { getProviderForSession } from "@/lib/auth/provider";
 import { getCurrentUser } from "@/lib/auth/session";
 import { blocksToPuckData } from "@/lib/builder/convert";
@@ -14,6 +22,10 @@ export const dynamic = "force-dynamic";
 
 /** Default document the visual builder edits when no explicit `?path=` is given. */
 const HOME_PATH = "src/data/pages/home.json";
+
+function isPostComponent(block: Block): block is PostComponent {
+  return block.type === "prose" || block.type === "githubDiscussions";
+}
 
 /** Only content documents under the pages/posts data dirs may be opened in the editor. */
 function isEditablePath(path: string): boolean {
@@ -97,14 +109,43 @@ export default async function EditSitePage({
   const liveUrl = pages?.url ?? repoData.pagesUrl ?? null;
 
   // Posts get the markdown-first composer; pages keep the visual (Puck) builder.
-  if (post && parsedPost && postMeta) {
-    const prose = parsedPost.blocks.find(
-      (b): b is Extract<Block, { type: "prose" }> => b.type === "prose",
-    );
-    const markdown =
-      prose?.props.markdown && prose.props.markdown.trim()
-        ? prose.props.markdown
-        : htmlToMarkdown(prose?.props.html ?? "");
+  if (post && parsedPost && postMeta && parsedPost.blocks.every(isPostComponent)) {
+    const discussionSetup: DiscussionSetup | null = await provider
+      .getDiscussionSetup({ owner, repo })
+      .catch(() => null);
+    const sourceRepo = discussionSetup?.repo ?? `${owner}/${repo}`;
+    const defaultCategory =
+      discussionSetup?.categories.find((category) => category.name === "Announcements") ??
+      discussionSetup?.categories[0];
+    const components: PostComponent[] = parsedPost.blocks.map((component) => {
+      if (component.type === "prose") {
+        return {
+          ...component,
+          props: {
+            ...component.props,
+            markdown:
+              component.props.markdown && component.props.markdown.trim()
+                ? component.props.markdown
+                : htmlToMarkdown(component.props.html ?? ""),
+          },
+        };
+      }
+      const usesSourceRepo =
+        !component.props.repo ||
+        component.props.repo.toLowerCase() === sourceRepo.toLowerCase();
+      return usesSourceRepo
+        ? {
+            ...component,
+            props: {
+              ...component.props,
+              repo: sourceRepo,
+              repoId: component.props.repoId || discussionSetup?.repoId || "",
+              category: component.props.category || defaultCategory?.name || "",
+              categoryId: component.props.categoryId || defaultCategory?.id || "",
+            },
+          }
+        : component;
+    });
     return (
       <PostComposer
         owner={owner}
@@ -115,9 +156,10 @@ export default async function EditSitePage({
         liveUrl={liveUrl}
         initialTitle={parsedPost.title}
         initialDescription={parsedPost.description ?? ""}
-        initialMarkdown={markdown}
+        initialComponents={components}
         postMeta={postMeta}
         initialHeadSha={headSha}
+        initialDiscussionSetup={discussionSetup}
       />
     );
   }

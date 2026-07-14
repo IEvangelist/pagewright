@@ -2,7 +2,16 @@
 
 import type { ComponentProps, ReactNode } from "react";
 import type { Config, CustomField } from "@measured/puck";
-import { Cta, Features, Footer, Gallery, Hero, Navbar, Prose } from "@pagewright/blocks";
+import {
+  Cta,
+  Features,
+  Footer,
+  Gallery,
+  GitHubDiscussions,
+  Hero,
+  Navbar,
+  Prose,
+} from "@pagewright/blocks";
 import { ImageField } from "@/components/image-field";
 
 /**
@@ -178,6 +187,76 @@ export const puckConfig: Config = {
       },
       defaultProps: { html: "<p>Write something here.</p>" },
       render: (props) => <Prose {...(props as unknown as ComponentProps<typeof Prose>)} />,
+    },
+    "GitHub Discussions": {
+      fields: {
+        repo: { type: "text", label: "Repository (owner/name)" },
+        repoId: { type: "text", label: "Repository ID" },
+        category: { type: "text", label: "Category" },
+        categoryId: { type: "text", label: "Category ID" },
+        mapping: {
+          type: "select",
+          label: "Mapping",
+          options: [
+            { label: "Pathname", value: "pathname" },
+            { label: "URL", value: "url" },
+            { label: "Title", value: "title" },
+            { label: "Specific term", value: "specific" },
+          ],
+        },
+        term: { type: "text", label: "Specific term (when selected)" },
+        strict: {
+          type: "radio",
+          label: "Strict matching",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
+          ],
+        },
+        reactionsEnabled: {
+          type: "radio",
+          label: "Reactions",
+          options: [
+            { label: "On", value: true },
+            { label: "Off", value: false },
+          ],
+        },
+        inputPosition: {
+          type: "radio",
+          label: "Comment box",
+          options: [
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+          ],
+        },
+        theme: {
+          type: "select",
+          label: "Theme",
+          options: [
+            { label: "Match system", value: "preferred_color_scheme" },
+            { label: "Light", value: "light" },
+            { label: "Dark", value: "dark" },
+          ],
+        },
+        lang: { type: "text", label: "Language code" },
+      },
+      defaultProps: {
+        repo: "",
+        repoId: "",
+        category: "",
+        categoryId: "",
+        mapping: "pathname",
+        strict: true,
+        reactionsEnabled: true,
+        inputPosition: "top",
+        theme: "preferred_color_scheme",
+        lang: "en",
+      },
+      render: (props) => (
+        <GitHubDiscussions
+          {...(props as unknown as ComponentProps<typeof GitHubDiscussions>)}
+        />
+      ),
     },
     Footer: {
       fields: {

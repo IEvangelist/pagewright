@@ -4,6 +4,7 @@ import {
   type CommitOptions,
   type CommitResult,
   type CreateRepoOptions,
+  type DiscussionSetup,
   type EnablePagesOptions,
   type DirEntry,
   type FileContents,
@@ -81,6 +82,29 @@ export class TokenGitHubProvider implements GitHubProvider {
     return raw ? mapRepo(raw) : null;
   }
 
+  async getDiscussionSetup(ref: RepoRef): Promise<DiscussionSetup | null> {
+    const repo = await this.getRepo(ref);
+    if (!repo) return null;
+    const categories = repo.hasDiscussions ? await this.getDiscussionCategories(ref) : [];
+    return {
+      repo: repo.fullName,
+      repoId: repo.nodeId,
+      enabled: repo.hasDiscussions,
+      private: repo.private,
+      categories,
+    };
+  }
+
+  async enableDiscussions(ref: RepoRef): Promise<DiscussionSetup> {
+    await this.rest.request(`/repos/${ref.owner}/${ref.repo}`, {
+      method: "PATCH",
+      body: { has_discussions: true },
+    });
+    const setup = await this.getDiscussionSetup(ref);
+    if (!setup) throw new Error(`Repo ${ref.owner}/${ref.repo} not found`);
+    return setup;
+  }
+
   async createRepo(opts: CreateRepoOptions): Promise<Repo> {
     const raw = await this.rest.request<Record<string, unknown>>("/user/repos", {
       method: "POST",
@@ -113,6 +137,53 @@ export class TokenGitHubProvider implements GitHubProvider {
       headers: { accept: "application/vnd.github+json" },
       body: { names: topics.map((t) => t.toLowerCase()) },
     });
+  }
+
+  private async getDiscussionCategories(ref: RepoRef) {
+    const result = await this.rest.request<{
+      data?: {
+        repository?: {
+          discussionCategories?: {
+            nodes?: Array<{
+              id?: unknown;
+              name?: unknown;
+              description?: unknown;
+              emoji?: unknown;
+            }>;
+          };
+        };
+      };
+      errors?: Array<{ message?: string }>;
+    }>("/graphql", {
+      method: "POST",
+      body: {
+        query: `query PagewrightDiscussionCategories($owner: String!, $name: String!) {
+          repository(owner: $owner, name: $name) {
+            discussionCategories(first: 100) {
+              nodes { id name description emoji }
+            }
+          }
+        }`,
+        variables: { owner: ref.owner, name: ref.repo },
+      },
+    });
+    if (result.errors?.length) {
+      throw new Error(
+        result.errors.map((error) => error.message).filter(Boolean).join("; ") ||
+          "GitHub could not list Discussion categories.",
+      );
+    }
+    return (result.data?.repository?.discussionCategories?.nodes ?? [])
+      .filter(
+        (category) =>
+          typeof category.id === "string" && typeof category.name === "string",
+      )
+      .map((category) => ({
+        id: category.id as string,
+        name: category.name as string,
+        description: typeof category.description === "string" ? category.description : null,
+        emoji: typeof category.emoji === "string" ? category.emoji : "",
+      }));
   }
 
   async getBranchHead(ref: RepoRef, branch?: string): Promise<string | null> {
@@ -343,6 +414,7 @@ function mapRepo(raw: Record<string, unknown>): Repo {
   const homepage = typeof raw.homepage === "string" && raw.homepage ? raw.homepage : null;
   return {
     id: Number(raw.id),
+    nodeId: typeof raw.node_id === "string" ? raw.node_id : "",
     name: String(raw.name),
     fullName: typeof raw.full_name === "string" ? raw.full_name : `${owner}/${String(raw.name)}`,
     owner,
@@ -353,6 +425,7 @@ function mapRepo(raw: Record<string, unknown>): Repo {
     topics: Array.isArray(raw.topics) ? raw.topics.filter((t): t is string => typeof t === "string") : [],
     homepage,
     pushedAt: typeof raw.pushed_at === "string" ? raw.pushed_at : null,
+    hasDiscussions: raw.has_discussions === true,
     pagesUrl: hasPages ? homepage ?? derivePagesUrl(owner, String(raw.name)) : null,
   };
 }

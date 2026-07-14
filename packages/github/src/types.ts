@@ -24,6 +24,7 @@ export interface RepoRef {
 
 export interface Repo {
   id: number;
+  nodeId: string;
   name: string;
   fullName: string;
   owner: string;
@@ -34,8 +35,24 @@ export interface Repo {
   topics: string[];
   homepage: string | null;
   pushedAt: string | null;
+  hasDiscussions: boolean;
   /** The live GitHub Pages URL when it can be derived; null when Pages is not enabled. */
   pagesUrl: string | null;
+}
+
+export interface DiscussionCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string;
+}
+
+export interface DiscussionSetup {
+  repo: string;
+  repoId: string;
+  enabled: boolean;
+  private: boolean;
+  categories: DiscussionCategory[];
 }
 
 export interface CreateRepoOptions {
@@ -178,6 +195,8 @@ export interface GitHubProvider {
   /** Repos this account owns that carry the Pagewright topic (its managed sites). */
   listManagedRepos(topic?: string): Promise<Repo[]>;
   getRepo(ref: RepoRef): Promise<Repo | null>;
+  getDiscussionSetup(ref: RepoRef): Promise<DiscussionSetup | null>;
+  enableDiscussions(ref: RepoRef): Promise<DiscussionSetup>;
   createRepo(opts: CreateRepoOptions): Promise<Repo>;
   deleteRepo(ref: RepoRef): Promise<void>;
 

@@ -142,10 +142,8 @@ export function NewSiteWizard({
     }
   }, [draft, hydrated]);
 
-  // Gallery motion — stagger reveal + pointer spotlight + lift on the template cards. Kept lighter
-  // than the landing hero (no 3D tilt) so the live scaled previews and stretched-link hit areas stay
-  // pristine. Re-runs whenever the visible card set changes (filter/search/phase). Bails entirely
-  // under prefers-reduced-motion.
+  // Gallery motion is limited to a staggered entrance. Pointer-following effects make browsing
+  // visually noisy and can be uncomfortable, so hover feedback stays local and CSS-only.
   useEffect(() => {
     if (phase !== "choose") return;
     const gallery = galleryRef.current;
@@ -158,22 +156,6 @@ export function NewSiteWizard({
 
     cards.forEach((card, i) => {
       card.style.setProperty("--pw-reveal-delay", `${Math.min(i, 8) * 45}ms`);
-      let raf = 0;
-      const onMove = (e: PointerEvent) => {
-        const r = card.getBoundingClientRect();
-        const mx = ((e.clientX - r.left) / r.width) * 100;
-        const my = ((e.clientY - r.top) / r.height) * 100;
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          card.style.setProperty("--pw-cmx", `${mx.toFixed(1)}%`);
-          card.style.setProperty("--pw-cmy", `${my.toFixed(1)}%`);
-        });
-      };
-      card.addEventListener("pointermove", onMove, { passive: true });
-      cleanups.push(() => {
-        card.removeEventListener("pointermove", onMove);
-        cancelAnimationFrame(raf);
-      });
     });
 
     const io = new IntersectionObserver(

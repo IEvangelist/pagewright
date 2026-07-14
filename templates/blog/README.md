@@ -14,6 +14,48 @@ A blog starter for [Pagewright](../../README.md). Built with **Astro**, rendered
 - Site-wide settings live in `src/data/site.json`. Uploaded images go to `public/media/`.
 - A sitemap is generated via `@astrojs/sitemap`.
 
+## GitHub Discussions comments
+
+Posts can include an ordered `githubDiscussions` component powered by the official
+[Giscus](https://giscus.app) client. Readers can read without signing in. Giscus handles GitHub
+authentication when someone comments or reacts, so the site does not need or expose a GitHub
+secret.
+
+When adding the component in Pagewright:
+
+1. Make the site repository public.
+2. Let Pagewright enable GitHub Discussions for the repository if needed.
+3. Install the Giscus GitHub App for the repository.
+4. Choose a Discussion category in Pagewright. The editor resolves the public GitHub IDs and uses
+   the stable `/blog/<slug>/` pathname to find or create one discussion per post.
+
+Advanced settings allow a different public repository or mapping when needed. These values are
+public GitHub resource identifiers, not credentials.
+
+Example post component:
+
+```json
+{
+  "type": "githubDiscussions",
+  "id": "comments",
+  "props": {
+    "repo": "owner/site-repository",
+    "repoId": "R_example",
+    "category": "Announcements",
+    "categoryId": "DIC_example",
+    "mapping": "pathname",
+    "strict": true,
+    "reactionsEnabled": true,
+    "inputPosition": "top",
+    "theme": "preferred_color_scheme",
+    "lang": "en"
+  }
+}
+```
+
+These values identify public GitHub resources. Do not add tokens, app private keys, OAuth secrets,
+or other credentials to post JSON.
+
 ## Local development
 
 ```bash

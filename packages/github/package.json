@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "tsc -p tsconfig.test.json && node tests/run.mjs"
   },
   "dependencies": {},
   "devDependencies": {

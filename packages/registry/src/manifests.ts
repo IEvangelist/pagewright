@@ -8,7 +8,7 @@ import type { SiteManifest, ActionPin, DependencySet } from "./schema";
  */
 
 /** The current registry release. Bump this (and add a manifest row) to ship a managed update. */
-export const CURRENT_MANIFEST_VERSION = "2026.7.0";
+export const CURRENT_MANIFEST_VERSION = "2026.7.1";
 
 /** Pinned GitHub Actions shared by the generated Pages workflows. */
 const CORE_ACTIONS: ActionPin[] = [
@@ -40,6 +40,23 @@ const RELEASED_AT = "2026-07-12";
 export const MANIFESTS: SiteManifest[] = [
   {
     manifestVersion: CURRENT_MANIFEST_VERSION,
+    templateId: "blog",
+    channel: "stable",
+    schemaVersion: "2",
+    kitVersion: "0.1.0",
+    node: "20",
+    packageManager: "npm",
+    dependencies: {
+      ...CORE_DEPENDENCIES,
+      "@astrojs/sitemap": "3.2.1",
+    },
+    devDependencies: { ...CORE_DEV_DEPENDENCIES },
+    actions: CORE_ACTIONS,
+    notes: "Adds ordered post components and GitHub Discussions comments.",
+    releasedAt: "2026-07-14",
+  },
+  {
+    manifestVersion: "2026.7.0",
     templateId: "landing",
     channel: "stable",
     schemaVersion: "1",
@@ -53,7 +70,7 @@ export const MANIFESTS: SiteManifest[] = [
     releasedAt: RELEASED_AT,
   },
   {
-    manifestVersion: CURRENT_MANIFEST_VERSION,
+    manifestVersion: "2026.7.0",
     templateId: "blog",
     channel: "stable",
     schemaVersion: "1",
@@ -70,7 +87,7 @@ export const MANIFESTS: SiteManifest[] = [
     releasedAt: RELEASED_AT,
   },
   {
-    manifestVersion: CURRENT_MANIFEST_VERSION,
+    manifestVersion: "2026.7.0",
     templateId: "portfolio",
     channel: "stable",
     schemaVersion: "1",

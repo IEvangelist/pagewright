@@ -6,6 +6,7 @@ import type {
 } from "../schema";
 import { BlockIcon } from "../icons";
 import { withBase, normalizeBase, type BaseAware } from "../base";
+import { getGitHubDiscussionsConfigIssues } from "../post-components";
 
 /**
  * Block components. Plain React + scoped `pw-` CSS classes (see styles/blocks.css) so they render
@@ -219,6 +220,109 @@ export function Prose({ html = "", base }: BlockProps<"prose"> & BaseAware) {
   );
 }
 
+export function GitHubDiscussions({
+  repo,
+  repoId,
+  category,
+  categoryId,
+  mapping = "pathname",
+  term,
+  discussionNumber,
+  strict = true,
+  reactionsEnabled = true,
+  inputPosition = "top",
+  theme = "preferred_color_scheme",
+  lang = "en",
+}: BlockProps<"githubDiscussions">) {
+  const props: BlockProps<"githubDiscussions"> = {
+    repo,
+    repoId,
+    category,
+    categoryId,
+    mapping,
+    term,
+    discussionNumber,
+    strict,
+    reactionsEnabled,
+    inputPosition,
+    theme,
+    lang,
+  };
+  const issues = getGitHubDiscussionsConfigIssues(props);
+  const discussionHref = REPOSITORY_NAME_PATTERN.test(repo)
+    ? `https://github.com/${repo.split("/").map(encodeURIComponent).join("/")}/discussions`
+    : "https://giscus.app";
+
+  return (
+    <section className="pw-section pw-discussion" aria-label="Discussion">
+      <div className="pw-container pw-discussion__inner">
+        <div className="pw-discussion__header">
+          <div>
+            <h2 className="pw-discussion__heading">
+              Discussion
+            </h2>
+            <p className="pw-discussion__intro">
+              Read publicly. Sign in with GitHub in the comments panel to join the conversation.
+            </p>
+          </div>
+          <a className="pw-discussion__github" href="https://github.com/login" target="_blank" rel="noreferrer">
+            Sign in with GitHub
+          </a>
+        </div>
+
+        {issues.length > 0 ? (
+          <div className="pw-discussion__setup" role="status">
+            <strong>Comments are not configured yet.</strong>
+            <p>The site owner needs to finish the GitHub Discussions setup in Pagewright.</p>
+            <a href="https://giscus.app" target="_blank" rel="noreferrer">
+              Open the Giscus setup guide
+            </a>
+          </div>
+        ) : (
+          <div className="pw-discussion__embed">
+            <div className="pw-discussion__loading" role="status" aria-live="polite">
+              <span>Loading discussion</span>
+              <i />
+              <i />
+              <i />
+            </div>
+            <script
+              src="https://giscus.app/client.js"
+              data-repo={repo}
+              data-repo-id={repoId}
+              data-category={category}
+              data-category-id={categoryId}
+              data-mapping={mapping}
+              data-term={
+                mapping === "specific"
+                  ? term
+                  : mapping === "number"
+                    ? discussionNumber
+                    : undefined
+              }
+              data-strict={strict ? "1" : "0"}
+              data-reactions-enabled={reactionsEnabled ? "1" : "0"}
+              data-emit-metadata="0"
+              data-input-position={inputPosition}
+              data-theme={theme}
+              data-lang={lang}
+              data-loading="lazy"
+              crossOrigin="anonymous"
+              async
+            />
+            <noscript>
+              JavaScript is required to load comments. You can{" "}
+              <a href={discussionHref}>view the repository discussions on GitHub</a>.
+            </noscript>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+const REPOSITORY_NAME_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
 export function Footer({
   brand,
   tagline,
@@ -256,6 +360,7 @@ export const blockRegistry: {
   gallery: Gallery,
   cta: Cta,
   prose: Prose,
+  githubDiscussions: GitHubDiscussions,
   footer: Footer,
 };
 

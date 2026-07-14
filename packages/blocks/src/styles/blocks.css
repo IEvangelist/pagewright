@@ -292,6 +292,108 @@
 }
 .pw-prose th { background: hsl(var(--pw-muted)); font-weight: 700; }
 
+/* GitHub Discussions */
+.pw-discussion {
+  padding-block: 24px 72px;
+}
+.pw-discussion__inner {
+  max-width: 768px;
+}
+.pw-discussion__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.pw-discussion__heading {
+  margin: 0 0 6px;
+  color: hsl(var(--pw-fg));
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.pw-discussion__intro {
+  margin: 0;
+  max-width: 56ch;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.925rem;
+}
+.pw-discussion__github {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: calc(var(--pw-radius) - 4px);
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1;
+  text-decoration: none;
+}
+.pw-discussion__github:hover {
+  border-color: hsl(var(--pw-primary) / 0.55);
+  background: hsl(var(--pw-muted));
+}
+.pw-discussion__github:focus-visible,
+.pw-discussion__setup a:focus-visible {
+  outline: 3px solid hsl(var(--pw-primary) / 0.35);
+  outline-offset: 2px;
+}
+.pw-discussion__setup {
+  padding: 20px;
+  border: 1px dashed hsl(var(--pw-border));
+  border-radius: var(--pw-radius);
+  background: hsl(var(--pw-muted) / 0.45);
+  color: hsl(var(--pw-fg));
+}
+.pw-discussion__setup p {
+  margin: 5px 0 10px;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.925rem;
+}
+.pw-discussion__setup a {
+  color: hsl(var(--pw-primary));
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+.pw-discussion__embed {
+  min-height: 180px;
+}
+.pw-discussion__loading {
+  display: grid;
+  gap: 12px;
+  padding: 18px 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.825rem;
+}
+.pw-discussion__loading i {
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+  background: hsl(var(--pw-muted));
+  animation: pw-discussion-pulse 1.5s ease-in-out infinite alternate;
+}
+.pw-discussion__loading i:nth-of-type(2) { width: 84%; }
+.pw-discussion__loading i:nth-of-type(3) { width: 62%; }
+.pw-discussion__embed:has(.giscus-frame) .pw-discussion__loading {
+  display: none;
+}
+.pw-discussion__embed .giscus,
+.pw-discussion__embed .giscus-frame {
+  width: 100%;
+}
+@keyframes pw-discussion-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-discussion__loading i { animation: none; }
+}
+
 /* Footer */
 .pw-footer {
   border-top: 1px solid hsl(var(--pw-border));
@@ -468,4 +570,6 @@
 @media (max-width: 560px) {
   .pw-cols-2, .pw-cols-3, .pw-cols-4 { grid-template-columns: 1fr; }
   .pw-postlist__grid { grid-template-columns: 1fr; }
+  .pw-discussion__header { flex-direction: column; }
+  .pw-discussion__github { width: 100%; justify-content: center; }
 }

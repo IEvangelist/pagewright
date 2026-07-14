@@ -7,6 +7,22 @@ body {
   padding: 0;
 }
 
+a[href],
+button:not(:disabled),
+select,
+summary,
+label[for] {
+  cursor: pointer;
+}
+input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+[contenteditable="true"] {
+  cursor: text;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 .pw-appbar {
   position: sticky;
   top: 0;
@@ -2106,6 +2122,129 @@ body {
 .pw-composer__titleinput:focus {
   outline: none;
 }
+/* Ordered post-component rail. */
+.pw-components {
+  flex: none;
+  padding: 10px 20px 12px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg));
+}
+.pw-components__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 9px;
+}
+.pw-components__head > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+.pw-components__head strong {
+  font-size: 0.82rem;
+}
+.pw-components__head span {
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.75rem;
+}
+.pw-components__add {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.pw-components__add .pw-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pw-components__list {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.pw-components__item {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 210px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 10px;
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+.pw-components__item.is-active {
+  border-color: hsl(var(--pw-primary) / 0.7);
+  background: hsl(var(--pw-primary) / 0.07);
+}
+.pw-components__item.is-dragging {
+  opacity: 0.5;
+}
+.pw-components__grip {
+  flex: none;
+  margin-left: 8px;
+  color: hsl(var(--pw-muted-fg) / 0.7);
+  cursor: grab;
+}
+.pw-components__select {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 7px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.pw-components__select span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-components__select small {
+  margin-left: auto;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.68rem;
+}
+.pw-components__actions {
+  display: flex;
+  padding-right: 5px;
+}
+.pw-components__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: hsl(var(--pw-muted-fg));
+  cursor: pointer;
+}
+.pw-components__actions button:hover:not(:disabled) {
+  background: hsl(var(--pw-muted));
+  color: hsl(var(--pw-fg));
+}
+.pw-components__actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.pw-components__select:focus-visible,
+.pw-components__actions button:focus-visible,
+.pw-components__add .pw-btn:focus-visible {
+  outline: 3px solid hsl(var(--pw-primary) / 0.35);
+  outline-offset: 1px;
+}
 /* Formatting toolbar. */
 .pw-composer__toolbar {
   flex: none;
@@ -2149,6 +2288,19 @@ body {
   font-weight: 550;
   color: hsl(var(--pw-muted-fg));
   white-space: nowrap;
+}
+.pw-composer__componentbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  padding: 8px 22px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card) / 0.6);
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 /* Write / preview panes. */
 .pw-composer__panes {
@@ -2225,6 +2377,317 @@ body {
   color: hsl(var(--pw-muted-fg) / 0.7);
   font-size: 0.9rem;
 }
+.pw-composer__componentempty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 36px 24px;
+  border-right: 1px solid hsl(var(--pw-border));
+  color: hsl(var(--pw-muted-fg));
+  text-align: center;
+}
+.pw-composer__componentempty strong {
+  color: hsl(var(--pw-fg));
+}
+.pw-composer__componentempty .pw-btn {
+  margin-top: 8px;
+}
+
+/* GitHub Discussions component configuration. */
+.pw-discussionform {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 24px 56px;
+  border-right: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-bg));
+}
+.pw-composer__panes--write .pw-discussionform {
+  border-right: 0;
+}
+.pw-discussionform__intro {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.pw-discussionform__intro > svg {
+  flex: none;
+  margin-top: 2px;
+  color: hsl(var(--pw-primary));
+}
+.pw-discussionform__intro strong {
+  display: block;
+  margin-bottom: 4px;
+  color: hsl(var(--pw-fg));
+  font-size: 0.95rem;
+}
+.pw-discussionform__intro p,
+.pw-discussionform__advanced > p {
+  margin: 0;
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.pw-discussionform__managed {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 12px;
+  background: hsl(var(--pw-card));
+}
+.pw-discussionform__repository {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+.pw-discussionform__repository span,
+.pw-discussionform__repository small {
+  color: hsl(var(--pw-muted-fg));
+  font-size: 0.72rem;
+}
+.pw-discussionform__repository code {
+  overflow: hidden;
+  color: hsl(var(--pw-fg));
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-discussionform__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 10px;
+  background: hsl(var(--pw-muted) / 0.5);
+  color: hsl(var(--pw-fg));
+  font-size: 0.78rem;
+}
+.pw-discussionform__notice > div {
+  display: grid;
+  gap: 3px;
+}
+.pw-discussionform__notice span {
+  color: hsl(var(--pw-muted-fg));
+  line-height: 1.4;
+}
+.pw-discussionform__notice.is-error {
+  justify-content: flex-start;
+  border-color: hsl(0 70% 52% / 0.35);
+  background: hsl(0 70% 52% / 0.08);
+  color: hsl(0 70% 42%);
+}
+.pw-discussionform__notice.is-error span {
+  color: inherit;
+}
+.dark .pw-discussionform__notice.is-error {
+  color: hsl(0 80% 70%);
+}
+.pw-discussionform__notice button,
+.pw-discussionform__actions button,
+.pw-discussionform__actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 8px;
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pw-discussionform__notice button {
+  border-color: hsl(var(--pw-primary));
+  background: hsl(var(--pw-primary));
+  color: hsl(var(--pw-primary-fg));
+}
+.pw-discussionform__notice button:disabled,
+.pw-discussionform__actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.pw-discussionform__notice button:focus-visible,
+.pw-discussionform__actions button:focus-visible,
+.pw-discussionform__actions a:focus-visible,
+.pw-discussionform__advanced summary:focus-visible {
+  outline: 3px solid hsl(var(--pw-primary) / 0.28);
+  outline-offset: 2px;
+}
+.pw-discussionform__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.pw-discussionform__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid hsl(33 88% 48% / 0.3);
+  border-radius: 10px;
+  background: hsl(38 92% 50% / 0.1);
+  color: hsl(33 82% 36%);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+.pw-discussionform__status.is-ready {
+  border-color: hsl(142 64% 42% / 0.3);
+  background: hsl(142 64% 42% / 0.1);
+  color: hsl(142 64% 32%);
+}
+.dark .pw-discussionform__status {
+  color: hsl(38 92% 65%);
+}
+.dark .pw-discussionform__status.is-ready {
+  color: hsl(142 60% 62%);
+}
+.pw-discussionform__advanced {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid hsl(var(--pw-border));
+}
+.pw-discussionform__advanced summary {
+  width: fit-content;
+  margin-bottom: 8px;
+  color: hsl(var(--pw-fg));
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.pw-discussionform__advanced > p {
+  max-width: 64ch;
+  margin-bottom: 16px;
+}
+.pw-discussionform__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.pw-discussionform__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pw-discussionform__field > label {
+  color: hsl(var(--pw-fg));
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+.pw-discussionform__field input,
+.pw-discussionform__field select {
+  width: 100%;
+  min-height: 39px;
+  padding: 8px 10px;
+  border: 1px solid hsl(var(--pw-border));
+  border-radius: 9px;
+  background: hsl(var(--pw-card));
+  color: hsl(var(--pw-fg));
+  font: inherit;
+  font-size: 0.84rem;
+}
+.pw-discussionform__field input::placeholder {
+  color: hsl(var(--pw-muted-fg) / 0.75);
+}
+.pw-discussionform__field input:focus,
+.pw-discussionform__field select:focus,
+.pw-discussionform__checks input:focus-visible {
+  outline: 3px solid hsl(var(--pw-primary) / 0.28);
+  outline-offset: 1px;
+  border-color: hsl(var(--pw-primary));
+}
+.pw-discussionform__field.has-error input,
+.pw-discussionform__field.has-error select {
+  border-color: hsl(0 70% 52% / 0.7);
+}
+.pw-discussionform__helper,
+.pw-discussionform__error {
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.pw-discussionform__helper {
+  color: hsl(var(--pw-muted-fg));
+}
+.pw-discussionform__error {
+  color: hsl(0 70% 47%);
+}
+.dark .pw-discussionform__error {
+  color: hsl(0 80% 70%);
+}
+.pw-discussionform__checks {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+.pw-discussionform__checks label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: hsl(var(--pw-fg));
+  font-size: 0.8rem;
+  font-weight: 550;
+}
+.pw-discussionform__checks input {
+  width: 16px;
+  height: 16px;
+  accent-color: hsl(var(--pw-primary));
+}
+.pw-postpreview {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 22px 24px 64px;
+}
+.pw-postpreview__prose {
+  margin-inline: auto;
+  padding-block: 18px;
+}
+.pw-postpreview__emptycomponent {
+  margin: 18px 0;
+  padding: 22px;
+  border: 1px dashed hsl(var(--pw-border));
+  border-radius: 12px;
+  color: hsl(var(--pw-muted-fg));
+  text-align: center;
+  font-size: 0.84rem;
+}
+.pw-postpreview__discussion {
+  padding-block: 28px 8px;
+}
+.pw-postpreview__discussion .pw-discussion__header {
+  align-items: flex-start;
+}
+.pw-postpreview__giscus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 28px 18px;
+  border: 1px dashed hsl(var(--pw-border));
+  border-radius: 12px;
+  background: hsl(var(--pw-muted) / 0.35);
+  color: hsl(var(--pw-muted-fg));
+  text-align: center;
+  font-size: 0.78rem;
+}
+.pw-postpreview__giscus strong {
+  color: hsl(var(--pw-fg));
+  font-size: 0.88rem;
+}
 @media (max-width: 860px) {
   .pw-composer__panes--split {
     grid-template-columns: 1fr;
@@ -2234,6 +2697,28 @@ body {
   }
   .pw-viewtoggle__btn span {
     display: none;
+  }
+  .pw-components__head > div:first-child span {
+    display: none;
+  }
+  .pw-discussionform__grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .pw-components__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pw-components__add {
+    width: 100%;
+  }
+  .pw-components__add .pw-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .pw-components__item {
+    min-width: 190px;
   }
 }
 
@@ -2325,9 +2810,6 @@ html.dark [class*="_ExternalInput-button_"] {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  transform: translate3d(var(--pw-par-x, 0px), var(--pw-par-y, 0px), 0);
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 .pw-landing__grid {
   position: absolute;
@@ -2455,15 +2937,14 @@ html.dark [class*="_ExternalInput-button_"] {
   transform: translateX(120%);
 }
 
-/* Feature cards → lift on hover (fallback for no-JS / reduced-motion; the JS motion layer swaps
-   this for a 3D tilt below once `.pw-motion` is present). */
+/* Feature cards use a small, local hover response. */
 .pw-landing .pw-feature {
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
-.pw-landing:not(.pw-motion) .pw-feature:hover {
-  transform: translateY(-4px);
+.pw-landing .pw-feature:hover {
+  transform: translateY(-2px);
   border-color: hsl(var(--pw-primary) / 0.4);
-  box-shadow: 0 18px 44px -26px hsl(var(--pw-primary) / 0.55);
+  box-shadow: 0 12px 30px -24px hsl(var(--pw-primary) / 0.45);
 }
 
 /* CTA card → brand glow */
@@ -2501,33 +2982,6 @@ html.dark [class*="_ExternalInput-button_"] {
    `.pw-motion` — which it never does under prefers-reduced-motion. So these
    pre-reveal hidden states can't strand content for no-JS / reduced-motion users. */
 
-/* Cursor-tracking spotlight — a soft brand glow that follows the pointer across the hero. */
-.pw-landing {
-  --pw-mx: 50%;
-  --pw-my: 24%;
-}
-.pw-landing__spotlight {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  background: radial-gradient(
-    460px circle at var(--pw-mx) var(--pw-my),
-    hsl(var(--pw-primary) / 0.16),
-    transparent 60%
-  );
-}
-.pw-landing.pw-motion .pw-landing__spotlight {
-  opacity: 1;
-}
-.dark .pw-landing.pw-motion .pw-landing__spotlight {
-  background: radial-gradient(
-    500px circle at var(--pw-mx) var(--pw-my),
-    hsl(var(--pw-primary) / 0.22),
-    transparent 62%
-  );
-}
-
 /* Scroll reveal — sections rise + fade as they enter view. The transition lives on the revealed
    state so the initial hide (applied by JS after first paint) snaps instantly rather than fading out
    and back in. */
@@ -2545,62 +2999,8 @@ html.dark [class*="_ExternalInput-button_"] {
   transition-delay: var(--pw-reveal-delay, 0ms);
 }
 
-/* 3D tilt + pointer highlight on feature cards. */
-.pw-landing.pw-motion .pw-feature.pw-tilt {
-  position: relative;
-  transform: perspective(880px) rotateX(var(--pw-rotx, 0deg)) rotateY(var(--pw-roty, 0deg))
-    translateY(var(--pw-lift, 0px));
-  transform-style: preserve-3d;
-  transition:
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.pw-landing.pw-motion .pw-feature.pw-tilt:hover {
-  --pw-lift: -6px;
-  border-color: hsl(var(--pw-primary) / 0.45);
-  box-shadow: 0 26px 60px -30px hsl(var(--pw-primary) / 0.6);
-}
-.pw-landing.pw-motion .pw-feature.pw-tilt::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  background: radial-gradient(
-    260px circle at var(--pw-cmx, 50%) var(--pw-cmy, 50%),
-    hsl(var(--pw-primary) / 0.16),
-    transparent 60%
-  );
-  pointer-events: none;
-}
-.pw-landing.pw-motion .pw-feature.pw-tilt:hover::before {
-  opacity: 1;
-}
-.pw-landing.pw-motion .pw-feature.pw-tilt > * {
-  position: relative;
-  z-index: 1;
-}
-/* Icon pops toward the viewer in 3D as the card tilts. */
-.pw-landing.pw-motion .pw-feature.pw-tilt .pw-feature__icon {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  transform: translateZ(0);
-}
-.pw-landing.pw-motion .pw-feature.pw-tilt:hover .pw-feature__icon {
-  transform: translateZ(36px) scale(1.06) rotate(-5deg);
-}
-
-/* Magnetic hero CTA — smooth the lean so the JS transform doesn't feel twitchy. */
-.pw-landing.pw-motion .pw-hero__actions .pw-btn--primary {
-  transition:
-    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.25s ease,
-    opacity 0.15s ease;
-}
 .pw-landing.pw-motion .pw-hero__actions .pw-btn--primary:hover {
-  box-shadow: 0 18px 44px -12px hsl(var(--pw-primary) / 0.7);
+  box-shadow: 0 12px 30px -16px hsl(var(--pw-primary) / 0.6);
 }
 
 /* CTA card → a slow conic glow rotating behind the panel. */
@@ -2642,8 +3042,8 @@ html.dark [class*="_ExternalInput-button_"] {
   to { --pw-spin: 360deg; }
 }
 
-/* Gallery template cards (/new) → stagger reveal + pointer spotlight + lift.
-   No 3D tilt here so the live scaled previews stay perfectly crisp. Transition lives on the revealed
+/* Gallery template cards (/new) use stagger reveal plus a small hover lift.
+   The live scaled previews stay perfectly crisp. Transition lives on the revealed
    state so the initial hide snaps instantly instead of fading out first. */
 .pw-gallery.pw-motion .pw-tplcard {
   opacity: 0;
@@ -2660,33 +3060,14 @@ html.dark [class*="_ExternalInput-button_"] {
   transition-delay: var(--pw-reveal-delay, 0ms);
 }
 .pw-gallery.pw-motion .pw-tplcard.pw-reveal--in:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
   border-color: hsl(var(--pw-primary) / 0.42);
-  box-shadow: 0 24px 56px -30px hsl(var(--pw-primary) / 0.5);
+  box-shadow: 0 14px 34px -28px hsl(var(--pw-primary) / 0.4);
   transition:
     transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
-.pw-gallery.pw-motion .pw-tplcard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  background: radial-gradient(
-    300px circle at var(--pw-cmx, 50%) var(--pw-cmy, 50%),
-    hsl(var(--pw-primary) / 0.12),
-    transparent 60%
-  );
-  pointer-events: none;
-}
-.pw-gallery.pw-motion .pw-tplcard:hover::before {
-  opacity: 1;
-}
-
 /* ============================================================================
    Template demo page — isolated iframe preview with device + theme switching
    ========================================================================== */

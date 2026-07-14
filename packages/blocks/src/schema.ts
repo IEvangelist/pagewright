@@ -80,6 +80,27 @@ export const proseBlockSchema = z.object({
   }),
 });
 
+export const githubDiscussionsBlockSchema = z.object({
+  type: z.literal("githubDiscussions"),
+  id: z.string(),
+  props: z.object({
+    repo: z.string().default(""),
+    repoId: z.string().default(""),
+    category: z.string().default(""),
+    categoryId: z.string().default(""),
+    mapping: z
+      .enum(["pathname", "url", "title", "og:title", "specific", "number"])
+      .default("pathname"),
+    term: z.string().optional(),
+    discussionNumber: z.number().int().positive().optional(),
+    strict: z.boolean().default(true),
+    reactionsEnabled: z.boolean().default(true),
+    inputPosition: z.enum(["top", "bottom"]).default("top"),
+    theme: z.enum(["preferred_color_scheme", "light", "dark", "dark_dimmed"]).default("preferred_color_scheme"),
+    lang: z.string().default("en"),
+  }),
+});
+
 export const footerBlockSchema = z.object({
   type: z.literal("footer"),
   id: z.string(),
@@ -118,11 +139,27 @@ export const blockSchema = z.discriminatedUnion("type", [
   galleryBlockSchema,
   ctaBlockSchema,
   proseBlockSchema,
+  githubDiscussionsBlockSchema,
   footerBlockSchema,
 ]);
 export type Block = z.infer<typeof blockSchema>;
 export type BlockType = Block["type"];
 export type BlockProps<T extends BlockType> = Extract<Block, { type: T }>["props"];
+
+export const postComponentSchema = z.discriminatedUnion("type", [
+  proseBlockSchema,
+  githubDiscussionsBlockSchema,
+]);
+export type PostComponent = z.infer<typeof postComponentSchema>;
+export type PostComponentType = PostComponent["type"];
+export const postComponentsSchema = z.array(postComponentSchema).superRefine((components, context) => {
+  if (components.filter((component) => component.type === "githubDiscussions").length > 1) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "A post can contain only one GitHub Discussions component.",
+    });
+  }
+});
 
 export const pageSchema = z.object({
   title: z.string(),
@@ -138,13 +175,23 @@ export type Page = z.infer<typeof pageSchema>;
  * A blog post is a page document plus blog front-matter (date, excerpt, cover, tags, author).
  * Shared by the builder, the generated Astro blog template, and the scheduled-publish workflow.
  */
-export const postSchema = pageSchema.extend({
-  date: z.string(),
-  excerpt: z.string().optional(),
-  cover: z.string().optional(),
-  tags: z.array(z.string()).default([]),
-  author: z.string().optional(),
-});
+export const postSchema = pageSchema
+  .extend({
+    date: z.string(),
+    excerpt: z.string().optional(),
+    cover: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    author: z.string().optional(),
+  })
+  .superRefine((post, context) => {
+    if (post.blocks.filter((block) => block.type === "githubDiscussions").length > 1) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["blocks"],
+        message: "A post can contain only one GitHub Discussions component.",
+      });
+    }
+  });
 export type Post = z.infer<typeof postSchema>;
 
 export const siteConfigSchema = z.object({
