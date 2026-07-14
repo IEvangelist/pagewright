@@ -68,10 +68,82 @@ const THEME_LISTENER = `
 })();
 `;
 
+/**
+ * Client script that makes the links inside the preview behave like a real site while keeping the
+ * preview intact:
+ *  - authored nav anchors (#features, #work, #posts, #contact, ...) resolve to the matching rendered
+ *    section (their ids are assigned at runtime) and smooth-scroll into view;
+ *  - a hash with no target degrades gracefully to a scroll-to-top instead of a jarring jump;
+ *  - external links open in a new tab so the preview is never blown away;
+ *  - same-origin frame links (blog post cards, "back to posts") navigate within the preview and
+ *    inherit the currently-selected preview theme;
+ *  - any other in-app link (e.g. the navbar brand "/") routes back to the preview home.
+ */
+const buildNavScript = (id: string): string => `
+(function(){
+  var FRAME = ${JSON.stringify(`/templates/${id}/frame`)};
+  function theme(){ return document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
+
+  // Authored templates use hash anchors, but the rendered blocks don't emit section ids. Map the
+  // common anchors onto the sections that exist so nav/CTA links land somewhere sensible.
+  var MAP = {
+    features: '.pw-features',
+    work: '.pw-gallery', projects: '.pw-gallery', gallery: '.pw-gallery',
+    posts: '.pw-postlist', blog: '.pw-postlist',
+    contact: '.pw-cta',
+    about: '.pw-hero', top: '.pw-hero', home: '.pw-hero'
+  };
+  Object.keys(MAP).forEach(function(key){
+    if (document.getElementById(key)) return;
+    var el = document.querySelector(MAP[key]);
+    if (el && !el.id) el.id = key;
+  });
+
+  document.addEventListener('click', function(e){
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var raw = a.getAttribute('href');
+    if (!raw) return;
+
+    // In-page hash link.
+    if (raw.charAt(0) === '#') {
+      e.preventDefault();
+      var t = raw.length > 1 ? document.getElementById(raw.slice(1)) : null;
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    var url;
+    try { url = new URL(raw, location.href); } catch (_) { return; }
+
+    // External link: open in a new tab so the preview survives.
+    if (url.origin !== location.origin) {
+      e.preventDefault();
+      window.open(url.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Same-origin: keep navigation inside the preview frame.
+    e.preventDefault();
+    if (url.pathname === FRAME) {
+      url.searchParams.set('theme', theme());
+      location.href = url.pathname + '?' + url.searchParams.toString();
+    } else {
+      location.href = FRAME + '?view=home&theme=' + theme();
+    }
+  });
+})();
+`;
+
 const FRAME_RESET = `
 html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 * { box-sizing: border-box; }
 .pw-root { min-height: 100vh; }
+.pw-hero, .pw-features, .pw-gallery, .pw-postlist, .pw-cta { scroll-margin-top: 84px; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--pw-border)); border-radius: 999px; }
 .pw-demo-back { display: inline-flex; align-items: center; gap: 8px; color: hsl(var(--pw-primary)); text-decoration: none; font-weight: 600; }
@@ -155,7 +227,7 @@ export async function GET(
 <title>${escapeHtml(site.name)} · Pagewright preview</title>
 <style>${css}\n${FRAME_RESET}</style>
 </head>
-<body class="pw-root">${bodyHtml}<script>${THEME_LISTENER}</script></body>
+<body class="pw-root">${bodyHtml}<script>${THEME_LISTENER}</script><script>${buildNavScript(id)}</script></body>
 </html>`;
 
   return new Response(doc, {
