@@ -23,7 +23,6 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
-  Check,
   ExternalLink,
   Globe,
   Loader2,
@@ -42,14 +41,20 @@ import {
 } from "@/lib/builder/media-context";
 import { SiteBindingsProvider } from "@/lib/builder/site-bindings-context";
 import type { PostMeta } from "@/lib/content/posts";
+import {
+  RepositoryConflictError,
+  useRepositoryWriteQueue,
+} from "@/lib/repository-write-queue";
 import { PostDetailsPanel, fileToBase64 } from "@/components/post-details-panel";
+import {
+  EditorSiteStatus,
+  type EditorSaveState,
+} from "@/components/editor-site-status";
 
 const DRAFT_PREFIX = "pagewright:page-draft:";
 const DRAFT_DEBOUNCE_MS = 600;
 const COMPACT_EDITOR_QUERY = "(max-width: 900px)";
 const useEditorPuck = createUsePuck();
-
-type SaveState = "idle" | "saving" | "saved" | "error" | "conflict";
 
 /**
  * Visual page/post editor. Wraps Puck with the Pagewright block config so editing is fully WYSIWYG
@@ -91,13 +96,14 @@ export function SiteEditor({
   site: SiteConfig;
   supportsGlobalFeatures: boolean;
   initialData: Data;
-  initialHeadSha: string | null;
+  initialHeadSha: string;
   postMeta?: PostMeta;
 }) {
   const isPost = postMeta !== undefined;
   const resolvedBackHref = backHref ?? `/sites/${owner}/${repo}`;
   const draftKey = `${DRAFT_PREFIX}${owner}/${repo}:${path}`;
   const metaDraftKey = `${draftKey}:meta`;
+  const draftBaseKey = `${draftKey}:base`;
 
   const [restoredDraft, setRestoredDraft] = useState(false);
   const [editorData, setEditorData] = useState<Data | null>(null);
@@ -106,21 +112,41 @@ export function SiteEditor({
   const metaRef = useRef<PostMeta | undefined>(meta);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [saveState, setSaveState] = useState<EditorSaveState>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [conflictSource, setConflictSource] = useState<
+    "save" | "upload" | "restored" | null
+  >(null);
+  const [dirty, setDirty] = useState(false);
+  const [deployHeadSha, setDeployHeadSha] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(0);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingDraftRef = useRef<Data | null>(null);
-  // The branch head the editor is working against. Sent with every save for conflict detection and
-  // advanced to the new commit after each successful save so consecutive saves don't false-conflict.
-  const headShaRef = useRef<string | null>(initialHeadSha);
+  const hydratedDraftKeyRef = useRef<string | null>(null);
+  const enqueueRepositoryWrite = useRepositoryWriteQueue(initialHeadSha);
+  const editRevisionRef = useRef(0);
   // The most recent editor data, kept so a conflict "overwrite" can re-submit what the user has.
   const lastDataRef = useRef<Data>(initialData);
+  const conflictRef = useRef(false);
+  const uploadingRef = useRef(0);
+  const draftBaseHeadShaRef = useRef<string | null>(initialHeadSha);
+  const persistDraftBase = useCallback(() => {
+    if (conflictRef.current) return;
+    window.localStorage.setItem(
+      draftBaseKey,
+      JSON.stringify({ baseHeadSha: draftBaseHeadShaRef.current }),
+    );
+  }, [draftBaseKey]);
 
   useEffect(() => {
+    if (hydratedDraftKeyRef.current === draftKey) return;
+    hydratedDraftKeyRef.current = draftKey;
+
     let nextData = initialData;
     let nextMeta = postMeta;
     let restored = false;
     let restoreFailed = false;
+    let restoredBaseHeadSha: string | null | undefined;
 
     try {
       const raw = window.localStorage.getItem(draftKey);
@@ -144,22 +170,49 @@ export function SiteEditor({
       }
     }
 
+    try {
+      const rawBase = window.localStorage.getItem(draftBaseKey);
+      if (rawBase) {
+        const parsed = JSON.parse(rawBase) as { baseHeadSha?: unknown };
+        if (typeof parsed.baseHeadSha === "string" || parsed.baseHeadSha === null) {
+          restoredBaseHeadSha = parsed.baseHeadSha;
+        }
+      }
+      if (!restored && rawBase) window.localStorage.removeItem(draftBaseKey);
+    } catch {
+      restoreFailed = true;
+    }
+
     lastDataRef.current = nextData;
     metaRef.current = nextMeta;
     setMeta(nextMeta);
     setRestoredDraft(restored);
+    setDirty(restored);
     setCompactLayout(window.matchMedia(COMPACT_EDITOR_QUERY).matches);
     setEditorData(nextData);
-    if (restoreFailed) {
+    if (restored) {
+      if (restoredBaseHeadSha !== undefined) {
+        draftBaseHeadShaRef.current = restoredBaseHeadSha;
+      }
+      if (restoredBaseHeadSha === undefined || restoredBaseHeadSha !== initialHeadSha) {
+        conflictRef.current = true;
+        setSaveState("conflict");
+        setConflictSource("restored");
+        setMessage(
+          "Your edits were restored from before a newer repository version. Reload latest to discard them, or explicitly overwrite with your version.",
+        );
+      }
+    } else if (restoreFailed) {
       setSaveState("error");
       setMessage("Local backup couldn’t be restored. The latest GitHub version is open.");
     }
-  }, [draftKey, initialData, metaDraftKey, postMeta]);
+  }, [draftBaseKey, draftKey, initialData, initialHeadSha, metaDraftKey, postMeta]);
 
   const writeDraft = useCallback(
     (next: Data, surfaceError: boolean) => {
       try {
         window.localStorage.setItem(draftKey, JSON.stringify(next));
+        persistDraftBase();
         if (pendingDraftRef.current === next) pendingDraftRef.current = null;
       } catch (error) {
         if (surfaceError) {
@@ -170,7 +223,7 @@ export function SiteEditor({
         }
       }
     },
-    [draftKey],
+    [draftKey, persistDraftBase],
   );
 
   const flushDraft = useCallback(() => {
@@ -192,6 +245,8 @@ export function SiteEditor({
   const onChange = useCallback(
     (next: Data) => {
       lastDataRef.current = next;
+      editRevisionRef.current++;
+      setDirty(true);
       pendingDraftRef.current = next;
       setSaveState((state) => (state === "saved" || state === "error" ? "idle" : state));
       if (draftTimer.current) clearTimeout(draftTimer.current);
@@ -205,143 +260,253 @@ export function SiteEditor({
 
   const updateMeta = useCallback(
     (patch: Partial<PostMeta>) => {
-      setMeta((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev, ...patch };
-        metaRef.current = next;
-        try {
-          window.localStorage.setItem(metaDraftKey, JSON.stringify(next));
-        } catch {
-          setSaveState("error");
-          setMessage("Local backup is unavailable. Publish before leaving this page.");
-        }
-        return next;
-      });
+      const current = metaRef.current;
+      if (!current) return;
+      editRevisionRef.current++;
+      setDirty(true);
       setSaveState((state) => (state === "saved" ? "idle" : state));
+      const next = { ...current, ...patch };
+      metaRef.current = next;
+      setMeta(next);
+      try {
+        window.localStorage.setItem(metaDraftKey, JSON.stringify(next));
+        persistDraftBase();
+      } catch {
+        setSaveState("error");
+        setMessage("Local backup is unavailable. Publish before leaving this page.");
+      }
     },
-    [metaDraftKey],
+    [metaDraftKey, persistDraftBase],
   );
 
   const save = useCallback(
     async (next: Data, { force = false }: { force?: boolean } = {}) => {
       lastDataRef.current = next;
-      setSaveState("saving");
-      setMessage(null);
-      try {
-        const res = await fetch(`/api/sites/${owner}/${repo}/pages`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            path,
-            data: next,
-            meta: isPost ? metaRef.current : undefined,
-            // Omit the guard on an explicit overwrite so the commit lands regardless.
-            expectedHeadSha: force ? undefined : headShaRef.current ?? undefined,
-          }),
-        });
-        const body = (await res.json().catch(() => null)) as
-          | { error?: string; code?: string; headSha?: string }
-          | null;
-        if (res.status === 409 || body?.code === "conflict") {
-          setSaveState("conflict");
-          setMessage(body?.error ?? "This site changed in GitHub while you were editing.");
-          return;
-        }
-        if (!res.ok) {
-          setSaveState("error");
-          setMessage(body?.error ?? "Couldn’t save your changes.");
-          return;
-        }
-        if (body?.headSha) headShaRef.current = body.headSha;
-        if (draftTimer.current) {
-          clearTimeout(draftTimer.current);
-          draftTimer.current = undefined;
-        }
-        pendingDraftRef.current = null;
-        let localBackupCleared = true;
-        try {
-          window.localStorage.removeItem(draftKey);
-          window.localStorage.removeItem(metaDraftKey);
-        } catch (error) {
-          localBackupCleared = false;
-          console.error("[pagewright] Failed to clear the published local draft.", error);
-        }
-        setRestoredDraft(false);
-        setSaveState("saved");
-        const successMessage =
-          isPost && metaRef.current?.draft
-            ? "Saved as draft. It stays hidden until you publish it."
-            : "Published. Your site is deploying now.";
-        setMessage(
-          localBackupCleared
-            ? successMessage
-            : `${successMessage} Clear this site’s browser data before editing again.`,
-        );
-      } catch {
+      if (uploadingRef.current > 0) {
         setSaveState("error");
-        setMessage("Network error while saving. Your work is kept locally.");
+        setMessage("Wait for image uploads to finish before publishing.");
+        return;
       }
+      if (conflictRef.current && !force) {
+        setSaveState("conflict");
+        setMessage(
+          "Resolve the version conflict before saving, or explicitly overwrite with your version.",
+        );
+        return;
+      }
+      const savedRevision = editRevisionRef.current;
+      return enqueueRepositoryWrite(async (expectedHeadSha) => {
+        setSaveState("saving");
+        setMessage(null);
+        setConflictSource(null);
+        try {
+          const res = await fetch(`/api/sites/${owner}/${repo}/pages`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              path,
+              data: next,
+              meta: isPost ? metaRef.current : undefined,
+              // Omit the guard on an explicit overwrite so the commit lands regardless.
+              expectedHeadSha: force ? undefined : expectedHeadSha,
+            }),
+          });
+          const body = (await res.json().catch(() => null)) as
+            | { error?: string; code?: string; headSha?: string }
+            | null;
+          if (res.status === 409 || body?.code === "conflict") {
+            conflictRef.current = true;
+            draftBaseHeadShaRef.current = expectedHeadSha;
+            setSaveState("conflict");
+            setConflictSource("save");
+            setMessage(body?.error ?? "This site changed somewhere else since you started editing.");
+            return { value: undefined };
+          }
+          if (!res.ok) {
+            setSaveState("error");
+            setMessage(body?.error ?? "Couldn’t save your changes.");
+            return { value: undefined };
+          }
+          conflictRef.current = false;
+          if (body?.headSha) draftBaseHeadShaRef.current = body.headSha;
+          const isCurrentRevision = editRevisionRef.current === savedRevision;
+          if (isCurrentRevision) {
+            if (draftTimer.current) {
+              clearTimeout(draftTimer.current);
+              draftTimer.current = undefined;
+            }
+            pendingDraftRef.current = null;
+            let localBackupCleared = true;
+            try {
+              window.localStorage.removeItem(draftKey);
+              window.localStorage.removeItem(metaDraftKey);
+              window.localStorage.removeItem(draftBaseKey);
+            } catch (error) {
+              localBackupCleared = false;
+              console.error("[pagewright] Failed to clear the published local draft.", error);
+            }
+            setRestoredDraft(false);
+            setDirty(false);
+            setSaveState("saved");
+            const successMessage =
+              isPost && metaRef.current?.draft
+                ? "Saved as draft. It stays hidden until you publish it."
+                : "Published. Your site is deploying now.";
+            setMessage(
+              localBackupCleared
+                ? successMessage
+                : `${successMessage} Clear this site’s browser data before editing again.`,
+            );
+          } else {
+            try {
+              persistDraftBase();
+            } catch {
+              // non-fatal
+            }
+            setSaveState("idle");
+            setMessage(null);
+          }
+          if (body?.headSha) setDeployHeadSha(body.headSha);
+          return { value: undefined, headSha: body?.headSha };
+        } catch {
+          setSaveState("error");
+          setMessage("Network error while saving. Your work is kept locally.");
+          return { value: undefined };
+        }
+      });
     },
-    [owner, repo, path, draftKey, metaDraftKey, isPost],
+    [
+      owner,
+      repo,
+      path,
+      draftKey,
+      metaDraftKey,
+      draftBaseKey,
+      isPost,
+      enqueueRepositoryWrite,
+      persistDraftBase,
+    ],
   );
 
   const onPublish = useCallback((next: Data) => save(next), [save]);
   const onOverwrite = useCallback(() => save(lastDataRef.current, { force: true }), [save]);
   const onReload = useCallback(() => {
-    const confirmed = window.confirm(
-      "Discard your local edits and load the latest version from GitHub? This cannot be undone.",
-    );
-    if (!confirmed) return;
+    if (
+      conflictSource !== "upload" &&
+      !window.confirm(
+        "Discard your local edits and load the latest version from GitHub? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
     try {
-      window.localStorage.removeItem(draftKey);
-      window.localStorage.removeItem(metaDraftKey);
+      if (conflictSource === "upload") {
+        if (draftTimer.current) {
+          clearTimeout(draftTimer.current);
+          draftTimer.current = undefined;
+        }
+        window.localStorage.setItem(draftKey, JSON.stringify(lastDataRef.current));
+        if (metaRef.current) {
+          window.localStorage.setItem(metaDraftKey, JSON.stringify(metaRef.current));
+        }
+        window.localStorage.setItem(
+          draftBaseKey,
+          JSON.stringify({ baseHeadSha: draftBaseHeadShaRef.current }),
+        );
+      } else {
+        window.localStorage.removeItem(draftKey);
+        window.localStorage.removeItem(metaDraftKey);
+        window.localStorage.removeItem(draftBaseKey);
+      }
     } catch {
       setSaveState("error");
-      setMessage("The local draft couldn’t be cleared. Your edits were not discarded.");
+      setMessage(
+        conflictSource === "upload"
+          ? "Couldn’t preserve your local edits. Copy your changes before reloading."
+          : "The local draft couldn’t be cleared. Your edits were not discarded.",
+      );
       return;
     }
     if (draftTimer.current) clearTimeout(draftTimer.current);
     draftTimer.current = undefined;
     pendingDraftRef.current = null;
     window.location.reload();
-  }, [draftKey, metaDraftKey]);
+  }, [conflictSource, draftBaseKey, draftKey, metaDraftKey]);
 
   // Uploads a dropped/selected image to the repo's media folder and hands back the site-relative URL
   // the block should reference. Memoized so the provider value is stable across renders.
   const mediaPreviewEndpoint = `/api/sites/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/media`;
   const uploader = useMemo<MediaUploader>(
     () => ({
-      async upload(file) {
-        const contentBase64 = await fileToBase64(file);
-        const res = await fetch(`/api/sites/${owner}/${repo}/media`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-            contentBase64,
-            expectedHeadSha: headShaRef.current ?? undefined,
-          }),
-        });
-        const body = (await res.json().catch(() => null)) as
-          | { url?: string; path?: string; headSha?: string; error?: string; code?: string }
-          | null;
-        if (res.status === 409 || body?.code === "conflict") {
-          setSaveState("conflict");
-          setMessage(body?.error ?? "This site changed in GitHub while you were editing.");
-          throw new Error(body?.error ?? "Resolve the GitHub conflict before uploading.");
+      async upload(file, apply) {
+        if (conflictRef.current) {
+          throw new RepositoryConflictError(
+            "Resolve the version conflict before uploading another image.",
+          );
         }
-        if (!res.ok || !body?.url) {
-          throw new Error(body?.error ?? "Upload failed.");
+        uploadingRef.current++;
+        setUploading(uploadingRef.current);
+        try {
+          const media = await enqueueRepositoryWrite(async (expectedHeadSha) => {
+            const contentBase64 = await fileToBase64(file);
+            const res = await fetch(`/api/sites/${owner}/${repo}/media`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                filename: file.name,
+                contentType: file.type,
+                contentBase64,
+                expectedHeadSha,
+              }),
+            });
+            const body = (await res.json().catch(() => null)) as
+              | {
+                  url?: string;
+                  path?: string;
+                  error?: string;
+                  code?: string;
+                  headSha?: string;
+                }
+              | null;
+            if (res.status === 409 || body?.code === "conflict") {
+              const conflictMessage =
+                body?.error ?? "This site changed somewhere else while the image was uploading.";
+              conflictRef.current = true;
+              draftBaseHeadShaRef.current = expectedHeadSha;
+              setSaveState("conflict");
+              setConflictSource("upload");
+              setMessage(conflictMessage);
+              throw new RepositoryConflictError(conflictMessage);
+            }
+            if (!res.ok || !body?.url) {
+              throw new Error(body?.error ?? "Upload failed.");
+            }
+            if (body.headSha) {
+              setDeployHeadSha(body.headSha);
+              draftBaseHeadShaRef.current = body.headSha;
+              try {
+                persistDraftBase();
+              } catch {
+                // non-fatal
+              }
+            }
+            return {
+              value: { url: body.url, path: body.path ?? "" },
+              headSha: body.headSha,
+            };
+          });
+          apply(media);
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        } finally {
+          uploadingRef.current = Math.max(0, uploadingRef.current - 1);
+          setUploading(uploadingRef.current);
         }
-        if (body.headSha) headShaRef.current = body.headSha;
-        return { url: body.url, path: body.path ?? "" };
       },
       previewUrl(value) {
         return resolveMediaPreviewUrl(value, mediaPreviewEndpoint) ?? value;
       },
     }),
-    [mediaPreviewEndpoint, owner, repo],
+    [mediaPreviewEndpoint, owner, repo, enqueueRepositoryWrite, persistDraftBase],
   );
 
   const editorMetadata = useMemo(
@@ -353,14 +518,20 @@ export function SiteEditor({
     () => ({
       header: () => (
         <EditorHeader
+          owner={owner}
+          repo={repo}
           title={editingLabel ?? siteName}
           kind={isPost ? "Post" : "Page"}
           backHref={resolvedBackHref}
           backLabel={backLabel}
           liveUrl={liveUrl}
           restoredDraft={restoredDraft}
+          dirty={dirty}
           saveState={saveState}
           message={message}
+          conflictSource={conflictSource}
+          uploading={uploading}
+          targetHeadSha={deployHeadSha}
           detailsOpen={detailsOpen}
           onToggleDetails={isPost ? () => setDetailsOpen((open) => !open) : undefined}
           onPublish={onPublish}
@@ -383,7 +554,10 @@ export function SiteEditor({
     }),
     [
       backLabel,
+      conflictSource,
       detailsOpen,
+      deployHeadSha,
+      dirty,
       editingLabel,
       isPost,
       liveUrl,
@@ -392,11 +566,14 @@ export function SiteEditor({
       onOverwrite,
       onPublish,
       onReload,
+      owner,
+      repo,
       resolvedBackHref,
       restoredDraft,
       saveState,
       siteName,
       updateMeta,
+      uploading,
       uploader,
     ],
   );
@@ -447,14 +624,20 @@ export function SiteEditor({
 /** The blog front-matter editor is shared with the markdown composer; see post-details-panel.tsx. */
 
 function EditorHeader({
+  owner,
+  repo,
   title,
   kind,
   backHref,
   backLabel,
   liveUrl,
   restoredDraft,
+  dirty,
   saveState,
   message,
+  conflictSource,
+  uploading,
+  targetHeadSha,
   detailsOpen,
   onToggleDetails,
   onPublish,
@@ -462,14 +645,20 @@ function EditorHeader({
   onReload,
   detailsPanel,
 }: {
+  owner: string;
+  repo: string;
   title: string;
   kind: "Page" | "Post";
   backHref: string;
   backLabel: string;
   liveUrl: string | null;
   restoredDraft: boolean;
-  saveState: SaveState;
+  dirty: boolean;
+  saveState: EditorSaveState;
   message: string | null;
+  conflictSource: "save" | "upload" | "restored" | null;
+  uploading: number;
+  targetHeadSha: string | null;
   detailsOpen: boolean;
   onToggleDetails?: () => void;
   onPublish: (data: Data) => void;
@@ -490,7 +679,7 @@ function EditorHeader({
   const hasFuture = useEditorPuck((state) => state.history.hasFuture);
   const getPuck = useGetPuck();
   const publishing = saveState === "saving";
-  const blocked = saveState === "conflict";
+  const blocked = saveState === "conflict" || uploading > 0;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(COMPACT_EDITOR_QUERY);
@@ -608,9 +797,16 @@ function EditorHeader({
             </button>
           ) : null}
 
-          {saveState !== "error" ? (
-            <SaveBadge state={saveState} message={message} restoredDraft={restoredDraft} />
-          ) : null}
+          <EditorSiteStatus
+            owner={owner}
+            repo={repo}
+            saveState={saveState}
+            saveMessage={message}
+            dirty={dirty || restoredDraft}
+            restored={restoredDraft}
+            uploading={uploading}
+            targetHeadSha={targetHeadSha}
+          />
 
           {liveUrl ? (
             <a
@@ -631,6 +827,8 @@ function EditorHeader({
             className="pw-editor__publish"
             onClick={() => onPublish(getPuck().appState.data)}
             disabled={publishing || blocked}
+            aria-label={uploading > 0 ? "Wait for image upload to finish" : "Publish"}
+            title={uploading > 0 ? "Wait for image upload to finish" : undefined}
           >
             {publishing ? (
               <Loader2 size={16} className="pw-spin" aria-hidden="true" />
@@ -662,11 +860,13 @@ function EditorHeader({
           <div className="pw-editor__conflictactions">
             <button type="button" className="pw-editor__discard" onClick={onReload}>
               <RotateCw size={15} aria-hidden="true" />
-              <span>Discard and reload</span>
+              <span>{conflictSource === "upload" ? "Reload and keep edits" : "Discard and reload"}</span>
             </button>
-            <button type="button" className="pw-editor__publish" onClick={onOverwrite}>
-              Publish my version
-            </button>
+            {conflictSource !== "upload" ? (
+              <button type="button" className="pw-editor__publish" onClick={onOverwrite}>
+                Publish my version
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -691,50 +891,5 @@ function EditorOutline({ children }: { children: ReactNode }) {
       <p className="pw-editor__panelintro">Select a section to edit or reorder it.</p>
       {children}
     </div>
-  );
-}
-
-function SaveBadge({
-  state,
-  message,
-  restoredDraft,
-}: {
-  state: SaveState;
-  message: string | null;
-  restoredDraft: boolean;
-}) {
-  // The conflict case is surfaced by a dedicated banner with actions, not the compact status.
-  if ((state === "idle" && !restoredDraft) || state === "conflict") return null;
-  const icon =
-    state === "idle" ? (
-      <RotateCw size={14} aria-hidden="true" />
-    ) : state === "saving" ? (
-      <Loader2 size={14} className="pw-spin" aria-hidden="true" />
-    ) : state === "saved" ? (
-      <Check size={14} aria-hidden="true" />
-    ) : (
-      <AlertCircle size={14} aria-hidden="true" />
-    );
-  let label = "Publish failed";
-  if (restoredDraft && state === "idle") label = "Local draft restored";
-  if (state === "saving") label = "Publishing...";
-  if (state === "saved") {
-    label = message?.startsWith("Saved as draft") ? "Draft saved" : "Published";
-  }
-  if (state === "error" && message?.startsWith("Local backup")) {
-    label = "Backup unavailable";
-  }
-  const accessibleMessage = message ?? label;
-  return (
-    <span
-      className={`pw-editor__savebadge pw-editor__savebadge--${state}`}
-      role="status"
-      aria-live="polite"
-      aria-label={accessibleMessage}
-      title={accessibleMessage}
-    >
-      {icon}
-      <span>{label}</span>
-    </span>
   );
 }

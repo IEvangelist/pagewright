@@ -202,6 +202,8 @@ export interface ListWorkflowRunsOptions {
   branch?: string;
   event?: string;
   perPage?: number;
+  /** Restrict results to a workflow file such as "deploy.yml". */
+  workflowFile?: string;
 }
 
 /**

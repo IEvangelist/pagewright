@@ -117,6 +117,16 @@ export async function POST(
   }
 
   const contentType = typeof body.contentType === "string" ? body.contentType.toLowerCase() : "";
+  const expectedHeadSha =
+    typeof body.expectedHeadSha === "string" && body.expectedHeadSha
+      ? body.expectedHeadSha
+      : undefined;
+  if (!expectedHeadSha) {
+    return Response.json(
+      { error: "The editor version is missing. Refresh before uploading." },
+      { status: 400 },
+    );
+  }
   const ext = EXT_BY_TYPE[contentType];
   if (!ext) {
     return Response.json(
@@ -163,10 +173,6 @@ export async function POST(
   const hash = createHash("sha1").update(bytes).digest("hex").slice(0, 8);
   const fileName = `${slug}-${hash}.${ext}`;
   const path = `${MEDIA_DIR}/${fileName}`;
-  const expectedHeadSha =
-    typeof body.expectedHeadSha === "string" && body.expectedHeadSha
-      ? body.expectedHeadSha
-      : undefined;
 
   try {
     const result = await provider.commitFiles(

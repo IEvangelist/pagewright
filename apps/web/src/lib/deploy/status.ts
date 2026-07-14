@@ -44,6 +44,7 @@ export interface DeployJob {
 export interface DeployRun {
   id: number;
   name: string | null;
+  headSha: string;
   status: WorkflowRunStatus;
   conclusion: WorkflowRunConclusion;
   htmlUrl: string;
@@ -57,6 +58,8 @@ export interface DeployStatus {
   owner: string;
   repo: string;
   repoUrl: string;
+  /** Current default-branch head, used to recognize when a newer commit superseded a tracked save. */
+  branchHeadSha: string | null;
   /** Live Pages URL once known (from Pages API or derived on the repo). */
   liveUrl: string | null;
   pagesEnabled: boolean;
@@ -109,6 +112,7 @@ function toDeployRun(run: WorkflowRun): DeployRun {
   return {
     id: run.id,
     name: run.name,
+    headSha: run.headSha,
     status: run.status,
     conclusion: run.conclusion,
     htmlUrl: run.htmlUrl,
@@ -145,6 +149,7 @@ export function buildDeployStatus(input: {
   pages: PagesInfo | null;
   run: WorkflowRun | null;
   jobs: WorkflowJob[];
+  branchHeadSha: string | null;
 }): DeployStatus {
   const run = input.run ? toDeployRun(input.run) : null;
   const pagesStatus: PagesStatusState = input.pages?.status ?? "unknown";
@@ -154,6 +159,7 @@ export function buildDeployStatus(input: {
     owner: input.owner,
     repo: input.repo.name,
     repoUrl: input.repo.htmlUrl,
+    branchHeadSha: input.branchHeadSha,
     liveUrl,
     pagesEnabled: input.pages?.enabled ?? false,
     pagesStatus,

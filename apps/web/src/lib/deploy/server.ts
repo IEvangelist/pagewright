@@ -17,13 +17,20 @@ export async function getDeployStatus(
   const repo = await provider.getRepo(ref);
   if (!repo) return null;
 
-  const [pages, runs] = await Promise.all([
+  const [pages, runs, branchHeadSha] = await Promise.all([
     provider.getPages(ref).catch(() => null),
-    provider.listWorkflowRuns(ref, { perPage: 1 }).catch(() => []),
+    provider
+      .listWorkflowRuns(ref, {
+        branch: repo.defaultBranch,
+        perPage: 1,
+        workflowFile: "deploy.yml",
+      })
+      .catch(() => []),
+    provider.getBranchHead(ref, repo.defaultBranch).catch(() => null),
   ]);
 
   const run = runs[0] ?? null;
   const jobs = run ? await provider.listWorkflowJobs(ref, run.id).catch(() => []) : [];
 
-  return buildDeployStatus({ owner: ref.owner, repo, pages, run, jobs });
+  return buildDeployStatus({ owner: ref.owner, repo, pages, run, jobs, branchHeadSha });
 }

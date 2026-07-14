@@ -76,8 +76,7 @@ export function PostDetailsPanel({
       setCoverBusy(true);
       setCoverError(null);
       try {
-        const { url } = await uploader.upload(file);
-        onChange({ cover: url });
+        await uploader.upload(file, ({ url }) => onChange({ cover: url }));
       } catch (err) {
         setCoverError(err instanceof Error ? err.message : "Upload failed.");
       } finally {

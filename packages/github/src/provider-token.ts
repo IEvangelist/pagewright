@@ -417,8 +417,11 @@ export class TokenGitHubProvider implements GitHubProvider {
   }
 
   async listWorkflowRuns(ref: RepoRef, opts: ListWorkflowRunsOptions = {}): Promise<WorkflowRun[]> {
+    const runsPath = opts.workflowFile
+      ? `/repos/${ref.owner}/${ref.repo}/actions/workflows/${encodeURIComponent(opts.workflowFile)}/runs`
+      : `/repos/${ref.owner}/${ref.repo}/actions/runs`;
     const data = await this.rest.request<{ workflow_runs?: unknown[] }>(
-      `/repos/${ref.owner}/${ref.repo}/actions/runs`,
+      runsPath,
       {
         query: {
           branch: opts.branch,

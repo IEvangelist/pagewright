@@ -1659,7 +1659,6 @@ button:disabled {
   white-space: nowrap;
   cursor: pointer;
 }
-
 .pw-editor__control {
   width: 30px;
   height: 30px;
@@ -1764,6 +1763,165 @@ button:disabled {
   color: var(--pw-editor-danger);
 }
 
+.pw-update-status-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.pw-update-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: hsl(var(--pw-muted));
+  color: hsl(var(--pw-muted-fg));
+  font-family: var(--pw-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+.pw-update-status:hover {
+  border-color: hsl(var(--pw-border));
+  color: hsl(var(--pw-fg));
+}
+.pw-update-status:active {
+  transform: translateY(1px);
+}
+.pw-update-status:focus-visible {
+  outline: 2px solid hsl(var(--pw-primary));
+  outline-offset: 2px;
+}
+.pw-update-status:disabled {
+  cursor: wait;
+}
+.pw-update-status__copy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.pw-update-status__time {
+  padding-left: 6px;
+  border-left: 1px solid currentColor;
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.pw-update-status--working {
+  color: hsl(250 65% 42%);
+  background: hsl(var(--pw-primary) / 0.12);
+}
+.pw-update-status--success {
+  color: hsl(142 72% 27%);
+  background: hsl(142 71% 45% / 0.14);
+}
+.pw-update-status--dirty {
+  color: hsl(32 92% 29%);
+  background: hsl(38 92% 50% / 0.14);
+}
+.pw-update-status--error {
+  color: hsl(0 72% 41%);
+  background: hsl(0 72% 51% / 0.12);
+}
+.pw-update-status__error-detail {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(320px, calc(100vw - 24px));
+  padding: 9px 11px;
+  border: 1px solid hsl(0 72% 51% / 0.32);
+  border-radius: 10px;
+  background: hsl(var(--pw-card));
+  box-shadow: 0 12px 32px hsl(var(--pw-fg) / 0.14);
+  color: hsl(0 72% 35%);
+  font-family: var(--pw-font);
+  font-size: 0.78rem;
+  font-weight: 550;
+  line-height: 1.4;
+  text-align: left;
+  text-wrap: pretty;
+  white-space: normal;
+}
+html.dark .pw-update-status--working {
+  color: hsl(250 90% 80%);
+}
+html.dark .pw-update-status--success {
+  color: hsl(142 62% 72%);
+}
+html.dark .pw-update-status--dirty {
+  color: hsl(38 88% 74%);
+}
+html.dark .pw-update-status--error {
+  color: hsl(0 82% 76%);
+}
+html.dark .pw-update-status__error-detail {
+  color: hsl(0 82% 82%);
+}
+@media (max-width: 1100px) {
+  .pw-update-status__time {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .pw-editor__bar {
+    gap: 8px;
+    padding-inline: 10px;
+  }
+  .pw-editor__baractions {
+    gap: 6px;
+  }
+  .pw-editor__titlewrap {
+    justify-content: flex-start;
+  }
+  .pw-editor__back span,
+  .pw-editor__bar .pw-linkpill span,
+  .pw-editor__bar .pw-btn span {
+    display: none;
+  }
+  .pw-editor__bar .pw-linkpill,
+  .pw-editor__bar .pw-btn {
+    width: 32px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+  .pw-update-status {
+    width: 30px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+  .pw-update-status__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .pw-update-status__error-detail {
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-update-status,
+  .pw-update-status .pw-spin {
+    animation: none;
+    transition: none;
+  }
+}
 .pw-editor__canvas {
   flex: 1;
   min-height: 0;
@@ -3236,17 +3394,6 @@ button:disabled {
 .pw-statusbadge--scheduled {
   color: hsl(221 78% 52%);
   background: hsl(221 83% 58% / 0.14);
-}
-/* Unsaved-changes indicator (idle state). */
-.pw-editor__savebadge--dirty {
-  color: hsl(var(--pw-muted-fg));
-  background: hsl(var(--pw-muted));
-}
-.pw-editor__unsaveddot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: hsl(33 90% 50%);
 }
 /* Segmented Write / Split / Preview toggle in the top bar. */
 .pw-viewtoggle {

@@ -60,14 +60,36 @@ export default async function EditSitePage({
   const repoData = await provider.getRepo({ owner, repo });
   if (!repoData) notFound();
 
-  const headSha = await provider
-    .getBranchHead({ owner, repo }, repoData.defaultBranch)
-    .catch(() => null);
-  const readRef = headSha ?? repoData.defaultBranch;
+  const [pages, headSha] = await Promise.all([
+    provider.getPages({ owner, repo }).catch(() => null),
+    provider.getBranchHead({ owner, repo }, repoData.defaultBranch).catch(() => null),
+  ]);
+
+  if (!headSha) {
+    return (
+      <main className="pw-dash">
+        <Link
+          href={post ? `/sites/${owner}/${repo}/posts` : `/sites/${owner}/${repo}`}
+          className="pw-backlink"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>{post ? "Back to posts" : "Back to site"}</span>
+        </Link>
+        <div className="pw-empty" style={{ marginTop: 24 }}>
+          <h2 className="pw-empty__title">A safe editing version couldn’t be loaded</h2>
+          <p className="pw-empty__body">
+            Pagewright couldn’t verify the repository’s current version, so editing is paused to
+            protect newer changes. Refresh the page to try again.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   const [file, siteFile, runtimeFile] = await Promise.all([
-    provider.getFile({ owner, repo }, path, readRef).catch(() => null),
-    provider.getFile({ owner, repo }, "src/data/site.json", readRef).catch(() => null),
-    provider.getFile({ owner, repo }, GLOBAL_FEATURES_RUNTIME_PATH, readRef).catch(() => null),
+    provider.getFile({ owner, repo }, path, headSha).catch(() => null),
+    provider.getFile({ owner, repo }, "src/data/site.json", headSha).catch(() => null),
+    provider.getFile({ owner, repo }, GLOBAL_FEATURES_RUNTIME_PATH, headSha).catch(() => null),
   ]);
   const supportsGlobalFeatures = runtimeFile !== null;
   let site: SiteConfig;
@@ -121,8 +143,6 @@ export default async function EditSitePage({
     );
   }
 
-  const pages = await provider.getPages({ owner, repo }).catch(() => null);
-
   const backHref = post ? `/sites/${owner}/${repo}/posts` : `/sites/${owner}/${repo}`;
   const editingLabel = post ? slugFromPostPath(path) : repoData.name;
   const liveUrl = pages?.url ?? repoData.pagesUrl ?? null;
@@ -167,6 +187,7 @@ export default async function EditSitePage({
     });
     return (
       <PostComposer
+        key={`${owner}/${repo}:${path}`}
         owner={owner}
         repo={repo}
         path={path}
@@ -189,6 +210,7 @@ export default async function EditSitePage({
 
   return (
     <SiteEditor
+      key={`${owner}/${repo}:${path}`}
       owner={owner}
       repo={repo}
       path={path}

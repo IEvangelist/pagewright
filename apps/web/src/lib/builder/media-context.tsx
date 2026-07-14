@@ -10,7 +10,11 @@ export interface UploadedMedia {
 }
 
 export interface MediaUploader {
-  upload: (file: File) => Promise<UploadedMedia>;
+  /**
+   * Commits a file and applies its URL while the upload is still considered pending. Keeping both
+   * steps in one boundary prevents a save from capturing the document before the URL is attached.
+   */
+  upload: (file: File, apply: (media: UploadedMedia) => void) => Promise<void>;
   previewUrl?: (value: string) => string;
 }
 

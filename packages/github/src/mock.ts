@@ -55,6 +55,8 @@ interface MockStore {
 const mockGlobal = globalThis as typeof globalThis & {
   __pagewrightMockStores?: Map<string, MockStore>;
 };
+// Next.js evaluates route bundles independently during development. Keep one process-wide store so
+// lazy compilation and hot reloads cannot regenerate branch SHAs between an editor read and save.
 const stores = (mockGlobal.__pagewrightMockStores ??= new Map<string, MockStore>());
 
 /** Deploy-progress timeline: how long the simulated Actions run takes to reach "built". */
@@ -604,7 +606,11 @@ export class MockGitHubProvider implements GitHubProvider {
 
   async listWorkflowRuns(ref: RepoRef, opts?: ListWorkflowRunsOptions): Promise<WorkflowRun[]> {
     const state = requireRepo(this.store(), ref);
-    const runs = state.runs.map(runToWorkflowRun);
+    if (opts?.workflowFile && opts.workflowFile.toLowerCase() !== "deploy.yml") return [];
+
+    let runs = state.runs.map(runToWorkflowRun);
+    if (opts?.branch) runs = runs.filter((run) => run.headBranch === opts.branch);
+    if (opts?.event) runs = runs.filter((run) => run.event === opts.event);
     return typeof opts?.perPage === "number" ? runs.slice(0, opts.perPage) : runs;
   }
 
