@@ -129,8 +129,7 @@ test("keeps the landing page WCAG AA compliant in light and dark themes", async 
   await page.addInitScript(() => localStorage.setItem("pw-theme", "light"));
   await page.goto("/");
 
-  const cta = page.getByRole("link", { name: "Get started free" });
-  await cta.scrollIntoViewIfNeeded();
+  const cta = page.locator(".pw-landing__primary");
   await expect(cta).toBeVisible();
   await expectTextContrast(cta, 4.5, "Landing page light CTA");
   await expectDualFocusIndicator(cta);
@@ -140,6 +139,18 @@ test("keeps the landing page WCAG AA compliant in light and dark themes", async 
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expectTextContrast(cta, 4.5, "Landing page dark CTA");
   await expectNoWcagViolations(page, "Landing page dark");
+});
+
+test("keeps generated template CTAs accessible in light and dark themes", async ({ page }) => {
+  for (const theme of ["light", "dark"]) {
+    await page.goto(`/templates/landing/frame?theme=${theme}`);
+    const cta = page.locator(".pw-cta .pw-btn--primary");
+
+    await expect(cta).toBeVisible();
+    await expectTextContrast(cta, 4.5, `Generated template ${theme} CTA`);
+    await expectDualFocusIndicator(cta);
+    await expectNoWcagViolations(page, `Generated template ${theme}`);
+  }
 });
 
 test("stays usable without horizontal overflow at 320px", async ({ page }) => {
