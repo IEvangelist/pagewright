@@ -28,3 +28,13 @@ export function getPublishedPosts(now: Date = new Date()): LoadedPost[] {
     .filter((p) => !p.draft && (!p.publishAt || new Date(p.publishAt) <= now))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
+/**
+ * Scheduled posts — those with a `publishAt` still in the future — surfaced as polished
+ * "Coming soon" teasers on the index. Soonest first. Plain drafts (no schedule) stay hidden.
+ */
+export function getUpcomingPosts(now: Date = new Date()): LoadedPost[] {
+  return getAllPosts()
+    .filter((p) => p.publishAt != null && new Date(p.publishAt) > now)
+    .sort((a, b) => new Date(a.publishAt!).getTime() - new Date(b.publishAt!).getTime());
+}

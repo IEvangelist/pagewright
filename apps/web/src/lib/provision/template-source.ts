@@ -1,7 +1,7 @@
 import "server-only";
 import type { CommitFile } from "@pagewright/github";
 import type { TemplateId } from "@pagewright/registry";
-import { parsePage, type Block } from "@pagewright/blocks";
+import { parsePage, parsePost, type Block } from "@pagewright/blocks";
 import bundle from "./provision-bundle.generated.json";
 
 /**
@@ -62,4 +62,102 @@ export function loadTemplateHomeBlocks(templateId: TemplateId): Block[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * A blog post reduced to what the demo renderer needs — its card metadata plus the body blocks so
+ * an individual article can be rendered in the isolated preview frame.
+ */
+export interface DemoPost {
+  slug: string;
+  title: string;
+  description?: string;
+  date: string;
+  publishAt?: string;
+  draft: boolean;
+  excerpt?: string;
+  cover?: string;
+  tags: string[];
+  author?: string;
+  blocks: Block[];
+}
+
+function fileSlug(path: string): string {
+  return (path.split("/").pop() ?? path).replace(/\.json$/, "");
+}
+
+function loadAllPosts(templateId: TemplateId): DemoPost[] {
+  const files = typedBundle.templates[templateId];
+  if (!files) return [];
+  const out: DemoPost[] = [];
+  for (const file of files) {
+    if (!/src\/data\/posts\/.+\.json$/.test(file.path) || typeof file.content !== "string") continue;
+    try {
+      const post = parsePost(JSON.parse(file.content));
+      const slug = post.slug && post.slug !== "/" ? post.slug.replace(/^\/+/, "") : fileSlug(file.path);
+      out.push({
+        slug,
+        title: post.title,
+        description: post.description,
+        date: post.date,
+        publishAt: post.publishAt,
+        draft: post.draft,
+        excerpt: post.excerpt,
+        cover: post.cover,
+        tags: post.tags,
+        author: post.author,
+        blocks: post.blocks,
+      });
+    } catch {
+      // Skip malformed sample posts rather than breaking the whole demo.
+    }
+  }
+  return out;
+}
+
+/**
+ * Split a template's sample posts into published (visible, newest first) and upcoming (scheduled for
+ * a future `publishAt`, soonest first) — mirroring the generated blog's `getPublishedPosts` /
+ * `getUpcomingPosts` so the demo shows exactly what a deployed site would.
+ */
+export function loadTemplatePosts(
+  templateId: TemplateId,
+  now: Date = new Date(),
+): { published: DemoPost[]; upcoming: DemoPost[] } {
+  const all = loadAllPosts(templateId);
+  const published = all
+    .filter((p) => !p.draft && (!p.publishAt || new Date(p.publishAt) <= now))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const upcoming = all
+    .filter((p) => p.publishAt != null && new Date(p.publishAt) > now)
+    .sort((a, b) => new Date(a.publishAt!).getTime() - new Date(b.publishAt!).getTime());
+  return { published, upcoming };
+}
+
+/** Look up a single sample post by slug (for rendering an article view in the demo frame). */
+export function loadTemplatePost(templateId: TemplateId, slug: string): DemoPost | undefined {
+  return loadAllPosts(templateId).find((p) => p.slug === slug);
+}
+
+/** The site config (name, description) shipped with a template, for demo chrome + framing. */
+export function loadTemplateSite(templateId: TemplateId): { name: string; description?: string } | null {
+  const files = typedBundle.templates[templateId];
+  const site = files?.find((file) => file.path.endsWith("src/data/site.json"));
+  if (!site || typeof site.content !== "string") return null;
+  try {
+    const parsed = JSON.parse(site.content) as { name?: string; description?: string };
+    return { name: parsed.name ?? templateId, description: parsed.description };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The raw block stylesheet (`@pagewright/blocks/blocks.css`), read from the vendored bundle so it can
+ * be inlined into the fully isolated demo preview iframe — giving a pixel-identical rendering to a
+ * deployed Astro site with no dependency on the app's own global styles.
+ */
+export function loadBlocksCss(): string {
+  const file = typedBundle.vendor.find((f) => f.path.endsWith("styles/blocks.css"));
+  return file && typeof file.content === "string" ? file.content : "";
 }

@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import { PageRenderer, PostList, parsePage } from "@pagewright/blocks";
 import homeDoc from "../data/pages/home.json";
-import { getPublishedPosts } from "../lib/posts";
+import { getPublishedPosts, getUpcomingPosts } from "../lib/posts";
 
 const page = parsePage(homeDoc);
 const base = import.meta.env.BASE_URL;
@@ -16,6 +16,14 @@ const posts = getPublishedPosts().map((p) => ({
   tags: p.tags,
 }));
 
+const upcoming = getUpcomingPosts().map((p) => ({
+  title: p.title,
+  href: `/blog/${p.slug}/`,
+  date: p.publishAt ?? p.date,
+  excerpt: p.excerpt,
+  tags: p.tags,
+}));
+
 // Render authored header blocks, then the derived post list, then the footer.
 const footerIndex = page.blocks.findIndex((b) => b.type === "footer");
 const headBlocks = footerIndex >= 0 ? page.blocks.slice(0, footerIndex) : page.blocks;
@@ -24,6 +32,6 @@ const footerBlocks = footerIndex >= 0 ? page.blocks.slice(footerIndex) : [];
 
 <Layout title={page.title} description={page.description}>
   <PageRenderer blocks={headBlocks} base={base} />
-  <PostList heading="Latest posts" posts={posts} base={base} />
+  <PostList heading="Latest posts" posts={posts} upcoming={upcoming} base={base} />
   <PageRenderer blocks={footerBlocks} base={base} />
 </Layout>

@@ -288,20 +288,34 @@ export function PostList({
   heading,
   subheading,
   posts,
+  upcoming = [],
   base,
 }: {
   heading?: string;
   subheading?: string;
   posts: PostCard[];
+  /** Scheduled/draft posts, surfaced as polished "Coming soon" teasers (not yet linkable). */
+  upcoming?: PostCard[];
   base?: string;
 }) {
   return (
-    <section className="pw-section pw-postlist">
+    <section className="pw-section pw-postlist" id="posts">
       <div className="pw-container">
         {heading ? <h2 className="pw-section__heading">{heading}</h2> : null}
         {subheading ? <p className="pw-section__subheading">{subheading}</p> : null}
         {posts.length === 0 ? (
-          <p className="pw-postlist__empty">No posts published yet — check back soon.</p>
+          <div className="pw-postlist__empty">
+            <span className="pw-postlist__emptyicon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </span>
+            <p className="pw-postlist__emptytitle">Your first story is coming soon</p>
+            <p className="pw-postlist__emptybody">
+              Write in the editor, hit publish, and your posts land here — deployed automatically.
+            </p>
+          </div>
         ) : (
           <div className="pw-postlist__grid">
             {posts.map((p, i) => (
@@ -331,6 +345,37 @@ export function PostList({
             ))}
           </div>
         )}
+        {upcoming.length > 0 ? (
+          <div className="pw-upcoming">
+            <h3 className="pw-upcoming__heading">
+              <span className="pw-upcoming__dot" aria-hidden="true" />
+              Coming soon
+            </h3>
+            <div className="pw-postlist__grid pw-upcoming__grid">
+              {upcoming.map((p, i) => (
+                <article key={i} className="pw-postcard pw-postcard--soon" aria-disabled="true">
+                  <div className="pw-postcard__body">
+                    <span className="pw-postcard__badge">
+                      <span className="pw-postcard__badgedot" aria-hidden="true" />
+                      Scheduled
+                    </span>
+                    <h3 className="pw-postcard__title">{p.title}</h3>
+                    {p.excerpt ? <p className="pw-postcard__excerpt">{p.excerpt}</p> : null}
+                    {p.tags && p.tags.length > 0 ? (
+                      <div className="pw-postcard__tags">
+                        {p.tags.map((t, ti) => (
+                          <span key={ti} className="pw-tag">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

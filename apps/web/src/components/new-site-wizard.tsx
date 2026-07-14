@@ -117,6 +117,21 @@ export function NewSiteWizard({
     setHydrated(true);
   }, [login]);
 
+  // Deep link from a template demo page ("Use this template" → /new?template=blog): preselect the
+  // template and jump straight to the configure step once the draft has hydrated.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const tpl = new URLSearchParams(window.location.search).get("template");
+      if (tpl && TEMPLATES.some((t) => t.id === tpl)) {
+        chooseTemplate(tpl as TemplateId);
+      }
+    } catch {
+      // Ignore — SSR/no-window.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
   // Autosave the draft as the user works.
   useEffect(() => {
     if (!hydrated) return;
@@ -377,14 +392,14 @@ export function NewSiteWizard({
                     ))}
                   </span>
                 </span>
-                <button
-                  type="button"
+                <Link
+                  href={`/templates/${t.id}`}
                   className="pw-tplcard__cta"
-                  onClick={() => chooseTemplate(t.id)}
+                  aria-label={`View the ${t.name} template`}
                 >
-                  <span className="pw-tplcard__ctalabel">Use this template</span>
+                  <span className="pw-tplcard__ctalabel">View template</span>
                   <ArrowRight size={15} aria-hidden="true" />
-                </button>
+                </Link>
               </div>
             ))}
           </div>
