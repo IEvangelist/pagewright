@@ -1,5 +1,6 @@
 import { RestClient, type RestClientOptions, isRecord } from "./rest";
 import {
+  type Base64FileContents,
   ConcurrencyError,
   type CommitOptions,
   type CommitResult,
@@ -204,6 +205,38 @@ export class TokenGitHubProvider implements GitHubProvider {
     const encoding = typeof data.encoding === "string" ? data.encoding : "base64";
     const decoded = encoding === "base64" ? decodeBase64(data.content) : data.content;
     return { content: decoded, sha: data.sha, path };
+  }
+
+  async getFileBase64(
+    ref: RepoRef,
+    path: string,
+    branch?: string,
+  ): Promise<Base64FileContents | null> {
+    const data = await this.rest.request<Record<string, unknown> | null>(
+      `/repos/${ref.owner}/${ref.repo}/contents/${encodePath(path)}`,
+      { query: branch ? { ref: branch } : undefined, allowStatuses: [404] },
+    );
+    if (!data || typeof data.sha !== "string") return null;
+    const encoding = typeof data.encoding === "string" ? data.encoding : "base64";
+
+    // GitHub omits inline content for files larger than 1 MB. Fetch the same object through the
+    // Git Blobs API so authenticated media previews continue to work up to GitHub's blob limit.
+    if (encoding === "none") {
+      const blob = await this.rest.request<Record<string, unknown>>(
+        `/repos/${ref.owner}/${ref.repo}/git/blobs/${encodeURIComponent(data.sha)}`,
+      );
+      if (typeof blob.content !== "string" || blob.encoding !== "base64") return null;
+      return {
+        contentBase64: blob.content.replace(/\n/g, ""),
+        sha: data.sha,
+        path,
+      };
+    }
+
+    if (typeof data.content !== "string") return null;
+    const contentBase64 =
+      encoding === "base64" ? data.content.replace(/\n/g, "") : encodeBase64(data.content);
+    return { contentBase64, sha: data.sha, path };
   }
 
   async listDirectory(ref: RepoRef, path: string, branch?: string): Promise<DirEntry[]> {
@@ -485,4 +518,14 @@ function decodeBase64(content: string): string {
   }
   // Browser/edge fallback.
   return decodeURIComponent(escape(atob(cleaned)));
+}
+
+function encodeBase64(content: string): string {
+  if (typeof globalThis.Buffer !== "undefined") {
+    return globalThis.Buffer.from(content, "utf-8").toString("base64");
+  }
+  const bytes = new TextEncoder().encode(content);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }

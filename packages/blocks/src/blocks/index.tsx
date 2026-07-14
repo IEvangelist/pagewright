@@ -142,7 +142,7 @@ export function Gallery({
                   {item.description ? (
                     <p className="pw-gallery__desc">{item.description}</p>
                   ) : null}
-                  {item.tags.length > 0 ? (
+                  {item.tags?.length ? (
                     <div className="pw-gallery__tags">
                       {item.tags.map((t, ti) => (
                         <span key={ti} className="pw-tag">

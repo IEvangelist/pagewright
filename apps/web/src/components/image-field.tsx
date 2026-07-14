@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { ImagePlus, Loader2, Upload, X } from "lucide-react";
-import { useMediaUpload } from "@/lib/builder/media-context";
+import { MEDIA_UPLOAD_ACCEPT, useMediaUpload } from "@/lib/builder/media-context";
 
 /**
  * A Puck custom-field renderer for image props. Supports drag-and-drop or click-to-browse; the
@@ -21,13 +21,16 @@ export function ImageField({
 }) {
   const uploader = useMediaUpload();
   const inputRef = useRef<HTMLInputElement>(null);
+  const labelId = useId();
+  const errorId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const previewUrl = uploader?.previewUrl?.(value) ?? value;
 
   const handleFile = useCallback(
     async (file: File | undefined) => {
-      if (!file) return;
+      if (!file || busy) return;
       if (!uploader) {
         setError("Uploads aren’t available here.");
         return;
@@ -47,12 +50,16 @@ export function ImageField({
         setBusy(false);
       }
     },
-    [uploader, onChange],
+    [busy, uploader, onChange],
   );
 
   return (
     <div className="pw-imgfield">
-      {label ? <span className="pw-imgfield__label">{label}</span> : null}
+      {label ? (
+        <span id={labelId} className="pw-imgfield__label">
+          {label}
+        </span>
+      ) : null}
       <div
         className={`pw-imgfield__drop${dragging ? " pw-imgfield__drop--drag" : ""}`}
         onDragOver={(e) => {
@@ -65,35 +72,36 @@ export function ImageField({
           setDragging(false);
           void handleFile(e.dataTransfer.files?.[0]);
         }}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
       >
-        {value ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="pw-imgfield__preview" src={value} alt="" />
-        ) : (
-          <span className="pw-imgfield__placeholder">
-            <ImagePlus size={18} aria-hidden="true" />
-          </span>
-        )}
-        <span className="pw-imgfield__hint">
-          {busy ? (
-            <>
-              <Loader2 size={14} className="pw-spin" aria-hidden="true" /> Uploading…
-            </>
+        <button
+          type="button"
+          className="pw-imgfield__trigger"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          aria-labelledby={label ? labelId : undefined}
+          aria-describedby={error ? errorId : undefined}
+          aria-busy={busy}
+        >
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="pw-imgfield__preview" src={previewUrl} alt="" />
           ) : (
-            <>
-              <Upload size={14} aria-hidden="true" /> Drop an image or click to upload
-            </>
+            <span className="pw-imgfield__placeholder">
+              <ImagePlus size={18} aria-hidden="true" />
+            </span>
           )}
-        </span>
+          <span className="pw-imgfield__hint" aria-live="polite">
+            {busy ? (
+              <>
+                <Loader2 size={14} className="pw-spin" aria-hidden="true" /> Uploading...
+              </>
+            ) : (
+              <>
+                <Upload size={14} aria-hidden="true" /> Drop an image or choose a file
+              </>
+            )}
+          </span>
+        </button>
         {value ? (
           <button
             type="button"
@@ -112,7 +120,7 @@ export function ImageField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={MEDIA_UPLOAD_ACCEPT}
         hidden
         onChange={(e) => {
           void handleFile(e.target.files?.[0]);
@@ -122,11 +130,16 @@ export function ImageField({
       <input
         type="text"
         className="pw-imgfield__url"
-        placeholder="…or paste an image URL"
+        aria-label={`${label ?? "Image"} URL`}
+        placeholder="Paste an image URL"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      {error ? <span className="pw-imgfield__error">{error}</span> : null}
+      {error ? (
+        <span id={errorId} className="pw-imgfield__error" role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 }

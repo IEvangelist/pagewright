@@ -98,6 +98,12 @@ export interface FileContents {
   path: string;
 }
 
+export interface Base64FileContents {
+  contentBase64: string;
+  sha: string;
+  path: string;
+}
+
 export interface DirEntry {
   name: string;
   path: string;
@@ -203,6 +209,8 @@ export interface GitHubProvider {
   /** Atomic multi-file commit via the Git Data API (blobs → tree → commit → ref update). */
   commitFiles(ref: RepoRef, opts: CommitOptions): Promise<CommitResult>;
   getFile(ref: RepoRef, path: string, branch?: string): Promise<FileContents | null>;
+  /** Read a binary file without converting its bytes through UTF-8. */
+  getFileBase64(ref: RepoRef, path: string, branch?: string): Promise<Base64FileContents | null>;
   /** List the entries of a directory at a ref. Returns [] when the directory is absent. */
   listDirectory(ref: RepoRef, path: string, branch?: string): Promise<DirEntry[]>;
   /** Current HEAD SHA of a branch (used for conflict detection on save). */

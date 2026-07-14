@@ -37,7 +37,11 @@ import {
   SquareCode,
   Trash2,
 } from "lucide-react";
-import type { MediaUploader } from "@/lib/builder/media-context";
+import {
+  MEDIA_UPLOAD_ACCEPT,
+  resolveMediaPreviewUrl,
+  type MediaUploader,
+} from "@/lib/builder/media-context";
 import type { PostMeta } from "@/lib/content/posts";
 import { renderMarkdown, readingStats } from "@/lib/content/markdown";
 import { PostDetailsPanel, fileToBase64 } from "@/components/post-details-panel";
@@ -58,6 +62,8 @@ import {
 
 const DRAFT_PREFIX = "pagewright:post-draft:";
 const DRAFT_DEBOUNCE_MS = 500;
+const PENDING_IMAGE_SOURCE =
+  "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 type SaveState = "idle" | "saving" | "saved" | "error" | "conflict";
 type ViewMode = "write" | "split" | "preview";
@@ -66,6 +72,16 @@ interface BodyDraft {
   title: string;
   description: string;
   components: PostComponent[];
+}
+
+class MediaUploadConflictError extends Error {}
+
+function rewriteMediaPreviewSources(html: string, mediaPreviewEndpoint: string): string {
+  return html.replace(
+    /\bsrc=(["'])(\/media\/[^"']+)\1/gi,
+    (_match: string, quote: string, value: string) =>
+      `src=${quote}${resolveMediaPreviewUrl(value, mediaPreviewEndpoint) ?? value}${quote}`,
+  );
 }
 
 /**
@@ -108,6 +124,7 @@ export function PostComposer({
 }) {
   const draftKey = `${DRAFT_PREFIX}${owner}/${repo}:${path}`;
   const metaDraftKey = `${draftKey}:meta`;
+  const mediaPreviewEndpoint = `/api/sites/${owner}/${repo}/media`;
 
   const [restoredDraft, setRestoredDraft] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -126,6 +143,7 @@ export function PostComposer({
 
   const taRef = useRef<HTMLTextAreaElement>(null);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingBodyDraftRef = useRef<BodyDraft | null>(null);
   const headShaRef = useRef<string | null>(initialHeadSha);
   const metaRef = useRef<PostMeta>(postMeta);
   const componentsRef = useRef(initialComponents);
@@ -169,24 +187,56 @@ export function PostComposer({
         dirtyRef.current = true;
       }
     } catch {
-      // ignore corrupt drafts
+      setSaveState("error");
+      setMessage("Local backup couldn’t be restored. The latest GitHub version is open.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scheduleBodyDraft = useCallback(
-    (next: BodyDraft) => {
-      if (draftTimer.current) clearTimeout(draftTimer.current);
-      draftTimer.current = setTimeout(() => {
-        try {
-          window.localStorage.setItem(draftKey, JSON.stringify(next));
-        } catch {
-          // storage full / unavailable — non-fatal
+  const writeBodyDraft = useCallback(
+    (next: BodyDraft, surfaceError: boolean) => {
+      try {
+        window.localStorage.setItem(draftKey, JSON.stringify(next));
+        if (pendingBodyDraftRef.current === next) pendingBodyDraftRef.current = null;
+      } catch (error) {
+        if (surfaceError) {
+          setSaveState("error");
+          setMessage("Local backup is unavailable. Save before leaving this page.");
+        } else {
+          console.error("[pagewright] Failed to flush the local post draft.", error);
         }
-      }, DRAFT_DEBOUNCE_MS);
+      }
     },
     [draftKey],
   );
+
+  const scheduleBodyDraft = useCallback(
+    (next: BodyDraft) => {
+      pendingBodyDraftRef.current = next;
+      if (draftTimer.current) clearTimeout(draftTimer.current);
+      draftTimer.current = setTimeout(() => {
+        draftTimer.current = undefined;
+        writeBodyDraft(next, true);
+      }, DRAFT_DEBOUNCE_MS);
+    },
+    [writeBodyDraft],
+  );
+
+  const flushBodyDraft = useCallback(() => {
+    if (draftTimer.current) {
+      clearTimeout(draftTimer.current);
+      draftTimer.current = undefined;
+    }
+    if (pendingBodyDraftRef.current) writeBodyDraft(pendingBodyDraftRef.current, false);
+  }, [writeBodyDraft]);
+
+  useEffect(() => {
+    window.addEventListener("pagehide", flushBodyDraft);
+    return () => {
+      window.removeEventListener("pagehide", flushBodyDraft);
+      flushBodyDraft();
+    };
+  }, [flushBodyDraft]);
 
   const dirtied = useCallback(() => {
     setDirty(true);
@@ -234,7 +284,8 @@ export function PostComposer({
         try {
           window.localStorage.setItem(metaDraftKey, JSON.stringify(next));
         } catch {
-          // non-fatal
+          setSaveState("error");
+          setMessage("Local backup is unavailable. Save before leaving this page.");
         }
         return next;
       });
@@ -347,19 +398,35 @@ export function PostComposer({
     () => ({
       async upload(file) {
         const contentBase64 = await fileToBase64(file);
-        const res = await fetch(`/api/sites/${owner}/${repo}/media`, {
+        const res = await fetch(mediaPreviewEndpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type, contentBase64 }),
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            contentBase64,
+            expectedHeadSha: headShaRef.current ?? undefined,
+          }),
         });
         const body = (await res.json().catch(() => null)) as
-          | { url?: string; path?: string; error?: string }
+          | { url?: string; path?: string; error?: string; code?: string; headSha?: string }
           | null;
-        if (!res.ok || !body?.url) throw new Error(body?.error ?? "Upload failed.");
-        return { url: body.url, path: body.path ?? "" };
+        if (res.status === 409 || body?.code === "conflict") {
+          const conflictMessage =
+            body?.error ?? "This site changed in GitHub while you were editing.";
+          setSaveState("conflict");
+          setMessage(conflictMessage);
+          throw new MediaUploadConflictError(conflictMessage);
+        }
+        if (!res.ok || !body?.url || !body.path) {
+          throw new Error(body?.error ?? "Upload failed.");
+        }
+        if (body.headSha) headShaRef.current = body.headSha;
+        return { url: body.url, path: body.path };
       },
+      previewUrl: (value) => resolveMediaPreviewUrl(value, mediaPreviewEndpoint) ?? value,
     }),
-    [owner, repo],
+    [mediaPreviewEndpoint],
   );
 
   const uploadImages = useCallback(
@@ -368,7 +435,7 @@ export function PostComposer({
       const targetId = activeComponent?.type === "prose" ? activeComponent.id : null;
       if (images.length === 0 || !targetId) return;
       for (const file of images) {
-        const marker = `pw-uploading-${Math.random().toString(36).slice(2)}`;
+        const marker = `${PENDING_IMAGE_SOURCE}#pw-uploading-${Math.random().toString(36).slice(2)}`;
         const alt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
         insertAtCursor(`![${alt}](${marker})\n`);
         setUploading((n) => n + 1);
@@ -387,7 +454,7 @@ export function PostComposer({
           });
         } catch (err) {
           setMessage(err instanceof Error ? err.message : "Image upload failed.");
-          setSaveState("error");
+          setSaveState(err instanceof MediaUploadConflictError ? "conflict" : "error");
           commitComponents((current) => {
             const target = current.find(
               (component): component is Extract<PostComponent, { type: "prose" }> =>
@@ -432,6 +499,11 @@ export function PostComposer({
   // ── save ────────────────────────────────────────────────────────────────────
   const save = useCallback(
     async ({ force = false }: { force?: boolean } = {}) => {
+      if (uploading > 0) {
+        setSaveState("error");
+        setMessage("Wait for image uploads to finish before saving.");
+        return;
+      }
       setSaveState("saving");
       setMessage(null);
       try {
@@ -461,36 +533,56 @@ export function PostComposer({
           return;
         }
         if (body?.headSha) headShaRef.current = body.headSha;
+        if (draftTimer.current) {
+          clearTimeout(draftTimer.current);
+          draftTimer.current = undefined;
+        }
+        pendingBodyDraftRef.current = null;
+        let localBackupCleared = true;
         try {
           window.localStorage.removeItem(draftKey);
           window.localStorage.removeItem(metaDraftKey);
-        } catch {
-          // ignore
+        } catch (error) {
+          localBackupCleared = false;
+          console.error("[pagewright] Failed to clear the saved local post draft.", error);
         }
         setRestoredDraft(false);
         setDirty(false);
         dirtyRef.current = false;
         setSaveState("saved");
-        setMessage(
+        const successMessage =
           metaRef.current.draft
-            ? "Saved as draft — deploying (hidden until published)"
-            : "Saved — deploying your post",
+            ? "Saved as draft. It stays hidden until published."
+            : "Saved. Your post is deploying now.";
+        setMessage(
+          localBackupCleared
+            ? successMessage
+            : `${successMessage} Clear this site’s browser data before editing again.`,
         );
       } catch {
         setSaveState("error");
         setMessage("Network error while saving. Your work is kept locally.");
       }
     },
-    [owner, repo, path, components, title, description, draftKey, metaDraftKey],
+    [owner, repo, path, components, title, description, draftKey, metaDraftKey, uploading],
   );
 
   const onReload = useCallback(() => {
+    const confirmed = window.confirm(
+      "Discard your local post edits and load the latest version from GitHub? This cannot be undone.",
+    );
+    if (!confirmed) return;
     try {
       window.localStorage.removeItem(draftKey);
       window.localStorage.removeItem(metaDraftKey);
     } catch {
-      // ignore
+      setSaveState("error");
+      setMessage("The local draft couldn’t be cleared. Your edits were not discarded.");
+      return;
     }
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = undefined;
+    pendingBodyDraftRef.current = null;
     window.location.reload();
   }, [draftKey, metaDraftKey]);
 
@@ -753,7 +845,9 @@ export function PostComposer({
               <span>Preview</span>
             </button>
           </div>
-          <SaveStatus state={saveState} message={message} dirty={dirty} restored={restoredDraft} />
+          {saveState !== "error" ? (
+            <SaveStatus state={saveState} message={message} dirty={dirty} restored={restoredDraft} />
+          ) : null}
           {liveUrl ? (
             <a className="pw-linkpill" href={liveUrl} target="_blank" rel="noreferrer">
               <Globe size={14} aria-hidden="true" />
@@ -775,7 +869,7 @@ export function PostComposer({
             type="button"
             className="pw-btn pw-btn--primary pw-btn--sm"
             onClick={() => void save()}
-            disabled={saveState === "saving"}
+            disabled={saveState === "saving" || uploading > 0}
           >
             {saveState === "saving" ? (
               <Loader2 size={15} className="pw-spin" aria-hidden="true" />
@@ -786,6 +880,13 @@ export function PostComposer({
           </button>
         </div>
       </div>
+
+      {saveState === "error" ? (
+        <div className="pw-editor__error" role="alert">
+          <AlertCircle size={16} aria-hidden="true" />
+          <span>{message ?? "Something went wrong. Your latest changes were not saved."}</span>
+        </div>
+      ) : null}
 
       {saveState === "conflict" ? (
         <div className="pw-editor__conflict" role="alert">
@@ -914,7 +1015,10 @@ export function PostComposer({
             ) : null}
             {showPreview ? (
               <div className="pw-composer__previewpane">
-                <PostComponentsPreview components={components} />
+                <PostComponentsPreview
+                  components={components}
+                  mediaPreviewEndpoint={mediaPreviewEndpoint}
+                />
               </div>
             ) : null}
           </div>
@@ -946,7 +1050,7 @@ export function PostComposer({
       <input
         ref={imageInputRef}
         type="file"
-        accept="image/*"
+        accept={MEDIA_UPLOAD_ACCEPT}
         multiple
         hidden
         onChange={(e) => {
@@ -1521,7 +1625,13 @@ function FormField({
   );
 }
 
-function PostComponentsPreview({ components }: { components: PostComponent[] }) {
+function PostComponentsPreview({
+  components,
+  mediaPreviewEndpoint,
+}: {
+  components: PostComponent[];
+  mediaPreviewEndpoint: string;
+}) {
   if (components.length === 0) {
     return <div className="pw-composer__previewempty">Add a component to preview your post.</div>;
   }
@@ -1534,7 +1644,12 @@ function PostComponentsPreview({ components }: { components: PostComponent[] }) 
             <article
               key={component.id}
               className="pw-prose pw-postpreview__prose"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(component.props.markdown) }}
+              dangerouslySetInnerHTML={{
+                __html: rewriteMediaPreviewSources(
+                  renderMarkdown(component.props.markdown),
+                  mediaPreviewEndpoint,
+                ),
+              }}
             />
           ) : (
             <div key={component.id} className="pw-postpreview__emptycomponent">

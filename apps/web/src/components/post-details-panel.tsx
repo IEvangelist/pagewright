@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
-import type { MediaUploader } from "@/lib/builder/media-context";
+import { MEDIA_UPLOAD_ACCEPT, type MediaUploader } from "@/lib/builder/media-context";
 import type { PostMeta } from "@/lib/content/posts";
 
 /** Read a File as a bare base64 string (no data-URL prefix). Browser-only (uses FileReader). */
@@ -57,6 +57,7 @@ export function PostDetailsPanel({
   const [tagsInput, setTagsInput] = useState(meta.tags.join(", "));
   const [coverBusy, setCoverBusy] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const coverPreview = uploader.previewUrl?.(meta.cover) ?? meta.cover;
 
   const commitTags = useCallback(
     (raw: string) => {
@@ -112,7 +113,7 @@ export function PostDetailsPanel({
             onChange={(e) => onChange({ draft: e.target.checked })}
           />
           <span>
-            <strong>Draft</strong> — keep hidden from the published site
+            <strong>Draft</strong>: keep hidden from the published site
           </span>
         </label>
 
@@ -180,7 +181,7 @@ export function PostDetailsPanel({
           <div className="pw-postmeta__cover">
             {meta.cover ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="pw-postmeta__coverimg" src={meta.cover} alt="" />
+              <img className="pw-postmeta__coverimg" src={coverPreview} alt="" />
             ) : (
               <div className="pw-postmeta__coverempty" aria-hidden="true">
                 <ImagePlus size={18} />
@@ -196,7 +197,7 @@ export function PostDetailsPanel({
                 <span>{meta.cover ? "Replace" : "Upload"}</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={MEDIA_UPLOAD_ACCEPT}
                   hidden
                   onChange={(e) => onCoverFile(e.target.files?.[0])}
                 />

@@ -7,6 +7,7 @@
  */
 
 import {
+  type Base64FileContents,
   ConcurrencyError,
   type CommitOptions,
   type CommitResult,
@@ -49,7 +50,11 @@ interface MockStore {
   nextId: number;
 }
 
-const stores = new Map<string, MockStore>();
+const mockGlobal = globalThis as typeof globalThis & {
+  __pagewrightMockStores?: Map<string, MockStore>;
+};
+const stores = mockGlobal.__pagewrightMockStores ?? new Map<string, MockStore>();
+mockGlobal.__pagewrightMockStores = stores;
 
 /** Deploy-progress timeline: how long the simulated Actions run takes to reach "built". */
 const RUN_DURATION_MS = 45_000;
@@ -433,6 +438,13 @@ export class MockGitHubProvider implements GitHubProvider {
     const content = state?.files.get(path);
     if (state === undefined || content === undefined) return null;
     return { content, sha: randomSha(), path };
+  }
+
+  async getFileBase64(ref: RepoRef, path: string): Promise<Base64FileContents | null> {
+    const state = this.store().repos.get(ref.repo.toLowerCase());
+    const contentBase64 = state?.files.get(path);
+    if (state === undefined || contentBase64 === undefined) return null;
+    return { contentBase64, sha: randomSha(), path };
   }
 
   async listDirectory(ref: RepoRef, path: string): Promise<DirEntry[]> {

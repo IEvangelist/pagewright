@@ -11,9 +11,21 @@ export interface UploadedMedia {
 
 export interface MediaUploader {
   upload: (file: File) => Promise<UploadedMedia>;
+  previewUrl?: (value: string) => string;
 }
 
+export const MEDIA_UPLOAD_ACCEPT =
+  "image/png,image/jpeg,image/gif,image/webp,image/avif,image/x-icon,image/vnd.microsoft.icon";
+
 const MediaUploadContext = createContext<MediaUploader | null>(null);
+
+export function resolveMediaPreviewUrl(
+  value: string | undefined,
+  mediaPreviewEndpoint?: string,
+): string | undefined {
+  if (!value?.startsWith("/media/") || !mediaPreviewEndpoint) return value;
+  return `${mediaPreviewEndpoint}?path=${encodeURIComponent(`public${value}`)}`;
+}
 
 /**
  * Makes an uploader available to Puck's custom image fields, which render deep inside the editor

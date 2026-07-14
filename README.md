@@ -112,7 +112,7 @@ encoding — the same atomic commit path everything else uses. The field stores 
 URL (`/media/…`); at build time the blocks prefix it with the site's base path
 (`import.meta.env.BASE_URL`), so it resolves correctly whether the site is served from a user/org
 root (`/`) or a **project page** subpath (`/<repo>/`), and looks identical in the editor preview.
-Uploads are capped at 8 MB and limited to common image types (PNG, JPEG, GIF, WebP, AVIF, SVG, ICO);
+Uploads are capped at 8 MB and limited to safe raster image types (PNG, JPEG, GIF, WebP, AVIF, ICO);
 pasting an external URL still works as a fallback.
 
 ### Composing posts and adding discussions

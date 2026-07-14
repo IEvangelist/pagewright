@@ -226,7 +226,7 @@ export async function POST(
       return Response.json(
         {
           error:
-            "This site changed somewhere else since you started editing. Reload to get the latest, or overwrite with your version.",
+            "This site changed in GitHub since you opened the editor. Publish your version, or discard it and load the latest.",
           code: "conflict",
           actualHeadSha: error.actualHeadSha,
         },

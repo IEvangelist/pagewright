@@ -1485,108 +1485,571 @@ button:disabled {
 
 /* ── Visual editor ───────────────────────────────────────────────────────── */
 .pw-editor {
+  --pw-editor-bg: #f6f8fa;
+  --pw-editor-canvas: #eef1f4;
+  --pw-editor-surface: #fbfcfd;
+  --pw-editor-surface-muted: #f3f5f7;
+  --pw-editor-border: #d0d7de;
+  --pw-editor-fg: #1f2328;
+  --pw-editor-muted: #59636e;
+  --pw-editor-accent: #0969da;
+  --pw-editor-accent-hover: #075bb5;
+  --pw-editor-accent-soft: #ddf4ff;
+  --pw-editor-accent-fg: #ffffff;
+  --pw-editor-success: #1a7f37;
+  --pw-editor-danger: #cf222e;
+  --pw-editor-warning: #9a6700;
+  --pw-editor-warning-bg: #fff8c5;
+  --puck-font-family: var(--pw-font);
+  --puck-color-black: #1f2328;
+  --puck-color-white: #fbfcfd;
+  --puck-color-azure-03: #075bb5;
+  --puck-color-azure-04: #0969da;
+  --puck-color-azure-05: #218bff;
+  --puck-color-azure-08: #54aeff;
+  --puck-color-azure-10: #b6dcfe;
+  --puck-color-azure-11: #ddf4ff;
+  --puck-color-azure-12: #f1f8ff;
+  --puck-color-rose-07: #54aeff;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   min-height: 0;
+  overflow: hidden;
+  background: var(--pw-editor-bg);
+  color: var(--pw-editor-fg);
+  font-family: var(--pw-font);
 }
-.pw-editor__bar {
+
+.pw-editor__header {
+  grid-area: header;
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  color: var(--pw-editor-fg);
+  background: var(--pw-editor-surface);
+}
+
+.pw-editor__toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex: none;
-  padding: 10px 16px;
-  border-bottom: 1px solid hsl(var(--pw-border));
-  background: hsl(var(--pw-card));
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 60px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--pw-editor-border);
+  box-sizing: border-box;
 }
+
+.pw-editor__context,
+.pw-editor__tools,
+.pw-editor__controlgroup,
+.pw-editor__identity {
+  display: flex;
+  align-items: center;
+}
+
+.pw-editor__context {
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pw-editor__tools {
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
 .pw-editor__back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: hsl(var(--pw-muted-fg));
-  font-size: 0.85rem;
-  font-weight: 550;
-  text-decoration: none;
-}
-.pw-editor__back:hover {
-  color: hsl(var(--pw-fg));
-}
-.pw-editor__titlewrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
   justify-content: center;
-}
-.pw-editor__title {
-  font-weight: 700;
-  font-size: 0.95rem;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 9px;
+  border-radius: 6px;
+  color: var(--pw-editor-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.pw-editor__back:hover {
+  background: var(--pw-editor-surface-muted);
+  color: var(--pw-editor-fg);
+}
+
+.pw-editor__back:focus-visible,
+.pw-editor__control:focus-visible,
+.pw-editor__textcontrol:focus-visible,
+.pw-editor__live:focus-visible,
+.pw-editor__publish:focus-visible,
+.pw-editor__discard:focus-visible {
+  outline: 2px solid var(--pw-editor-accent);
+  outline-offset: 2px;
+}
+
+.pw-editor__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--pw-editor-border);
+}
+
+.pw-editor__identity {
+  gap: 8px;
+  min-width: 0;
+}
+
+.pw-editor__title {
+  display: block;
+  max-width: min(28vw, 360px);
   overflow: hidden;
+  color: var(--pw-editor-fg);
+  font-size: 0.9rem;
+  font-weight: 650;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
-.pw-editor__draftflag {
-  flex: none;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: hsl(33 90% 40%);
-  background: hsl(38 92% 50% / 0.14);
+
+.pw-editor__kind {
+  color: var(--pw-editor-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
 }
-.pw-editor__baractions {
-  display: flex;
+
+.pw-editor__controlgroup {
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--pw-editor-border);
+  border-radius: 8px;
+  background: var(--pw-editor-surface-muted);
+}
+
+.pw-editor__control,
+.pw-editor__textcontrol,
+.pw-editor__live,
+.pw-editor__publish,
+.pw-editor__discard {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  flex: none;
+  justify-content: center;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
 }
+
+.pw-editor__control {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pw-editor-muted);
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.pw-editor__control:hover:not(:disabled) {
+  background: var(--pw-editor-surface);
+  color: var(--pw-editor-fg);
+}
+
+.pw-editor__control.is-active {
+  background: var(--pw-editor-surface);
+  color: var(--pw-editor-accent);
+  box-shadow: 0 0 0 1px var(--pw-editor-border);
+}
+
+.pw-editor__control:disabled {
+  color: color-mix(in srgb, var(--pw-editor-muted) 45%, transparent);
+  cursor: not-allowed;
+}
+
+.pw-editor__textcontrol,
+.pw-editor__live,
+.pw-editor__discard {
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--pw-editor-border);
+  background: var(--pw-editor-surface);
+  color: var(--pw-editor-fg);
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.pw-editor__textcontrol:hover,
+.pw-editor__live:hover,
+.pw-editor__discard:hover {
+  background: var(--pw-editor-surface-muted);
+  border-color: color-mix(in srgb, var(--pw-editor-border) 65%, var(--pw-editor-muted));
+}
+
+.pw-editor__textcontrol.is-active {
+  border-color: var(--pw-editor-accent);
+  color: var(--pw-editor-accent);
+  background: var(--pw-editor-accent-soft);
+}
+
+.pw-editor__publish {
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--pw-editor-accent);
+  background: var(--pw-editor-accent);
+  color: var(--pw-editor-accent-fg);
+  transition: background-color 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+
+.pw-editor__publish:hover:not(:disabled) {
+  border-color: var(--pw-editor-accent-hover);
+  background: var(--pw-editor-accent-hover);
+}
+
+.pw-editor__publish:active:not(:disabled),
+.pw-editor__discard:active,
+.pw-editor__control:active:not(:disabled),
+.pw-editor__textcontrol:active,
+.pw-editor__live:active {
+  transform: translateY(1px);
+}
+
+.pw-editor__publish:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .pw-editor__savebadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  min-height: 34px;
+  padding: 0 4px;
+  color: var(--pw-editor-muted);
+  font-size: 0.76rem;
+  font-weight: 550;
+  white-space: nowrap;
 }
+
 .pw-editor__savebadge--saving {
-  color: hsl(var(--pw-primary));
-  background: hsl(var(--pw-primary) / 0.12);
+  color: var(--pw-editor-accent);
 }
+
 .pw-editor__savebadge--saved {
-  color: hsl(142 71% 36%);
-  background: hsl(142 71% 45% / 0.14);
+  color: var(--pw-editor-success);
 }
+
 .pw-editor__savebadge--error {
-  color: hsl(0 72% 48%);
-  background: hsl(0 72% 51% / 0.12);
+  color: var(--pw-editor-danger);
 }
+
 .pw-editor__canvas {
   flex: 1;
   min-height: 0;
   position: relative;
+  background: var(--pw-editor-canvas);
 }
-/* Conflict banner: shown when the repo moved under the editor since it loaded. */
-.pw-editor__conflict {
+
+.pw-editor--loading {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr);
+  background: var(--pw-editor-canvas);
+}
+
+.pw-editor__loadingbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: none;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--pw-editor-border);
+  background: var(--pw-editor-surface);
+}
+
+.pw-editor__loadingline,
+.pw-editor__loadingpanel,
+.pw-editor__loadingcanvas {
+  display: block;
+  background: var(--pw-editor-surface-muted);
+}
+
+.pw-editor__loadingline {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.pw-editor__loadingline--title {
+  width: 180px;
+}
+
+.pw-editor__loadingline--actions {
+  width: 280px;
+}
+
+.pw-editor__loadingbody {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 340px;
+  min-height: 0;
+}
+
+.pw-editor__loadingpanel {
+  border-right: 1px solid var(--pw-editor-border);
+  background: var(--pw-editor-surface);
+}
+
+.pw-editor__loadingpanel:last-child {
+  border-right: 0;
+  border-left: 1px solid var(--pw-editor-border);
+}
+
+.pw-editor__loadingcanvas {
+  margin: 24px;
+  border: 1px solid var(--pw-editor-border);
+  border-radius: 8px;
+  background: var(--pw-editor-surface);
+}
+
+.pw-editor__error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 16px;
-  border-bottom: 1px solid hsl(38 92% 50% / 0.35);
-  background: hsl(38 92% 50% / 0.12);
-  color: hsl(33 80% 32%);
-  font-size: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--pw-editor-danger) 35%, transparent);
+  background: color-mix(in srgb, var(--pw-editor-danger) 8%, var(--pw-editor-bg));
+  color: var(--pw-editor-fg);
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
-.pw-editor__conflicttext {
-  flex: 1;
+
+.pw-editor__error > svg {
+  flex: 0 0 auto;
+  color: var(--pw-editor-danger);
+}
+
+.pw-editor__conflict {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--pw-editor-warning) 35%, transparent);
+  background: var(--pw-editor-warning-bg);
+  color: var(--pw-editor-warning);
+  font-size: 0.8rem;
+}
+
+.pw-editor__conflictcopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
-  font-weight: 550;
 }
-/* Puck fills its container. */
+
+.pw-editor__conflictcopy strong {
+  color: var(--pw-editor-fg);
+  font-size: 0.82rem;
+}
+
+.pw-editor__conflictactions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pw-editor__discard {
+  color: var(--pw-editor-danger);
+}
+
+.pw-editor__panelbody {
+  min-width: 0;
+}
+
+.pw-editor__panelintro {
+  margin: 0 0 12px;
+  color: var(--pw-editor-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+/* Puck fills its container without creating a second viewport height. */
 .pw-editor__canvas > div {
   height: 100%;
+}
+
+.pw-editor__canvas [class*="_PuckCanvas_"] {
+  background: var(--pw-editor-canvas);
+}
+
+.pw-editor__canvas [class*="_PuckCanvas-root_"] {
+  border-color: var(--pw-editor-border);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--pw-editor-fg) 12%, transparent);
+}
+
+.pw-editor__canvas [class*="_Sidebar_"],
+.pw-editor__canvas [class*="_SidebarSection-title_"],
+.pw-editor__canvas [class*="_SidebarSection-loadingOverlay_"] {
+  background: var(--pw-editor-surface);
+}
+
+.pw-editor__canvas [class*="_SidebarSection-title_"] {
+  padding: 14px 16px;
+  border-color: var(--pw-editor-border);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.pw-editor__canvas [class*="_PuckFields--wrapFields_"] [class*="_PuckFields-field_"] {
+  padding: 14px 16px;
+}
+
+.pw-editor__canvas
+  [class*="_PuckFields--wrapFields_"]
+  [class*="_PuckFields-field_"]
+  + [class*="_PuckFields-field_"] {
+  margin-top: 0;
+  border-color: var(--pw-editor-border);
+}
+
+.pw-editor__canvas [class*="_Input-label_"] {
+  padding-bottom: 8px;
+  color: var(--pw-editor-fg);
+  font-size: 0.78rem;
+}
+
+.pw-editor__canvas [class*="_Input-input_"] {
+  border-color: var(--pw-editor-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--pw-editor-fg);
+  line-height: 1.45;
+}
+
+.pw-editor__canvas [class*="_Input-input_"]:focus {
+  border-color: var(--pw-editor-accent);
+  outline-color: color-mix(in srgb, var(--pw-editor-accent) 65%, transparent);
+}
+
+.pw-editor__canvas [class*="_Drawer_"] {
+  gap: 8px;
+}
+
+.pw-editor__canvas [class*="_DrawerItem-draggable_"] {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-color: var(--pw-editor-border);
+  border-radius: 6px;
+}
+
+.pw-editor__canvas [class*="_Layer-icon_"] {
+  color: var(--pw-editor-accent);
+}
+
+@media (max-width: 1180px) {
+  .pw-editor__savebadge > span,
+  .pw-editor__live > span {
+    display: none;
+  }
+
+  .pw-editor__savebadge {
+    justify-content: center;
+    width: 30px;
+    padding: 0;
+  }
+
+  .pw-editor__live {
+    width: 36px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .pw-editor__loadingbody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pw-editor__loadingpanel {
+    display: none;
+  }
+
+  .pw-editor__toolbar {
+    gap: 8px;
+    padding-inline: 10px;
+  }
+
+  .pw-editor__tools {
+    gap: 6px;
+  }
+
+  .pw-editor__backlabel,
+  .pw-editor__divider,
+  .pw-editor__kind {
+    display: none;
+  }
+
+  .pw-editor .pw-editor__back {
+    width: 36px;
+    padding: 0;
+  }
+
+  .pw-editor .pw-editor__title {
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 700px) {
+  .pw-editor__live,
+  .pw-editor__savebadge {
+    display: none;
+  }
+
+  .pw-editor__textcontrol {
+    width: 36px;
+    padding: 0;
+  }
+
+  .pw-editor__textcontrol > span {
+    display: none;
+  }
+
+  .pw-editor__conflict {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .pw-editor__conflictactions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 520px) {
+  .pw-editor__identity {
+    display: none;
+  }
+
+  .pw-editor__publish {
+    width: auto;
+    padding-inline: 11px;
+  }
+
+  .pw-editor__conflictactions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .pw-editor__conflictactions .pw-editor__publish,
+  .pw-editor__conflictactions .pw-editor__discard {
+    width: 100%;
+  }
+
+  .pw-editor__conflictactions .pw-editor__publish {
+    padding-inline: 12px;
+  }
 }
 
 /* Drag-and-drop image field (Puck custom field) */
@@ -1597,32 +2060,48 @@ button:disabled {
 }
 .pw-imgfield__label {
   font-size: 0.78rem;
-  font-weight: 550;
-  color: hsl(var(--pw-fg));
+  font-weight: 600;
+  color: var(--pw-editor-fg, hsl(var(--pw-fg)));
 }
 .pw-imgfield__drop {
   position: relative;
+  min-height: 108px;
+  overflow: hidden;
+  border: 1px dashed var(--pw-editor-border, hsl(var(--pw-border)));
+  border-radius: 8px;
+  background: var(--pw-editor-surface-muted, hsl(var(--pw-muted) / 0.4));
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.pw-imgfield__trigger {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 96px;
-  padding: 12px;
-  border: 1.5px dashed hsl(var(--pw-border));
-  border-radius: 10px;
-  background: hsl(var(--pw-muted) / 0.4);
-  color: hsl(var(--pw-muted-fg, var(--pw-fg)));
+  width: 100%;
+  min-height: 108px;
+  padding: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--pw-editor-muted, hsl(var(--pw-muted-fg, var(--pw-fg))));
+  font: inherit;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.pw-imgfield__drop:hover {
-  border-color: hsl(var(--pw-primary));
+.pw-imgfield__drop:hover,
+.pw-imgfield__drop:focus-within {
+  border-color: var(--pw-editor-accent, hsl(var(--pw-primary)));
+}
+.pw-imgfield__trigger:focus-visible {
+  outline: 2px solid var(--pw-editor-accent, hsl(var(--pw-primary)));
+  outline-offset: -3px;
+}
+.pw-imgfield__trigger:disabled {
+  cursor: progress;
 }
 .pw-imgfield__drop--drag {
-  border-color: hsl(var(--pw-primary));
-  background: hsl(var(--pw-primary) / 0.08);
+  border-color: var(--pw-editor-accent, hsl(var(--pw-primary)));
+  background: var(--pw-editor-accent-soft, hsl(var(--pw-primary) / 0.08));
 }
 .pw-imgfield__preview {
   max-width: 100%;
@@ -1636,10 +2115,10 @@ button:disabled {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
-  background: hsl(var(--pw-card));
-  border: 1px solid hsl(var(--pw-border));
-  color: hsl(var(--pw-primary));
+  border-radius: 8px;
+  background: var(--pw-editor-surface, hsl(var(--pw-card)));
+  border: 1px solid var(--pw-editor-border, hsl(var(--pw-border)));
+  color: var(--pw-editor-accent, hsl(var(--pw-primary)));
 }
 .pw-imgfield__hint {
   display: inline-flex;
@@ -1658,32 +2137,32 @@ button:disabled {
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid hsl(var(--pw-border));
-  border-radius: 999px;
-  background: hsl(var(--pw-card));
-  color: hsl(var(--pw-fg));
+  border: 1px solid var(--pw-editor-border, hsl(var(--pw-border)));
+  border-radius: 6px;
+  background: var(--pw-editor-surface, hsl(var(--pw-card)));
+  color: var(--pw-editor-fg, hsl(var(--pw-fg)));
   cursor: pointer;
 }
 .pw-imgfield__clear:hover {
-  background: hsl(var(--pw-muted));
+  background: var(--pw-editor-surface-muted, hsl(var(--pw-muted)));
 }
 .pw-imgfield__url {
   width: 100%;
-  padding: 7px 10px;
-  border: 1px solid hsl(var(--pw-border));
-  border-radius: 8px;
-  background: hsl(var(--pw-card));
-  color: hsl(var(--pw-fg));
+  padding: 9px 10px;
+  border: 1px solid var(--pw-editor-border, hsl(var(--pw-border)));
+  border-radius: 6px;
+  background: var(--pw-editor-surface, hsl(var(--pw-card)));
+  color: var(--pw-editor-fg, hsl(var(--pw-fg)));
   font: inherit;
   font-size: 0.8rem;
 }
 .pw-imgfield__url:focus-visible {
-  outline: 2px solid hsl(var(--pw-primary) / 0.5);
+  outline: 2px solid var(--pw-editor-accent, hsl(var(--pw-primary)));
   outline-offset: 1px;
 }
 .pw-imgfield__error {
   font-size: 0.74rem;
-  color: hsl(var(--pw-destructive, 0 72% 51%));
+  color: var(--pw-editor-danger, hsl(var(--pw-destructive, 0 72% 51%)));
 }
 
 /* Publishing panel */
@@ -1941,17 +2420,6 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-.pw-editor__kind {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: hsl(var(--pw-primary));
-  background: hsl(var(--pw-primary) / 0.12);
-  border-radius: 6px;
-  padding: 2px 7px;
-}
-
 .pw-field__error {
   font-size: 0.8rem;
   color: hsl(0 72% 51%);
@@ -2188,10 +2656,83 @@ button:disabled {
 
 /* ── Markdown post composer ─────────────────────────────────────────────────── */
 .pw-composer {
+  --pw-editor-bg: hsl(var(--pw-bg));
+  --pw-editor-surface: hsl(var(--pw-card));
+  --pw-editor-surface-muted: hsl(var(--pw-muted));
+  --pw-editor-border: hsl(var(--pw-border));
+  --pw-editor-fg: hsl(var(--pw-fg));
+  --pw-editor-muted: hsl(var(--pw-muted-fg));
+  --pw-editor-accent: #0969da;
+  --pw-editor-accent-soft: #ddf4ff;
+  --pw-editor-action: #0969da;
+  --pw-editor-action-hover: #075bb5;
+  --pw-editor-success: hsl(142 71% 36%);
+  --pw-editor-danger: hsl(0 72% 48%);
+  --pw-editor-warning: hsl(33 80% 32%);
+  --pw-editor-warning-bg: hsl(38 92% 50% / 0.12);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   min-height: 0;
+  background: var(--pw-editor-bg);
+  color: var(--pw-editor-fg);
+}
+
+.pw-composer .pw-btn--primary {
+  border-color: var(--pw-editor-action);
+  background: var(--pw-editor-action);
+  color: #fff;
+}
+
+.pw-composer .pw-btn--primary:hover {
+  border-color: var(--pw-editor-action-hover);
+  background: var(--pw-editor-action-hover);
+}
+
+.pw-composer .pw-editor__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  min-height: 60px;
+  padding: 8px 16px;
+  border-bottom: 1px solid hsl(var(--pw-border));
+  background: hsl(var(--pw-card));
+  box-sizing: border-box;
+}
+
+.pw-composer .pw-editor__titlewrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pw-composer .pw-editor__baractions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.pw-composer .pw-editor__savebadge {
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.pw-composer .pw-editor__conflict {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pw-composer .pw-editor__conflicttext {
+  flex: 1;
+  min-width: 0;
+  font-weight: 550;
 }
 /* Body splits into the writing area (main) and the collapsible details sidebar. */
 .pw-composer__body {
@@ -2225,6 +2766,18 @@ button:disabled {
   display: none;
 }
 @media (max-width: 980px) {
+  .pw-composer .pw-editor__bar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding-inline: 12px;
+  }
+
+  .pw-composer .pw-editor__baractions {
+    flex: 1 0 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
   /* On narrow screens the sidebar overlays the editor instead of squeezing it. */
   .pw-composer__side {
     position: absolute;
@@ -2322,7 +2875,7 @@ button:disabled {
 }
 .pw-viewtoggle__btn.is-active {
   background: hsl(var(--pw-card));
-  color: hsl(var(--pw-primary));
+  color: var(--pw-editor-accent);
   box-shadow: 0 1px 3px hsl(var(--pw-fg) / 0.14);
 }
 /* Big title field. */
@@ -2578,10 +3131,10 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed hsl(var(--pw-primary) / 0.6);
+  border: 2px dashed color-mix(in srgb, var(--pw-editor-accent) 60%, transparent);
   border-radius: 14px;
-  background: hsl(var(--pw-primary) / 0.08);
-  color: hsl(var(--pw-primary));
+  background: var(--pw-editor-accent-soft);
+  color: var(--pw-editor-accent);
   font-weight: 650;
   font-size: 0.9rem;
   pointer-events: none;
@@ -2947,63 +3500,144 @@ button:disabled {
   }
 }
 
-/* ── Dark mode for the Puck visual editor ───────────────────────────────────────
-   Puck ships only a light palette driven by CSS variables it defines on `:root`
-   (grey ramp + white/black surfaces + accent ramps). It has no dark theme, so in
-   `.dark` its chrome (header, sidebars, fields, inputs) stays glaringly light.
-   We remap its variables on `html.dark` — higher specificity than Puck's own
-   `:root`, so this wins regardless of stylesheet import order — inverting the grey
-   ramp and flipping the white/black surfaces to our app's dark neutrals. A handful
-   of scoped fixes handle the spots where `--puck-color-white` doubles as *text*
-   (buttons) or where an accent is used as a near-white hover background. */
-html.dark {
-  /* Inverted neutral ramp: 01 = strongest text … 12 = deepest surface. */
-  --puck-color-grey-01: #f7f8fa;
-  --puck-color-grey-02: #e8e9ee;
-  --puck-color-grey-03: #d4d5dc;
-  --puck-color-grey-04: #b3b4bd;
-  --puck-color-grey-05: #9a9ba5;
-  --puck-color-grey-06: #82838e;
-  --puck-color-grey-07: #6b6c77;
-  --puck-color-grey-08: #4a4b55;
-  --puck-color-grey-09: #2f2f38; /* borders / dividers */
-  --puck-color-grey-10: #26262d;
-  --puck-color-grey-11: #1e1e24;
-  --puck-color-grey-12: #17171c;
-  /* Surfaces: `white` is Puck's panel/input background; `black` its strong text. */
-  --puck-color-white: #1a1a20;
-  --puck-color-black: #f7f8fa;
+@media (max-width: 480px) {
+  .pw-composer .pw-editor__bar {
+    padding-inline: 8px;
+  }
+
+  .pw-composer .pw-editor__title {
+    overflow: hidden;
+    max-width: 110px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pw-composer .pw-editor__baractions {
+    justify-content: space-between;
+    gap: 5px;
+  }
+
+  .pw-composer .pw-linkpill {
+    justify-content: center;
+    width: 34px;
+    padding-inline: 0;
+  }
+
+  .pw-composer .pw-linkpill > span,
+  .pw-composer .pw-linkpill > svg:last-child,
+  .pw-composer .pw-editor__baractions > .pw-btn--ghost > span {
+    display: none;
+  }
+
+  .pw-composer .pw-editor__baractions > .pw-btn--ghost {
+    justify-content: center;
+    width: 34px;
+    padding-inline: 0;
+  }
 }
-/* Buttons set `color: var(--puck-color-white)` for light text on a coloured fill —
-   now that white is dark, force their label back to a light neutral. */
+
+/* Puck exposes palette ramps rather than semantic dark-mode tokens. Scope the
+   remap to the editor so the site preview keeps its own independent theme. */
+html.dark .pw-editor {
+  --pw-editor-bg: #0d1117;
+  --pw-editor-canvas: #010409;
+  --pw-editor-surface: #161b22;
+  --pw-editor-surface-muted: #21262d;
+  --pw-editor-border: #30363d;
+  --pw-editor-fg: #f0f6fc;
+  --pw-editor-muted: #b1bac4;
+  --pw-editor-accent: #1f6feb;
+  --pw-editor-accent-hover: #1158c7;
+  --pw-editor-accent-soft: #0d2742;
+  --pw-editor-accent-fg: #ffffff;
+  --pw-editor-success: #3fb950;
+  --pw-editor-danger: #f85149;
+  --pw-editor-warning: #d29922;
+  --pw-editor-warning-bg: #2b2100;
+  --puck-color-grey-01: #f0f6fc;
+  --puck-color-grey-02: #d8dee4;
+  --puck-color-grey-03: #c9d1d9;
+  --puck-color-grey-04: #b1bac4;
+  --puck-color-grey-05: #8c959f;
+  --puck-color-grey-06: #6e7681;
+  --puck-color-grey-07: #484f58;
+  --puck-color-grey-08: #30363d;
+  --puck-color-grey-09: #30363d;
+  --puck-color-grey-10: #21262d;
+  --puck-color-grey-11: #161b22;
+  --puck-color-grey-12: #0d1117;
+  --puck-color-white: #161b22;
+  --puck-color-black: #f0f6fc;
+  --puck-color-azure-01: #cae8ff;
+  --puck-color-azure-02: #a5d6ff;
+  --puck-color-azure-03: #79c0ff;
+  --puck-color-azure-04: #58a6ff;
+  --puck-color-azure-05: #388bfd;
+  --puck-color-azure-06: #2f81f7;
+  --puck-color-azure-07: #1f6feb;
+  --puck-color-azure-08: #1158c7;
+  --puck-color-azure-09: #0d419d;
+  --puck-color-azure-10: #0c2d6b;
+  --puck-color-azure-11: #0d2742;
+  --puck-color-azure-12: #0b1f33;
+  --puck-color-rose-07: #58a6ff;
+}
+
+html.dark .pw-composer {
+  --pw-editor-accent: #58a6ff;
+  --pw-editor-accent-soft: #0d2742;
+  --pw-editor-action: #1f6feb;
+  --pw-editor-action-hover: #1158c7;
+  --pw-editor-success: #3fb950;
+  --pw-editor-danger: #f85149;
+  --pw-editor-warning: #d29922;
+  --pw-editor-warning-bg: #2b2100;
+}
+
 html.dark [class*="_Button_"] {
-  color: #f7f8fa;
+  color: #f0f6fc;
 }
-/* Secondary buttons hover to a near-white accent with black text in the light
-   theme; give them a subtle dark hover instead so text stays legible. */
+
+html.dark [class*="_Button--primary_"] {
+  background-color: #1f6feb;
+  color: #ffffff;
+}
+
+html.dark [class*="_Button--primary_"]:hover {
+  background-color: #1158c7;
+}
+
+html.dark [class*="_Button--primary_"]:active {
+  background-color: #0d419d;
+}
+
 html.dark [class*="_Button--secondary_"]:hover,
 html.dark [class*="_Button--secondary_"]:active {
-  background-color: hsl(var(--pw-muted));
-  color: #f7f8fa;
+  background-color: #21262d;
+  color: #f0f6fc;
 }
-/* Form controls inherit their text colour — pin it so typed text is readable on
-   the dark input surface. */
+
 html.dark [class*="_Input-input_"],
 html.dark [class*="_Input-radioInner_"],
 html.dark [class*="_ExternalInputModal-searchInput_"],
 html.dark [class*="_ExternalInput-button_"] {
-  color: var(--puck-color-grey-02);
+  color: #d8dee4;
 }
-/* Puck portals modals to <body>, outside `.pw-editor` — the variable remap above
-   still applies since it lives on html.dark, so modals theme correctly too. */
-/* The preview canvas is wrapped in `.pw-root` (see puck-config root.render) so it
-   inherits the block theme tokens; stretch it to fill the drop area so the themed
-   background covers the whole canvas, not just the content height. The Puck preview
-   frame itself hardcodes a white background, so theme it to the block background. */
+
+html.dark [class*="_ActionBar_"] {
+  background: #21262d;
+  color: #f0f6fc;
+}
+
+html.dark [class*="_ActionBar-label_"] {
+  color: #b1bac4;
+}
+
+/* The preview root uses site tokens while the surrounding workbench uses editor tokens. */
 .pw-editor-canvas-root {
   min-height: 100%;
 }
-.pw-editor__canvas [class*="_PuckPreview_"],
+
 .pw-editor__canvas [class*="_PuckCanvas-root_"] {
   background: hsl(var(--pw-bg)) !important;
 }
