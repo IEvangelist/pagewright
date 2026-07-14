@@ -142,21 +142,22 @@ export async function POST(
         content: renderUpdatedPackageJson(packageFile.content, manifest),
       },
     ];
-    const branch = `pagewright/update-${manifest.manifestVersion}-${Date.now().toString(36)}`;
-    const pullRequest = await provider.createPullRequestWithFiles(ref, {
-      branch,
-      baseBranch: repoData.defaultBranch,
-      baseSha: headSha,
-      title: `Pagewright runtime ${manifest.manifestVersion}`,
-      body:
-        "Updates the Pagewright-managed runtime and template rendering files. Site content under `src/data/` is preserved.",
+    // Apply the update as a managed service: an atomic commit straight to the default branch — no
+    // pull request for the user to review and merge. Only Pagewright-managed runtime files change
+    // (content under `src/data/` is untouched), and the commit lands on `main` so the site's deploy
+    // workflow picks it up automatically. `expectedHeadSha` keeps it safe against concurrent edits.
+    const result = await provider.commitFiles(ref, {
       message: `Update Pagewright runtime to ${manifest.manifestVersion}`,
       files,
+      branch: repoData.defaultBranch,
+      expectedHeadSha: headSha,
     });
-    return Response.json(
-      { ok: true, pullRequestUrl: pullRequest.htmlUrl },
-      { status: 201 },
-    );
+    return Response.json({
+      ok: true,
+      commitUrl: result.htmlUrl,
+      headSha: result.sha,
+      manifestVersion: manifest.manifestVersion,
+    });
   } catch (error) {
     if (error instanceof ConcurrencyError) {
       return Response.json(

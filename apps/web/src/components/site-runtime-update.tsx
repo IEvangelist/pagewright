@@ -3,35 +3,38 @@
 import { useState } from "react";
 import { Check, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 
-type UpdateState = "idle" | "requesting" | "requested" | "error";
+type UpdateState = "idle" | "updating" | "done" | "error";
 
 export function SiteRuntimeUpdate({ owner, repo }: { owner: string; repo: string }) {
   const [state, setState] = useState<UpdateState>("idle");
   const [message, setMessage] = useState<string | null>(null);
-  const [pullRequestUrl, setPullRequestUrl] = useState<string | null>(null);
+  const [commitUrl, setCommitUrl] = useState<string | null>(null);
 
-  async function requestUpdate() {
-    setState("requesting");
+  async function runUpdate() {
+    setState("updating");
     setMessage(null);
-    setPullRequestUrl(null);
+    setCommitUrl(null);
     try {
       const response = await fetch(`/api/sites/${owner}/${repo}/runtime-update`, {
         method: "POST",
       });
       const body = (await response.json().catch(() => null)) as
-        | { error?: string; pullRequestUrl?: string }
+        | { error?: string; commitUrl?: string }
         | null;
       if (!response.ok) {
         setState("error");
-        setMessage(body?.error ?? "Couldn’t request the runtime update.");
+        setMessage(body?.error ?? "Couldn’t update the site runtime.");
         return;
       }
-      setState("requested");
-      setPullRequestUrl(body?.pullRequestUrl ?? null);
-      setMessage("Merge the Pagewright update pull request, then reload this page.");
+      setState("done");
+      setCommitUrl(body?.commitUrl ?? null);
+      setMessage("Runtime updated — your site is deploying. Refreshing settings…");
+      // The runtime file now exists on the default branch, so a reload unlocks the full settings
+      // form. Give the success state a beat to register before refreshing.
+      window.setTimeout(() => window.location.reload(), 1600);
     } catch {
       setState("error");
-      setMessage("Network error while requesting the runtime update.");
+      setMessage("Network error while updating the site runtime.");
     }
   }
 
@@ -40,20 +43,20 @@ export function SiteRuntimeUpdate({ owner, repo }: { owner: string; repo: string
       <button
         type="button"
         className="pw-btn pw-btn--primary"
-        onClick={() => void requestUpdate()}
-        disabled={state === "requesting" || state === "requested"}
+        onClick={() => void runUpdate()}
+        disabled={state === "updating" || state === "done"}
       >
-        {state === "requesting" ? (
+        {state === "updating" ? (
           <Loader2 className="pw-spin" size={16} aria-hidden="true" />
-        ) : state === "requested" ? (
+        ) : state === "done" ? (
           <Check size={16} aria-hidden="true" />
         ) : (
           <RefreshCw size={16} aria-hidden="true" />
         )}
-        {state === "requesting"
-          ? "Requesting update…"
-          : state === "requested"
-            ? "Update requested"
+        {state === "updating"
+          ? "Updating…"
+          : state === "done"
+            ? "Runtime updated"
             : "Update site runtime"}
       </button>
       {message ? (
@@ -62,11 +65,11 @@ export function SiteRuntimeUpdate({ owner, repo }: { owner: string; repo: string
           role={state === "error" ? "alert" : "status"}
         >
           {message}
-          {pullRequestUrl ? (
+          {commitUrl ? (
             <>
               {" "}
-              <a href={pullRequestUrl} target="_blank" rel="noopener noreferrer">
-                Review update PR <ExternalLink size={13} aria-hidden="true" />
+              <a href={commitUrl} target="_blank" rel="noopener noreferrer">
+                View change <ExternalLink size={13} aria-hidden="true" />
               </a>
             </>
           ) : null}

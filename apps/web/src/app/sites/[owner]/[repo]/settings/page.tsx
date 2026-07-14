@@ -54,8 +54,8 @@ export default async function SiteSettingsPage({
       <SettingsShell owner={owner} repo={repo}>
         <div className="pw-alert" role="status">
           <strong>This site needs a Pagewright runtime update.</strong> Global settings, bindings, and
-          link icons stay disabled until the generated site runtime supports them, so the editor
-          preview can’t diverge from the live site.
+          link icons stay disabled until the generated site runtime supports them. Pagewright applies
+          the update for you — no pull request to merge — then redeploys your site automatically.
           <SiteRuntimeUpdate owner={owner} repo={repo} />
         </div>
       </SettingsShell>
