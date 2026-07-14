@@ -21,6 +21,11 @@ out/
 *.log
 npm-debug.log*
 
+# Browser test artifacts
+.playwright-cli/
+playwright-report/
+test-results/
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { Block, SiteConfig } from "@pagewright/blocks";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
@@ -36,18 +36,19 @@ export default async function NewSitePage() {
           <Link href={user ? "/dashboard" : "/"} className="pw-appbar__brandlink">
             Pagewright
           </Link>
-          <span className="pw-appbar__badge">new site</span>
+          <span className="pw-appbar__context">Create site</span>
         </span>
         <div className="pw-appbar__actions">
           <AuthButton />
           <ThemeToggle />
         </div>
       </header>
-      <main className="pw-dash">
-        <Link href={user ? "/dashboard" : "/"} className="pw-backlink">
-          <ArrowLeft size={16} aria-hidden="true" />
-          <span>{user ? "Back to dashboard" : "Back to home"}</span>
-        </Link>
+      <main className="pw-dash pw-newsite">
+        <nav className="pw-crumbs" aria-label="Breadcrumb">
+          <Link href={user ? "/dashboard" : "/"}>{user ? "Dashboard" : "Home"}</Link>
+          <ChevronRight size={14} aria-hidden="true" />
+          <span aria-current="page">Create site</span>
+        </nav>
         <NewSiteWizard login={user?.login ?? null} previews={previews} />
       </main>
     </>

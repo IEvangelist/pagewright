@@ -48,6 +48,8 @@ pnpm install
 pnpm dev        # runs the builder app + template dev servers via Turborepo
 pnpm build      # builds every workspace
 pnpm typecheck
+pnpm test       # runs workspace unit tests
+pnpm test:e2e   # runs the new-site browser and accessibility suite
 ```
 
 - Builder app: <http://localhost:3000>
@@ -67,6 +69,14 @@ With nothing configured, `pnpm dev` runs in **demo mode**: click **Sign in with 
 demo session and land on the dashboard with seeded sites. To use real GitHub, copy `.env.example`
 to `apps/web/.env.local` and set the App or OAuth client id/secret plus a 32+ char `SESSION_SECRET`.
 Tokens are sealed in an httpOnly, encrypted session cookie and only ever used server-side.
+
+### Quality automation
+
+The web app has a Playwright suite covering the new-site wizard's validation recovery, live setup
+summary, mobile layout, and complete mock provisioning flow. Axe-core runs against both light and
+dark themes and fails the suite on WCAG A or AA violations, including text contrast. On GitHub,
+`.github/workflows/quality.yml` installs Chromium and runs type checking, unit tests, production
+builds, and the browser suite for every pull request and every push to `main`.
 
 ### Creating a site
 

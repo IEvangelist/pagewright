@@ -78,9 +78,10 @@ export function AuthButton() {
 
   if (!session.authenticated || !session.user) {
     return (
-      <a className="pw-btn pw-btn--primary" href="/api/auth/login">
+      <a className="pw-btn pw-btn--primary" href="/api/auth/login" aria-label="Sign in with GitHub">
         <GitHubMark size={16} aria-hidden="true" />
-        <span>Sign in with GitHub</span>
+        <span className="pw-auth__signin-full">Sign in with GitHub</span>
+        <span className="pw-auth__signin-short">Sign in</span>
       </a>
     );
   }

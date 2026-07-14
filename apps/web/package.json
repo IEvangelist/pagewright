@@ -1,6 +1,6 @@
 {
   "name": "@pagewright/web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Pagewright builder app — Next.js (App Router) + shadcn, deployed on Netlify.",
@@ -13,6 +13,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "pretypecheck": "node ../../scripts/build-provision-bundle.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/landing.test.mjs"
@@ -32,6 +34,8 @@
     "turndown": "^7.2.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",

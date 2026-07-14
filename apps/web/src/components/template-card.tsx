@@ -9,10 +9,12 @@ export function TemplateCard({
   template,
   blocks,
   site,
+  onSelect,
 }: {
   template: TemplateMeta;
   blocks?: Block[];
   site?: SiteConfig;
+  onSelect?: () => void;
 }) {
   return (
     <article className="pw-tplcard">
@@ -36,14 +38,21 @@ export function TemplateCard({
           ))}
         </div>
       </div>
-      <Link
-        href={templateDemoHref(template.id)}
-        className="pw-tplcard__cta"
-        aria-label={`Preview the ${template.name} template`}
-      >
-        <span>Preview template</span>
-        <ArrowRight size={15} aria-hidden="true" />
-      </Link>
+      {onSelect ? (
+        <button type="button" className="pw-tplcard__cta" onClick={onSelect}>
+          <span>Use {template.name}</span>
+          <ArrowRight size={15} aria-hidden="true" />
+        </button>
+      ) : (
+        <Link
+          href={templateDemoHref(template.id)}
+          className="pw-tplcard__cta"
+          aria-label={`Preview the ${template.name} template`}
+        >
+          <span>Preview template</span>
+          <ArrowRight size={15} aria-hidden="true" />
+        </Link>
+      )}
     </article>
   );
 }

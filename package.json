@@ -1,6 +1,6 @@
 {
   "name": "pagewright",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "No-code builder that turns Astro templates into self-deploying GitHub Pages sites.",
   "packageManager": "pnpm@10.25.0",
@@ -12,6 +12,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "pnpm --filter @pagewright/web test:e2e",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean"
   },
