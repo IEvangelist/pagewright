@@ -1,0 +1,55 @@
+name: Deploy to Netlify
+
+# Production deploys run automatically when changes land on `main`, and can be
+# triggered by hand from the Actions tab. The Netlify site is not linked to the
+# repo directly, so this workflow is the single source of deployments.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never cancel an in-flight production deploy — let each one finish so the live
+# site is never left half-updated. Queued runs deploy the newest commit.
+concurrency:
+  group: netlify-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.25.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `netlify deploy --build` runs the build defined in netlify.toml (which
+      # regenerates the provision bundle via the app's prebuild hook and runs
+      # @netlify/plugin-nextjs), then publishes to production.
+      - name: Deploy to Netlify (production)
+        run: >
+          pnpm --package=netlify-cli@26.1.0 dlx netlify deploy
+          --build
+          --prod
+          --filter @pagewright/web
+          --site "$NETLIFY_SITE_ID"
