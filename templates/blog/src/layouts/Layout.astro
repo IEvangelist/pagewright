@@ -1,7 +1,8 @@
 ---
 import "@pagewright/blocks/blocks.css";
-import { themeInitScript } from "@pagewright/site-kit";
-import siteConfig from "../data/site.json";
+import { parseSiteConfig } from "@pagewright/blocks";
+import { createThemeInitScript } from "@pagewright/site-kit";
+import siteDoc from "../data/site.json";
 
 interface Props {
   title?: string;
@@ -9,8 +10,10 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+const siteConfig = parseSiteConfig(siteDoc);
 const pageTitle = title ? `${title} · ${siteConfig.name}` : siteConfig.name;
 const pageDescription = description ?? siteConfig.description ?? "";
+const themeInitScript = createThemeInitScript(siteConfig.defaultTheme);
 ---
 
 <!doctype html>

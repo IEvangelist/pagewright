@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PageRenderer, type Block } from "@pagewright/blocks";
+import { PageRenderer, type Block, type SiteConfig } from "@pagewright/blocks";
 
 const PREVIEW_PAGE_WIDTH = 1280;
 
@@ -11,11 +11,13 @@ const PREVIEW_PAGE_WIDTH = 1280;
  */
 export function TemplatePreview({
   blocks,
+  site,
   name,
   gradient,
   className = "",
 }: {
   blocks?: Block[];
+  site?: SiteConfig;
   name: string;
   gradient: string;
   className?: string;
@@ -47,7 +49,7 @@ export function TemplatePreview({
             className="pw-tplcard__page pw-root"
             style={{ transform: `scale(${scale})` }}
           >
-            <PageRenderer blocks={blocks} />
+            <PageRenderer blocks={blocks} site={site} />
           </span>
         </span>
       ) : (

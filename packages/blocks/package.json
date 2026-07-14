@@ -1,6 +1,6 @@
 {
   "name": "@pagewright/blocks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Shared React block components + Zod schema rendered by both the Pagewright builder and generated Astro sites.",
   "sideEffects": [

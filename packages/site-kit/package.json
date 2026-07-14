@@ -1,6 +1,6 @@
 {
   "name": "@pagewright/site-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Versioned Astro rendering kit for Pagewright sites (theme script, schema, migrations).",
   "exports": {

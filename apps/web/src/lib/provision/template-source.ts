@@ -1,7 +1,13 @@
 import "server-only";
 import type { CommitFile } from "@pagewright/github";
 import type { TemplateId } from "@pagewright/registry";
-import { parsePage, parsePost, type Block } from "@pagewright/blocks";
+import {
+  parsePage,
+  parsePost,
+  parseSiteConfig,
+  type Block,
+  type SiteConfig,
+} from "@pagewright/blocks";
 import bundle from "./provision-bundle.generated.json";
 
 /**
@@ -139,14 +145,13 @@ export function loadTemplatePost(templateId: TemplateId, slug: string): DemoPost
   return loadAllPosts(templateId).find((p) => p.slug === slug);
 }
 
-/** The site config (name, description) shipped with a template, for demo chrome + framing. */
-export function loadTemplateSite(templateId: TemplateId): { name: string; description?: string } | null {
+/** The site config shipped with a template, used by demos and global-value bindings. */
+export function loadTemplateSite(templateId: TemplateId): SiteConfig | null {
   const files = typedBundle.templates[templateId];
   const site = files?.find((file) => file.path.endsWith("src/data/site.json"));
   if (!site || typeof site.content !== "string") return null;
   try {
-    const parsed = JSON.parse(site.content) as { name?: string; description?: string };
-    return { name: parsed.name ?? templateId, description: parsed.description };
+    return parseSiteConfig(JSON.parse(site.content));
   } catch {
     return null;
   }

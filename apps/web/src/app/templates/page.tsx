@@ -1,16 +1,22 @@
 import Link from "next/link";
-import type { Block } from "@pagewright/blocks";
+import type { Block, SiteConfig } from "@pagewright/blocks";
 import { AuthButton } from "@/components/auth-button";
 import { TemplateCard } from "@/components/template-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TEMPLATES } from "@/lib/templates";
-import { loadTemplateHomeBlocks } from "@/lib/provision/template-source";
+import { loadTemplateHomeBlocks, loadTemplateSite } from "@/lib/provision/template-source";
 
 export const dynamic = "force-dynamic";
 
 export default function TemplatesPage() {
-  const previews: Record<string, Block[]> = Object.fromEntries(
-    TEMPLATES.map((template) => [template.id, loadTemplateHomeBlocks(template.id)]),
+  const previews: Record<string, { blocks: Block[]; site: SiteConfig | null }> = Object.fromEntries(
+    TEMPLATES.map((template) => [
+      template.id,
+      {
+        blocks: loadTemplateHomeBlocks(template.id),
+        site: loadTemplateSite(template.id),
+      },
+    ]),
   );
 
   return (
@@ -40,7 +46,8 @@ export default function TemplatesPage() {
             <TemplateCard
               key={template.id}
               template={template}
-              blocks={previews[template.id]}
+              blocks={previews[template.id]?.blocks}
+              site={previews[template.id]?.site ?? undefined}
             />
           ))}
         </div>

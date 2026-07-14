@@ -7,7 +7,13 @@ import {
   Plus,
   Rocket,
 } from "lucide-react";
-import { PageRenderer, parsePage, type Block } from "@pagewright/blocks";
+import {
+  PageRenderer,
+  parsePage,
+  parseSiteConfig,
+  type Block,
+  type SiteConfig,
+} from "@pagewright/blocks";
 import type { GitHubProvider, PagesInfo, Repo, WorkflowRun } from "@pagewright/github";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
@@ -25,6 +31,7 @@ interface SiteView {
   latestRun: WorkflowRun | null;
   /** The site's home page blocks, used to render a live thumbnail preview. */
   previewBlocks: Block[] | null;
+  siteConfig: SiteConfig;
 }
 
 async function loadSites(provider: GitHubProvider): Promise<SiteView[]> {
@@ -33,10 +40,11 @@ async function loadSites(provider: GitHubProvider): Promise<SiteView[]> {
   return Promise.all(
     repos.map(async (repo): Promise<SiteView> => {
       const ref = { owner: repo.owner, repo: repo.name };
-      const [pages, runs, home] = await Promise.all([
+      const [pages, runs, home, siteFile] = await Promise.all([
         provider.getPages(ref).catch(() => emptyPages()),
         provider.listWorkflowRuns(ref, { perPage: 1 }).catch(() => []),
         provider.getFile(ref, HOME_PAGE_PATH).catch(() => null),
+        provider.getFile(ref, "src/data/site.json").catch(() => null),
       ]);
       let previewBlocks: Block[] | null = null;
       if (home) {
@@ -46,7 +54,17 @@ async function loadSites(provider: GitHubProvider): Promise<SiteView[]> {
           previewBlocks = null;
         }
       }
-      return { repo, pages, latestRun: runs[0] ?? null, previewBlocks };
+      let siteConfig: SiteConfig;
+      try {
+        siteConfig = parseSiteConfig(
+          siteFile
+            ? JSON.parse(siteFile.content)
+            : { name: repo.name, description: repo.description ?? "", url: repo.homepage ?? "" },
+        );
+      } catch {
+        siteConfig = parseSiteConfig({ name: repo.name, description: repo.description ?? "" });
+      }
+      return { repo, pages, latestRun: runs[0] ?? null, previewBlocks, siteConfig };
     }),
   );
 }
@@ -215,7 +233,7 @@ function SiteThumb({
     previewBlocks && previewBlocks.length > 0 ? (
       <div className="pw-sitethumb__frame" aria-hidden="true">
         <div className="pw-sitethumb__page pw-root">
-          <PageRenderer blocks={previewBlocks} />
+          <PageRenderer blocks={previewBlocks} site={site.siteConfig} />
         </div>
       </div>
     ) : (
@@ -225,17 +243,15 @@ function SiteThumb({
     );
 
   return (
-    <a
-      className="pw-sitethumb"
-      href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noreferrer" : undefined}
-      aria-label={
-        external ? `Open live site ${repo.name}` : `Manage ${repo.name}`
-      }
-    >
+    <div className="pw-sitethumb">
       {inner}
-      <span className="pw-sitethumb__overlay">
+      <a
+        className="pw-sitethumb__overlay"
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noreferrer" : undefined}
+        aria-label={external ? `Open live site ${repo.name}` : `Manage ${repo.name}`}
+      >
         {external ? (
           <>
             <Globe size={14} aria-hidden="true" />
@@ -247,8 +263,8 @@ function SiteThumb({
             <span>{status.tone === "deploying" ? "Deploying…" : "Set up site"}</span>
           </>
         )}
-      </span>
-    </a>
+      </a>
+    </div>
   );
 }
 

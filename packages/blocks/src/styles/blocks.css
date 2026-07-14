@@ -118,6 +118,9 @@
 .pw-navbar__logo { height: 28px; width: auto; }
 .pw-navbar__links { display: flex; align-items: center; gap: 20px; }
 .pw-navbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: hsl(var(--pw-muted-fg));
   text-decoration: none;
   font-size: 0.95rem;
@@ -408,9 +411,17 @@
 }
 .pw-footer__tagline { color: hsl(var(--pw-muted-fg)); margin: 6px 0 0; font-size: 0.9rem; }
 .pw-footer__links { display: flex; gap: 20px; flex-wrap: wrap; }
-.pw-footer__link { color: hsl(var(--pw-muted-fg)); text-decoration: none; font-size: 0.9rem; }
+.pw-footer__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: hsl(var(--pw-muted-fg));
+  text-decoration: none;
+  font-size: 0.9rem;
+}
 .pw-footer__link:hover { color: hsl(var(--pw-fg)); }
 .pw-footer__copyright { color: hsl(var(--pw-muted-fg)); font-size: 0.85rem; margin-top: 24px; }
+.pw-linkicon { display: inline-flex; align-items: center; justify-content: center; flex: none; }
 
 /* Shared tags */
 .pw-tag {

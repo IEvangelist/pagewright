@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import type { Block } from "@pagewright/blocks";
+import type { Block, SiteConfig } from "@pagewright/blocks";
 import type { TemplateMeta } from "@/lib/templates";
 import { templateDemoHref } from "@/lib/landing-content";
 import { TemplatePreview } from "@/components/template-preview";
@@ -8,14 +8,17 @@ import { TemplatePreview } from "@/components/template-preview";
 export function TemplateCard({
   template,
   blocks,
+  site,
 }: {
   template: TemplateMeta;
   blocks?: Block[];
+  site?: SiteConfig;
 }) {
   return (
     <article className="pw-tplcard">
       <TemplatePreview
         blocks={blocks}
+        site={site}
         name={template.name}
         gradient={`linear-gradient(135deg, ${template.preview.from}, ${template.preview.to})`}
       />

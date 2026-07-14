@@ -23,8 +23,8 @@ const CORE_ACTIONS: ActionPin[] = [
 const CORE_DEPENDENCIES: DependencySet = {
   astro: "5.2.0",
   "@astrojs/react": "4.2.0",
-  "@pagewright/blocks": "0.1.0",
-  "@pagewright/site-kit": "0.1.0",
+  "@pagewright/blocks": "0.1.1",
+  "@pagewright/site-kit": "0.1.1",
   "lucide-react": "0.469.0",
   react: "19.0.0",
   "react-dom": "19.0.0",
@@ -35,7 +35,14 @@ const CORE_DEV_DEPENDENCIES: DependencySet = {
   "@types/react-dom": "19.0.2",
 };
 
-const RELEASED_AT = "2026-07-12";
+const PREVIOUS_CORE_DEPENDENCIES: DependencySet = {
+  ...CORE_DEPENDENCIES,
+  "@pagewright/blocks": "0.1.0",
+  "@pagewright/site-kit": "0.1.0",
+};
+
+const RELEASED_AT = "2026-07-14";
+const PREVIOUS_RELEASED_AT = "2026-07-12";
 
 export const MANIFESTS: SiteManifest[] = [
   {
@@ -59,15 +66,60 @@ export const MANIFESTS: SiteManifest[] = [
     manifestVersion: "2026.7.0",
     templateId: "landing",
     channel: "stable",
-    schemaVersion: "1",
-    kitVersion: "0.1.0",
+    schemaVersion: "2",
+    kitVersion: "0.1.1",
     node: "20",
     packageManager: "npm",
     dependencies: { ...CORE_DEPENDENCIES },
     devDependencies: { ...CORE_DEV_DEPENDENCIES },
     actions: CORE_ACTIONS,
-    notes: "Initial stable manifest for the landing template.",
+    notes: "Adds global site settings, reusable bindings, and icon-bearing external links.",
     releasedAt: RELEASED_AT,
+  },
+  {
+    manifestVersion: "2026.7.0",
+    templateId: "blog",
+    channel: "stable",
+    schemaVersion: "2",
+    kitVersion: "0.1.1",
+    node: "20",
+    packageManager: "npm",
+    dependencies: {
+      ...CORE_DEPENDENCIES,
+      "@astrojs/sitemap": "3.2.1",
+    },
+    devDependencies: { ...CORE_DEV_DEPENDENCIES },
+    actions: CORE_ACTIONS,
+    notes: "Adds global site settings, reusable bindings, and icon-bearing external links.",
+    releasedAt: RELEASED_AT,
+  },
+  {
+    manifestVersion: "2026.7.0",
+    templateId: "portfolio",
+    channel: "stable",
+    schemaVersion: "2",
+    kitVersion: "0.1.1",
+    node: "20",
+    packageManager: "npm",
+    dependencies: { ...CORE_DEPENDENCIES },
+    devDependencies: { ...CORE_DEV_DEPENDENCIES },
+    actions: CORE_ACTIONS,
+    notes: "Adds global site settings, reusable bindings, and icon-bearing external links.",
+    releasedAt: RELEASED_AT,
+  },
+  {
+    manifestVersion: "2026.7.0",
+    templateId: "landing",
+    channel: "stable",
+    schemaVersion: "1",
+    kitVersion: "0.1.0",
+    node: "20",
+    packageManager: "npm",
+    dependencies: { ...PREVIOUS_CORE_DEPENDENCIES },
+    devDependencies: { ...CORE_DEV_DEPENDENCIES },
+    actions: CORE_ACTIONS,
+    notes: "Initial stable manifest for the landing template.",
+    releasedAt: PREVIOUS_RELEASED_AT,
   },
   {
     manifestVersion: "2026.7.0",
@@ -78,13 +130,13 @@ export const MANIFESTS: SiteManifest[] = [
     node: "20",
     packageManager: "npm",
     dependencies: {
-      ...CORE_DEPENDENCIES,
+      ...PREVIOUS_CORE_DEPENDENCIES,
       "@astrojs/sitemap": "3.2.1",
     },
     devDependencies: { ...CORE_DEV_DEPENDENCIES },
     actions: CORE_ACTIONS,
     notes: "Initial stable manifest for the blog template (adds sitemap).",
-    releasedAt: RELEASED_AT,
+    releasedAt: PREVIOUS_RELEASED_AT,
   },
   {
     manifestVersion: "2026.7.0",
@@ -94,10 +146,10 @@ export const MANIFESTS: SiteManifest[] = [
     kitVersion: "0.1.0",
     node: "20",
     packageManager: "npm",
-    dependencies: { ...CORE_DEPENDENCIES },
+    dependencies: { ...PREVIOUS_CORE_DEPENDENCIES },
     devDependencies: { ...CORE_DEV_DEPENDENCIES },
     actions: CORE_ACTIONS,
     notes: "Initial stable manifest for the portfolio template.",
-    releasedAt: RELEASED_AT,
+    releasedAt: PREVIOUS_RELEASED_AT,
   },
 ];

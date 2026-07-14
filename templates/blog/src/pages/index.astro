@@ -1,28 +1,45 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { PageRenderer, PostList, parsePage } from "@pagewright/blocks";
+import {
+  PageRenderer,
+  PostList,
+  createSiteBindings,
+  parsePage,
+  parseSiteConfig,
+  resolveBindings,
+} from "@pagewright/blocks";
 import homeDoc from "../data/pages/home.json";
+import siteDoc from "../data/site.json";
 import { getPublishedPosts, getUpcomingPosts } from "../lib/posts";
 
 const page = parsePage(homeDoc);
+const site = parseSiteConfig(siteDoc);
+const bindings = createSiteBindings(site);
+const resolvedPage = resolveBindings(page, bindings);
 const base = import.meta.env.BASE_URL;
 
-const posts = getPublishedPosts().map((p) => ({
-  title: p.title,
-  href: `/blog/${p.slug}/`,
-  date: p.date,
-  excerpt: p.excerpt,
-  cover: p.cover,
-  tags: p.tags,
-}));
+const posts = getPublishedPosts().map((rawPost) => {
+  const p = resolveBindings(rawPost, bindings);
+  return {
+    title: p.title,
+    href: `/blog/${p.slug}/`,
+    date: p.date,
+    excerpt: p.excerpt,
+    cover: p.cover,
+    tags: p.tags,
+  };
+});
 
-const upcoming = getUpcomingPosts().map((p) => ({
-  title: p.title,
-  href: `/blog/${p.slug}/`,
-  date: p.publishAt ?? p.date,
-  excerpt: p.excerpt,
-  tags: p.tags,
-}));
+const upcoming = getUpcomingPosts().map((rawPost) => {
+  const p = resolveBindings(rawPost, bindings);
+  return {
+    title: p.title,
+    href: `/blog/${p.slug}/`,
+    date: p.publishAt ?? p.date,
+    excerpt: p.excerpt,
+    tags: p.tags,
+  };
+});
 
 // Render authored header blocks, then the derived post list, then the footer.
 const footerIndex = page.blocks.findIndex((b) => b.type === "footer");
@@ -30,8 +47,8 @@ const headBlocks = footerIndex >= 0 ? page.blocks.slice(0, footerIndex) : page.b
 const footerBlocks = footerIndex >= 0 ? page.blocks.slice(footerIndex) : [];
 ---
 
-<Layout title={page.title} description={page.description}>
-  <PageRenderer blocks={headBlocks} base={base} />
+<Layout title={resolvedPage.title} description={resolvedPage.description}>
+  <PageRenderer blocks={headBlocks} base={base} site={site} />
   <PostList heading="Latest posts" posts={posts} upcoming={upcoming} base={base} />
-  <PageRenderer blocks={footerBlocks} base={base} />
+  <PageRenderer blocks={footerBlocks} base={base} site={site} />
 </Layout>

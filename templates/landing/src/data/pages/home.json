@@ -8,7 +8,7 @@
       "type": "navbar",
       "id": "nav-1",
       "props": {
-        "brand": "Pagewright",
+        "brand": "{{site.name}}",
         "links": [
           { "label": "Templates", "href": "#templates" },
           { "label": "Features", "href": "#features" },
@@ -63,10 +63,10 @@
         "tagline": "No-code sites, powered by your GitHub.",
         "links": [
           { "label": "Templates", "href": "#templates" },
-          { "label": "GitHub", "href": "https://github.com" },
+          { "label": "GitHub", "href": "https://github.com", "icon": "github" },
           { "label": "Privacy", "href": "#privacy" }
         ],
-        "copyright": "© 2026 Pagewright"
+        "copyright": "© {{currentYear}} {{site.name}}"
       }
     }
   ]

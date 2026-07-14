@@ -20,6 +20,8 @@ import {
   type GitHubUser,
   type ListWorkflowRunsOptions,
   type PagesInfo,
+  type PullRequestFilesOptions,
+  type PullRequestResult,
   type Repo,
   type RepoRef,
   type WorkflowJob,
@@ -53,8 +55,7 @@ interface MockStore {
 const mockGlobal = globalThis as typeof globalThis & {
   __pagewrightMockStores?: Map<string, MockStore>;
 };
-const stores = mockGlobal.__pagewrightMockStores ?? new Map<string, MockStore>();
-mockGlobal.__pagewrightMockStores = stores;
+const stores = (mockGlobal.__pagewrightMockStores ??= new Map<string, MockStore>());
 
 /** Deploy-progress timeline: how long the simulated Actions run takes to reach "built". */
 const RUN_DURATION_MS = 45_000;
@@ -80,7 +81,7 @@ function seedHomePage(name: string): string {
         type: "navbar",
         id: "nav-1",
         props: {
-          brand,
+          brand: "{{site.name}}",
           links: [
             { label: "Features", href: "#features" },
             { label: "About", href: "#about" },
@@ -93,7 +94,7 @@ function seedHomePage(name: string): string {
         id: "hero-1",
         props: {
           eyebrow: "Powered by GitHub Pages",
-          heading: `Welcome to ${brand}`,
+          heading: "Welcome to {{site.name}}",
           subheading:
             "Edit every block right here in the visual builder, then publish straight to your own GitHub repository.",
           primaryCta: { label: "Start building", href: "#start" },
@@ -127,15 +128,39 @@ function seedHomePage(name: string): string {
         type: "footer",
         id: "footer-1",
         props: {
-          brand,
+          brand: "{{site.name}}",
           tagline: "No-code sites, powered by your GitHub.",
-          links: [{ label: "GitHub", href: "https://github.com" }],
-          copyright: "© 2026 Pagewright",
+          links: [],
+          copyright: "© {{currentYear}} {{site.name}}",
         },
       },
     ],
   };
   return JSON.stringify(page, null, 2);
+}
+
+function seedSiteConfig(repo: Repo): string {
+  return JSON.stringify(
+    {
+      name: repo.name
+        .split(/[-_]/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
+      description: repo.description ?? "",
+      url: repo.homepage ?? "",
+      defaultTheme: "system",
+      links: [
+        {
+          label: "GitHub repository",
+          href: repo.htmlUrl,
+          icon: "github",
+        },
+      ],
+    },
+    null,
+    2,
+  );
 }
 
 function keyFor(login: string): string {
@@ -300,7 +325,39 @@ function seedRepo(
     repo,
     branchHead: sha,
     files: new Map<string, string>([
-      ["pagewright.json", JSON.stringify({ templateId: opts.template, manifestVersion: "2026.7.0" }, null, 2)],
+      [
+        "pagewright.json",
+        JSON.stringify(
+          {
+            templateId: opts.template,
+            manifestVersion: "2026.7.1",
+            schemaVersion: "2",
+            channel: "stable",
+            createdWith: "0.1.0",
+            updatedAt: "2026-07-14",
+          },
+          null,
+          2,
+        ),
+      ],
+      ["vendor/pagewright-blocks/src/bindings.ts", "// Global features runtime marker.\n"],
+      [
+        "package.json",
+        JSON.stringify(
+          {
+            name: opts.name,
+            private: true,
+            type: "module",
+            dependencies: {
+              "@pagewright/blocks": "file:./vendor/pagewright-blocks",
+              "@pagewright/site-kit": "file:./vendor/pagewright-site-kit",
+            },
+          },
+          null,
+          2,
+        ),
+      ],
+      ["src/data/site.json", seedSiteConfig(repo)],
       ["src/data/pages/home.json", seedHomePage(opts.name)],
       ...(opts.template === "blog" ? seedBlogPosts() : []),
     ]),
@@ -495,6 +552,23 @@ export class MockGitHubProvider implements GitHubProvider {
       sha,
       htmlUrl: `https://github.com/${ref.owner}/${ref.repo}/commit/${sha}`,
       branch: opts.branch ?? "main",
+    };
+  }
+
+  async createPullRequestWithFiles(
+    ref: RepoRef,
+    opts: PullRequestFilesOptions,
+  ): Promise<PullRequestResult> {
+    const store = this.store();
+    const state = requireRepo(store, ref);
+    if (opts.baseSha !== state.branchHead) {
+      throw new ConcurrencyError("Branch moved", state.branchHead);
+    }
+    const number = store.nextId++;
+    return {
+      number,
+      htmlUrl: `https://github.com/${ref.owner}/${ref.repo}/pull/${number}`,
+      branch: opts.branch,
     };
   }
 

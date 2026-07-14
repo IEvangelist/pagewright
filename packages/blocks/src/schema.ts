@@ -11,6 +11,7 @@ import { z } from "zod";
 export const linkSchema = z.object({
   label: z.string(),
   href: z.string(),
+  icon: z.string().optional(),
 });
 export type Link = z.infer<typeof linkSchema>;
 
@@ -194,14 +195,81 @@ export const postSchema = pageSchema
   });
 export type Post = z.infer<typeof postSchema>;
 
-export const siteConfigSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  url: z.string().optional(),
-  defaultTheme: z.enum(["light", "dark", "system"]).default("system"),
-  socials: z.array(linkSchema).default([]),
-});
+function isCanonicalHttpUrl(value: string): boolean {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function isExternalHref(value: string): boolean {
+  if (!/^(?:https?:\/\/|mailto:|tel:)/i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return isCanonicalHttpUrl(value);
+    }
+    return (
+      (url.protocol === "mailto:" || url.protocol === "tel:") &&
+      url.pathname.trim().length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+const externalHrefSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(isExternalHref, "Enter a full http(s), mailto, or tel URL.");
+
+const canonicalSiteUrlSchema = z
+  .string()
+  .trim()
+  .refine((value) => !value || isCanonicalHttpUrl(value), "Enter a full http(s) URL.");
+
+export const siteLinkSchema = linkSchema.extend({
+  label: z.string().trim().min(1),
+  href: externalHrefSchema,
+}).passthrough();
+export type SiteLink = z.infer<typeof siteLinkSchema>;
+
+/**
+ * Site-wide details and external links. `socials` is accepted as a legacy alias so sites generated
+ * before global settings existed migrate to `links` the next time they are saved.
+ */
+export const siteConfigSchema = z
+  .object({
+    // Reads stay tolerant of legacy files; the settings write schema below applies stricter rules.
+    name: z.string(),
+    description: z.string().optional(),
+    url: z.string().optional(),
+    defaultTheme: z.enum(["light", "dark", "system"]).default("system"),
+    links: z.array(siteLinkSchema).optional(),
+    socials: z.array(linkSchema.passthrough()).optional(),
+  })
+  .passthrough()
+  .transform(({ socials, links, ...config }) => ({
+    ...config,
+    links: links ?? socials ?? [],
+  }));
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
+
+const persistedSiteSettingsSchema = z
+  .object({
+    name: z.string().trim().min(1),
+    description: z.string().optional(),
+    url: canonicalSiteUrlSchema.optional(),
+    defaultTheme: z.enum(["light", "dark", "system"]).default("system"),
+    links: z.array(siteLinkSchema).default([]),
+  })
+  .passthrough();
+
+/** Validate settings submitted by the app after applying legacy read migrations. */
+export const siteSettingsSchema = siteConfigSchema.pipe(persistedSiteSettingsSchema);
 
 /** Parse + apply defaults for an unknown page document (used when reading repo content). */
 export function parsePage(input: unknown): Page {
@@ -211,4 +279,9 @@ export function parsePage(input: unknown): Page {
 /** Parse + apply defaults for an unknown blog post document. */
 export function parsePost(input: unknown): Post {
   return postSchema.parse(input);
+}
+
+/** Parse + apply defaults and legacy migrations for an unknown site settings document. */
+export function parseSiteConfig(input: unknown): SiteConfig {
+  return siteConfigSchema.parse(input);
 }

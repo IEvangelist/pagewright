@@ -1,7 +1,14 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { PageRenderer, PostHeader } from "@pagewright/blocks";
+import {
+  PageRenderer,
+  PostHeader,
+  createSiteBindings,
+  parseSiteConfig,
+  resolveBindings,
+} from "@pagewright/blocks";
 import { getPublishedPosts, type LoadedPost } from "../../lib/posts";
+import siteDoc from "../../data/site.json";
 
 export function getStaticPaths() {
   return getPublishedPosts().map((post) => ({
@@ -14,7 +21,9 @@ interface Props {
   post: LoadedPost;
 }
 
-const { post } = Astro.props;
+const site = parseSiteConfig(siteDoc);
+const { blocks, ...postMetadata } = Astro.props.post;
+const post = resolveBindings(postMetadata, createSiteBindings(site));
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -25,7 +34,7 @@ const base = import.meta.env.BASE_URL;
     author={post.author}
     tags={post.tags}
   />
-  <PageRenderer blocks={post.blocks} base={base} />
+  <PageRenderer blocks={blocks} base={base} site={site} />
   <div class="pw-section" style="padding-block: 0 72px;">
     <div class="pw-container" style="max-width: 720px;">
       <a class="pw-postback" href={base}>← Back to all posts</a>

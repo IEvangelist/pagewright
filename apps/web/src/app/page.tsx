@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Blocks, GitBranch, Rocket } from "lucide-react";
-import type { Block } from "@pagewright/blocks";
+import type { Block, SiteConfig } from "@pagewright/blocks";
 import { AuthButton } from "@/components/auth-button";
 import { LandingMotion } from "@/components/landing-motion";
 import { TemplateCard } from "@/components/template-card";
@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getLandingCtas, templateDemoHref } from "@/lib/landing-content";
 import { TEMPLATES } from "@/lib/templates";
-import { loadTemplateHomeBlocks } from "@/lib/provision/template-source";
+import { loadTemplateHomeBlocks, loadTemplateSite } from "@/lib/provision/template-source";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +64,8 @@ export default async function Home() {
             </div>
             <TemplatePreview
               className="pw-landing__hero-preview"
-              blocks={previews[featuredTemplate.id]}
+              blocks={previews[featuredTemplate.id]?.blocks}
+              site={previews[featuredTemplate.id]?.site ?? undefined}
               name={featuredTemplate.name}
               gradient={`linear-gradient(135deg, ${featuredTemplate.preview.from}, ${featuredTemplate.preview.to})`}
             />
@@ -84,7 +85,8 @@ export default async function Home() {
               <TemplateCard
                 key={template.id}
                 template={template}
-                blocks={previews[template.id]}
+                blocks={previews[template.id]?.blocks}
+                site={previews[template.id]?.site ?? undefined}
               />
             ))}
           </div>
@@ -154,8 +156,14 @@ export default async function Home() {
   );
 }
 
-function loadPreviews(): Record<string, Block[]> {
+function loadPreviews(): Record<string, { blocks: Block[]; site: SiteConfig | null }> {
   return Object.fromEntries(
-    TEMPLATES.map((template) => [template.id, loadTemplateHomeBlocks(template.id)]),
+    TEMPLATES.map((template) => [
+      template.id,
+      {
+        blocks: loadTemplateHomeBlocks(template.id),
+        site: loadTemplateSite(template.id),
+      },
+    ]),
   );
 }

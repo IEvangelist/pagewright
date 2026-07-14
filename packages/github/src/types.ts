@@ -92,6 +92,22 @@ export interface CommitResult {
   branch: string;
 }
 
+export interface PullRequestFilesOptions {
+  branch: string;
+  baseBranch: string;
+  baseSha: string;
+  title: string;
+  body: string;
+  message: string;
+  files: CommitFile[];
+}
+
+export interface PullRequestResult {
+  number: number;
+  htmlUrl: string;
+  branch: string;
+}
+
 export interface FileContents {
   content: string;
   sha: string;
@@ -208,6 +224,11 @@ export interface GitHubProvider {
 
   /** Atomic multi-file commit via the Git Data API (blobs → tree → commit → ref update). */
   commitFiles(ref: RepoRef, opts: CommitOptions): Promise<CommitResult>;
+  /** Create a branch, commit managed files to it, and open a pull request against the base branch. */
+  createPullRequestWithFiles(
+    ref: RepoRef,
+    opts: PullRequestFilesOptions,
+  ): Promise<PullRequestResult>;
   getFile(ref: RepoRef, path: string, branch?: string): Promise<FileContents | null>;
   /** Read a binary file without converting its bytes through UTF-8. */
   getFileBase64(ref: RepoRef, path: string, branch?: string): Promise<Base64FileContents | null>;

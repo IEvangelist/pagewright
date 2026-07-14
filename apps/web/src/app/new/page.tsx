@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { Block } from "@pagewright/blocks";
+import type { Block, SiteConfig } from "@pagewright/blocks";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { NewSiteWizard } from "@/components/new-site-wizard";
 import { getCurrentUser } from "@/lib/auth/session";
 import { TEMPLATES } from "@/lib/templates";
-import { loadTemplateHomeBlocks } from "@/lib/provision/template-source";
+import { loadTemplateHomeBlocks, loadTemplateSite } from "@/lib/provision/template-source";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +21,12 @@ export default async function NewSitePage() {
   // Real at-scale gallery previews: read each template's starter home page from the provision
   // bundle (server-only) and hand the blocks to the wizard, which renders them like the dashboard
   // site thumbnails instead of flat gradient placeholders.
-  const previews: Record<string, Block[]> = {};
+  const previews: Record<string, { blocks: Block[]; site: SiteConfig | null }> = {};
   for (const template of TEMPLATES) {
-    previews[template.id] = loadTemplateHomeBlocks(template.id);
+    previews[template.id] = {
+      blocks: loadTemplateHomeBlocks(template.id),
+      site: loadTemplateSite(template.id),
+    };
   }
 
   return (

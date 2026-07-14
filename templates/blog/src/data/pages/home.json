@@ -8,7 +8,7 @@
       "type": "navbar",
       "id": "nav-1",
       "props": {
-        "brand": "The Blog",
+        "brand": "{{site.name}}",
         "links": [
           { "label": "Posts", "href": "#posts" },
           { "label": "About", "href": "#about" }
@@ -21,7 +21,7 @@
       "id": "hero-1",
       "props": {
         "eyebrow": "Writing in the open",
-        "heading": "The Pagewright Blog",
+        "heading": "{{site.name}}",
         "subheading": "Notes, updates, and ideas written visually and published straight from GitHub.",
         "align": "center"
       }
@@ -30,13 +30,13 @@
       "type": "footer",
       "id": "footer-1",
       "props": {
-        "brand": "The Pagewright Blog",
+        "brand": "{{site.name}}",
         "tagline": "Published with Pagewright.",
         "links": [
-          { "label": "GitHub", "href": "https://github.com" },
-          { "label": "RSS", "href": "#" }
+          { "label": "GitHub", "href": "https://github.com", "icon": "github" },
+          { "label": "RSS", "href": "#", "icon": "rss" }
         ],
-        "copyright": "© 2026"
+        "copyright": "© {{currentYear}} {{site.name}}"
       }
     }
   ]

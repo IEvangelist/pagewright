@@ -15,6 +15,8 @@ import {
   type PagesInfo,
   type PagesStatusState,
   type ProviderKind,
+  type PullRequestFilesOptions,
+  type PullRequestResult,
   type Repo,
   type RepoRef,
   type WorkflowJob,
@@ -322,6 +324,50 @@ export class TokenGitHubProvider implements GitHubProvider {
       htmlUrl: commit.html_url ?? `https://github.com/${ref.owner}/${ref.repo}/commit/${commit.sha}`,
       branch,
     };
+  }
+
+  async createPullRequestWithFiles(
+    ref: RepoRef,
+    opts: PullRequestFilesOptions,
+  ): Promise<PullRequestResult> {
+    const base = `/repos/${ref.owner}/${ref.repo}`;
+    await this.rest.request(`${base}/git/refs`, {
+      method: "POST",
+      body: { ref: `refs/heads/${opts.branch}`, sha: opts.baseSha },
+    });
+
+    try {
+      await this.commitFiles(ref, {
+        message: opts.message,
+        files: opts.files,
+        branch: opts.branch,
+        expectedHeadSha: opts.baseSha,
+      });
+      const pull = await this.rest.request<{ number: number; html_url: string }>(
+        `${base}/pulls`,
+        {
+          method: "POST",
+          body: {
+            title: opts.title,
+            body: opts.body,
+            head: opts.branch,
+            base: opts.baseBranch,
+            maintainer_can_modify: true,
+          },
+        },
+      );
+      return { number: pull.number, htmlUrl: pull.html_url, branch: opts.branch };
+    } catch (error) {
+      try {
+        await this.rest.request(
+          `${base}/git/refs/heads/${encodeURIComponent(opts.branch)}`,
+          { method: "DELETE", allowStatuses: [404] },
+        );
+      } catch {
+        // Preserve the original failure; an orphaned update branch is safe to delete manually.
+      }
+      throw error;
+    }
   }
 
   async enablePages(ref: RepoRef, opts: EnablePagesOptions = {}): Promise<PagesInfo> {

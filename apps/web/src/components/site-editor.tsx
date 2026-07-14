@@ -18,6 +18,7 @@ import {
   type Data,
   type Overrides,
 } from "@measured/puck";
+import type { SiteConfig } from "@pagewright/blocks";
 import {
   AlertCircle,
   AlertTriangle,
@@ -39,6 +40,7 @@ import {
   resolveMediaPreviewUrl,
   type MediaUploader,
 } from "@/lib/builder/media-context";
+import { SiteBindingsProvider } from "@/lib/builder/site-bindings-context";
 import type { PostMeta } from "@/lib/content/posts";
 import { PostDetailsPanel, fileToBase64 } from "@/components/post-details-panel";
 
@@ -72,6 +74,8 @@ export function SiteEditor({
   backHref,
   backLabel = "Back to site",
   liveUrl,
+  site,
+  supportsGlobalFeatures,
   initialData,
   initialHeadSha,
   postMeta,
@@ -84,6 +88,8 @@ export function SiteEditor({
   backHref?: string;
   backLabel?: string;
   liveUrl: string | null;
+  site: SiteConfig;
+  supportsGlobalFeatures: boolean;
   initialData: Data;
   initialHeadSha: string | null;
   postMeta?: PostMeta;
@@ -414,23 +420,25 @@ export function SiteEditor({
   return (
     <div className="pw-editor">
       <div className="pw-editor__canvas">
-        <MediaUploadProvider uploader={uploader}>
-          <Puck
-            config={puckConfig}
-            data={editorData}
-            metadata={editorMetadata}
-            onChange={onChange}
-            onPublish={onPublish}
-            overrides={overrides}
-            ui={{
-              leftSideBarVisible: !compactLayout,
-              rightSideBarVisible: !compactLayout,
-              leftSideBarWidth: 280,
-              rightSideBarWidth: 340,
-            }}
-            iframe={{ enabled: false }}
-          />
-        </MediaUploadProvider>
+        <SiteBindingsProvider site={site} supportsGlobalFeatures={supportsGlobalFeatures}>
+          <MediaUploadProvider uploader={uploader}>
+            <Puck
+              config={puckConfig}
+              data={editorData}
+              metadata={editorMetadata}
+              onChange={onChange}
+              onPublish={onPublish}
+              overrides={overrides}
+              ui={{
+                leftSideBarVisible: !compactLayout,
+                rightSideBarVisible: !compactLayout,
+                leftSideBarWidth: 280,
+                rightSideBarWidth: 340,
+              }}
+              iframe={{ enabled: false }}
+            />
+          </MediaUploadProvider>
+        </SiteBindingsProvider>
       </div>
     </div>
   );

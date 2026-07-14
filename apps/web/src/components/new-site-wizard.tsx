@@ -20,7 +20,7 @@ import {
   Sun,
   XCircle,
 } from "lucide-react";
-import type { Block } from "@pagewright/blocks";
+import type { Block, SiteConfig } from "@pagewright/blocks";
 import { GitHubMark } from "@/components/icons/github-mark";
 import { TemplateCard } from "@/components/template-card";
 import {
@@ -73,7 +73,7 @@ export function NewSiteWizard({
   previews = {},
 }: {
   login?: string | null;
-  previews?: Record<string, Block[]>;
+  previews?: Record<string, { blocks: Block[]; site: SiteConfig | null }>;
 }) {
   const [phase, setPhase] = useState<Phase>("choose");
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
@@ -362,7 +362,8 @@ export function NewSiteWizard({
               <TemplateCard
                 key={template.id}
                 template={template}
-                blocks={previews[template.id]}
+                blocks={previews[template.id]?.blocks}
+                site={previews[template.id]?.site ?? undefined}
               />
             ))}
           </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Settings2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { DeployProgress } from "@/components/deploy-progress";
@@ -81,6 +81,12 @@ export default async function SiteManagePage({
             <p className="pw-dash__subtitle">Deployment status &amp; live site</p>
           </div>
           <div className="pw-dash__headactions">
+            <Link
+              className="pw-btn pw-btn--ghost"
+              href={`/sites/${status.owner}/${status.repo}/settings`}
+            >
+              <Settings2 size={16} aria-hidden="true" /> Site settings
+            </Link>
             {hasPosts ? (
               <Link
                 className="pw-btn pw-btn--ghost"

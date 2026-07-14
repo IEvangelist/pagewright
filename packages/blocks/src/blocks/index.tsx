@@ -3,6 +3,7 @@ import type {
   BlockProps,
   BlockType,
   Link,
+  SiteConfig,
 } from "../schema";
 import { BlockIcon } from "../icons";
 import { withBase, normalizeBase, type BaseAware } from "../base";
@@ -17,6 +18,42 @@ import { getGitHubDiscussionsConfigIssues } from "../post-components";
  * root-relative image/link URLs resolve on GitHub Pages project sites.
  */
 
+interface SiteAware {
+  site?: SiteConfig;
+}
+
+function linkAttributes(link: Link, base?: string) {
+  const href = withBase(base, link.href);
+  const external = /^(?:https?:)?\/\//i.test(link.href);
+  return {
+    href,
+    target: external ? "_blank" : undefined,
+    rel: external ? "noopener noreferrer" : undefined,
+  };
+}
+
+function LinkContent({ link }: { link: Link }) {
+  return (
+    <>
+      {link.icon ? (
+        <span className="pw-linkicon" aria-hidden="true">
+          <BlockIcon name={link.icon} size={16} />
+        </span>
+      ) : null}
+      <span>{link.label}</span>
+    </>
+  );
+}
+
+function linkDestinationKey(link: Link): string {
+  const href = link.href.trim();
+  try {
+    return new URL(href).href;
+  } catch {
+    return href;
+  }
+}
+
 function CtaLink({
   link,
   variant,
@@ -28,8 +65,8 @@ function CtaLink({
 }) {
   if (!link) return null;
   return (
-    <a className={`pw-btn pw-btn--${variant}`} href={withBase(base, link.href)}>
-      {link.label}
+    <a className={`pw-btn pw-btn--${variant}`} {...linkAttributes(link, base)}>
+      <LinkContent link={link} />
     </a>
   );
 }
@@ -44,8 +81,8 @@ export function Navbar({ brand, logo, links = [], cta, base }: BlockProps<"navba
         </a>
         <div className="pw-navbar__links">
           {links.map((l, i) => (
-            <a key={i} className="pw-navbar__link" href={withBase(base, l.href)}>
-              {l.label}
+            <a key={i} className="pw-navbar__link" {...linkAttributes(l, base)}>
+              <LinkContent link={l} />
             </a>
           ))}
           <CtaLink link={cta} variant="primary" base={base} />
@@ -329,7 +366,17 @@ export function Footer({
   links = [],
   copyright,
   base,
-}: BlockProps<"footer"> & BaseAware) {
+  site,
+}: BlockProps<"footer"> & BaseAware & SiteAware) {
+  const globalLinks = site?.links ?? [];
+  const seenLinks = new Set<string>();
+  const visibleLinks = [...links, ...globalLinks].filter((link) => {
+    const key = linkDestinationKey(link);
+    if (seenLinks.has(key)) return false;
+    seenLinks.add(key);
+    return true;
+  });
+
   return (
     <footer className="pw-footer">
       <div className="pw-container pw-footer__inner">
@@ -338,9 +385,9 @@ export function Footer({
           {tagline ? <p className="pw-footer__tagline">{tagline}</p> : null}
         </div>
         <div className="pw-footer__links">
-          {links.map((l, i) => (
-            <a key={i} className="pw-footer__link" href={withBase(base, l.href)}>
-              {l.label}
+          {visibleLinks.map((l, i) => (
+            <a key={i} className="pw-footer__link" {...linkAttributes(l, base)}>
+              <LinkContent link={l} />
             </a>
           ))}
         </div>

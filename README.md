@@ -102,6 +102,12 @@ sends it with every commit (`expectedHeadSha`). If the repo moved elsewhere in t
 commit is rejected and the editor shows a conflict banner offering **reload latest** or **overwrite
 with my version** — so concurrent edits never silently clobber each other.
 
+Each managed site also has **Site settings** backed by `src/data/site.json`. Site name, description,
+canonical URL, default theme, and icon-bearing external links are edited once and reused everywhere.
+Text and URL fields can insert `{{site.name}}`, `{{site.description}}`, `{{site.url}}`, and
+`{{currentYear}}`; previews and deployed Astro output resolve the same values. Global external links
+are appended to the footer, while per-block links can use the same searchable icon picker.
+
 ### Uploading media
 
 Image props (hero image, navbar logo, gallery items) render a **drag-and-drop upload field** in the
@@ -186,6 +192,7 @@ content goes live even if the app is never opened again.
 - [x] Draft / schedule / publish / unpublish lifecycle (site online/offline + page scheduling)
 - [x] Dashboard with live block-preview thumbnails per site
 - [x] Base-path–aware asset & link resolution (works on GitHub Pages project subpaths)
+- [x] Global site settings, reusable value bindings, external links, and searchable icon picker
 
 ## Production prerequisites
 

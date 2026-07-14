@@ -4,10 +4,12 @@ import { ArrowLeft } from "lucide-react";
 import {
   parsePage,
   parsePost,
+  parseSiteConfig,
   type Block,
   type Page,
   type Post,
   type PostComponent,
+  type SiteConfig,
 } from "@pagewright/blocks";
 import type { DiscussionSetup } from "@pagewright/github";
 import { getProviderForSession } from "@/lib/auth/provider";
@@ -15,6 +17,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { blocksToPuckData } from "@/lib/builder/convert";
 import { isPostPath, postToMeta, slugFromPostPath, type PostMeta } from "@/lib/content/posts";
 import { htmlToMarkdown } from "@/lib/content/markdown-server";
+import { GLOBAL_FEATURES_RUNTIME_PATH } from "@/lib/site-runtime";
 import { SiteEditor } from "@/components/site-editor";
 import { PostComposer } from "@/components/post-composer";
 
@@ -57,7 +60,26 @@ export default async function EditSitePage({
   const repoData = await provider.getRepo({ owner, repo });
   if (!repoData) notFound();
 
-  const file = await provider.getFile({ owner, repo }, path).catch(() => null);
+  const headSha = await provider
+    .getBranchHead({ owner, repo }, repoData.defaultBranch)
+    .catch(() => null);
+  const readRef = headSha ?? repoData.defaultBranch;
+  const [file, siteFile, runtimeFile] = await Promise.all([
+    provider.getFile({ owner, repo }, path, readRef).catch(() => null),
+    provider.getFile({ owner, repo }, "src/data/site.json", readRef).catch(() => null),
+    provider.getFile({ owner, repo }, GLOBAL_FEATURES_RUNTIME_PATH, readRef).catch(() => null),
+  ]);
+  const supportsGlobalFeatures = runtimeFile !== null;
+  let site: SiteConfig;
+  try {
+    site = parseSiteConfig(
+      siteFile
+        ? JSON.parse(siteFile.content)
+        : { name: repoData.name, description: repoData.description ?? "" },
+    );
+  } catch {
+    site = parseSiteConfig({ name: repoData.name, description: repoData.description ?? "" });
+  }
   let page: Page | null = null;
   let parsedPost: Post | null = null;
   let postMeta: PostMeta | undefined;
@@ -100,9 +122,6 @@ export default async function EditSitePage({
   }
 
   const pages = await provider.getPages({ owner, repo }).catch(() => null);
-  const headSha = await provider
-    .getBranchHead({ owner, repo }, repoData.defaultBranch)
-    .catch(() => null);
 
   const backHref = post ? `/sites/${owner}/${repo}/posts` : `/sites/${owner}/${repo}`;
   const editingLabel = post ? slugFromPostPath(path) : repoData.name;
@@ -160,6 +179,8 @@ export default async function EditSitePage({
         postMeta={postMeta}
         initialHeadSha={headSha}
         initialDiscussionSetup={discussionSetup}
+        site={site}
+        supportsGlobalFeatures={supportsGlobalFeatures}
       />
     );
   }
@@ -176,6 +197,8 @@ export default async function EditSitePage({
       backHref={backHref}
       backLabel={post ? "Back to posts" : "Back to site"}
       liveUrl={liveUrl}
+      site={site}
+      supportsGlobalFeatures={supportsGlobalFeatures}
       initialData={initialData}
       initialHeadSha={headSha}
       postMeta={postMeta}

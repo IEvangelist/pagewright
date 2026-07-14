@@ -49,15 +49,18 @@ import type { DiscussionSetup } from "@pagewright/github";
 import {
   applyLegacyMarkdownDraft,
   createPostComponent,
+  createSiteBindings,
   getGitHubDiscussionsConfigIssues,
   movePostComponent,
   postComponentRegistry,
   postComponentsSchema,
   removePostComponent,
+  resolveHtmlBindingString,
   updatePostComponent,
   type BlockProps,
   type PostComponent,
   type PostComponentType,
+  type SiteConfig,
 } from "@pagewright/blocks";
 
 const DRAFT_PREFIX = "pagewright:post-draft:";
@@ -108,6 +111,8 @@ export function PostComposer({
   postMeta,
   initialHeadSha,
   initialDiscussionSetup,
+  site,
+  supportsGlobalFeatures,
 }: {
   owner: string;
   repo: string;
@@ -121,6 +126,8 @@ export function PostComposer({
   postMeta: PostMeta;
   initialHeadSha: string | null;
   initialDiscussionSetup: DiscussionSetup | null;
+  site: SiteConfig;
+  supportsGlobalFeatures: boolean;
 }) {
   const draftKey = `${DRAFT_PREFIX}${owner}/${repo}:${path}`;
   const metaDraftKey = `${draftKey}:meta`;
@@ -1018,6 +1025,8 @@ export function PostComposer({
                 <PostComponentsPreview
                   components={components}
                   mediaPreviewEndpoint={mediaPreviewEndpoint}
+                  site={site}
+                  supportsGlobalFeatures={supportsGlobalFeatures}
                 />
               </div>
             ) : null}
@@ -1628,13 +1637,23 @@ function FormField({
 function PostComponentsPreview({
   components,
   mediaPreviewEndpoint,
+  site,
+  supportsGlobalFeatures,
 }: {
   components: PostComponent[];
   mediaPreviewEndpoint: string;
+  site: SiteConfig;
+  supportsGlobalFeatures: boolean;
 }) {
   if (components.length === 0) {
     return <div className="pw-composer__previewempty">Add a component to preview your post.</div>;
   }
+
+  const bindings = createSiteBindings(site);
+  const renderPreviewMarkdown = (markdown: string) => {
+    const html = renderMarkdown(markdown);
+    return supportsGlobalFeatures ? resolveHtmlBindingString(html, bindings) : html;
+  };
 
   return (
     <div className="pw-postpreview">
@@ -1646,7 +1665,7 @@ function PostComponentsPreview({
               className="pw-prose pw-postpreview__prose"
               dangerouslySetInnerHTML={{
                 __html: rewriteMediaPreviewSources(
-                  renderMarkdown(component.props.markdown),
+                  renderPreviewMarkdown(component.props.markdown),
                   mediaPreviewEndpoint,
                 ),
               }}

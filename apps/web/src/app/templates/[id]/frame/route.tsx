@@ -3,6 +3,9 @@ import {
   PageRenderer,
   PostList,
   PostHeader,
+  createSiteBindings,
+  parseSiteConfig,
+  resolveBindings,
   type Block,
   type PostCard,
 } from "@pagewright/blocks";
@@ -165,7 +168,7 @@ export async function GET(
   const view = url.searchParams.get("view") === "post" ? "post" : "home";
   const slug = url.searchParams.get("slug") ?? "";
 
-  const site = loadTemplateSite(id as never) ?? { name: meta.name };
+  const site = loadTemplateSite(id as never) ?? parseSiteConfig({ name: meta.name });
   const css = loadBlocksCss();
 
   let body: React.ReactNode = null;
@@ -173,10 +176,17 @@ export async function GET(
   if (id === "blog" && view === "post") {
     const post = loadTemplatePost(id as never, slug);
     if (post) {
+      const { blocks, ...postMetadata } = post;
+      const resolvedPost = resolveBindings(postMetadata, createSiteBindings(site));
       body = (
         <>
-          <PostHeader title={post.title} date={post.date} author={post.author} tags={post.tags} />
-          <PageRenderer blocks={post.blocks} />
+          <PostHeader
+            title={resolvedPost.title}
+            date={resolvedPost.date}
+            author={resolvedPost.author}
+            tags={resolvedPost.tags}
+          />
+          <PageRenderer blocks={blocks} site={site} />
           <div className="pw-section" style={{ paddingBlock: "0 72px" }}>
             <div className="pw-container" style={{ maxWidth: 720 }}>
               <a className="pw-demo-back" href={`/templates/${id}/frame?view=home&theme=${theme}`}>
@@ -200,17 +210,17 @@ export async function GET(
       const footer = footerIndex >= 0 ? blocks.slice(footerIndex) : [];
       body = (
         <>
-          <PageRenderer blocks={head} />
+          <PageRenderer blocks={head} site={site} />
           <PostList
             heading="Latest posts"
             posts={published.map((p) => postToCard(id, theme, p))}
             upcoming={upcoming.map(upcomingToCard)}
           />
-          <PageRenderer blocks={footer} />
+          <PageRenderer blocks={footer} site={site} />
         </>
       );
     } else {
-      body = <PageRenderer blocks={blocks} />;
+      body = <PageRenderer blocks={blocks} site={site} />;
     }
   }
 

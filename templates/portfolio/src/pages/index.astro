@@ -1,13 +1,22 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { PageRenderer, parsePage } from "@pagewright/blocks";
+import {
+  PageRenderer,
+  createSiteBindings,
+  parsePage,
+  parseSiteConfig,
+  resolveBindings,
+} from "@pagewright/blocks";
 import homeDoc from "../data/pages/home.json";
+import siteDoc from "../data/site.json";
 
 // Validate + apply schema defaults at build time so malformed content fails loudly.
 const page = parsePage(homeDoc);
+const site = parseSiteConfig(siteDoc);
+const resolvedPage = resolveBindings(page, createSiteBindings(site));
 const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title={page.title} description={page.description}>
-  <PageRenderer blocks={page.blocks} base={base} />
+<Layout title={resolvedPage.title} description={resolvedPage.description}>
+  <PageRenderer blocks={page.blocks} base={base} site={site} />
 </Layout>

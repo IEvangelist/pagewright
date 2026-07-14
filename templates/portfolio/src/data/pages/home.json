@@ -8,7 +8,7 @@
       "type": "navbar",
       "id": "nav-1",
       "props": {
-        "brand": "Your Name",
+        "brand": "{{site.name}}",
         "links": [
           { "label": "Work", "href": "#work" },
           { "label": "About", "href": "#about" },
@@ -89,14 +89,14 @@
       "type": "footer",
       "id": "footer-1",
       "props": {
-        "brand": "Your Name",
+        "brand": "{{site.name}}",
         "tagline": "Designer & developer.",
         "links": [
-          { "label": "GitHub", "href": "https://github.com" },
-          { "label": "LinkedIn", "href": "#" },
-          { "label": "Email", "href": "#contact" }
+          { "label": "GitHub", "href": "https://github.com", "icon": "github" },
+          { "label": "LinkedIn", "href": "#", "icon": "linkedin" },
+          { "label": "Email", "href": "#contact", "icon": "mail" }
         ],
-        "copyright": "© 2026 Your Name"
+        "copyright": "© {{currentYear}} {{site.name}}"
       }
     }
   ]
