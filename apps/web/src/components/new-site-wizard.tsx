@@ -89,6 +89,7 @@ export function NewSiteWizard({
   const [result, setResult] = useState<ProvisionResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const galleryRef = useRef<HTMLDivElement | null>(null);
 
   // Restore any in-progress draft from a previous visit (localStorage autosave).
   useEffect(() => {
@@ -125,6 +126,57 @@ export function NewSiteWizard({
       // Storage full / unavailable — non-fatal.
     }
   }, [draft, hydrated]);
+
+  // Gallery motion — stagger reveal + pointer spotlight + lift on the template cards. Kept lighter
+  // than the landing hero (no 3D tilt) so the live scaled previews and stretched-link hit areas stay
+  // pristine. Re-runs whenever the visible card set changes (filter/search/phase). Bails entirely
+  // under prefers-reduced-motion.
+  useEffect(() => {
+    if (phase !== "choose") return;
+    const gallery = galleryRef.current;
+    if (!gallery) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    gallery.classList.add("pw-motion");
+    const cards = Array.from(gallery.querySelectorAll<HTMLElement>(".pw-tplcard"));
+    const cleanups: Array<() => void> = [];
+
+    cards.forEach((card, i) => {
+      card.style.setProperty("--pw-reveal-delay", `${Math.min(i, 8) * 45}ms`);
+      let raf = 0;
+      const onMove = (e: PointerEvent) => {
+        const r = card.getBoundingClientRect();
+        const mx = ((e.clientX - r.left) / r.width) * 100;
+        const my = ((e.clientY - r.top) / r.height) * 100;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          card.style.setProperty("--pw-cmx", `${mx.toFixed(1)}%`);
+          card.style.setProperty("--pw-cmy", `${my.toFixed(1)}%`);
+        });
+      };
+      card.addEventListener("pointermove", onMove, { passive: true });
+      cleanups.push(() => {
+        card.removeEventListener("pointermove", onMove);
+        cancelAnimationFrame(raf);
+      });
+    });
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("pw-reveal--in");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
+    );
+    cards.forEach((card) => io.observe(card));
+    cleanups.push(() => io.disconnect());
+
+    return () => cleanups.forEach((fn) => fn());
+  }, [phase, hydrated, query, category]);
 
   const selectedTemplate = draft.templateId ? getTemplateMeta(draft.templateId) : undefined;
   const accent =
@@ -303,7 +355,7 @@ export function NewSiteWizard({
         {filteredTemplates.length === 0 ? (
           <p className="pw-wizard__empty">No templates match “{query}”.</p>
         ) : (
-          <div className="pw-gallery">
+          <div className="pw-gallery" ref={galleryRef}>
             {filteredTemplates.map((t) => (
               <div key={t.id} className="pw-tplcard">
                 <TemplatePreview
